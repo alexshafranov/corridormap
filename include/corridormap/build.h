@@ -27,7 +27,7 @@
 
 namespace corridormap {
 
-static const float SQRT_2 = 1.414214f;
+static const float CORRIDORMAP_SQRT_2 = 1.41421356f;
 
 // maximum distance for points and lines.
 // computed such that distance mesh "covers" the full render target in ortho projection.
@@ -36,7 +36,7 @@ inline float max_distance(float scene_bbox_min[2], float scene_bbox_max[2])
     float w = scene_bbox_max[0] - scene_bbox_min[0];
     float h = scene_bbox_max[1] - scene_bbox_min[1];
     float s = (w > h) ? w : h;
-    return s * SQRT_2;
+    return s * CORRIDORMAP_SQRT_2;
 }
 
 // build polygon distance mesh, suitable to be passed to render interface. polygon must be convex.
