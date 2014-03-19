@@ -27,8 +27,20 @@
 
 namespace corridormap {
 
-// build distance mesh suitable for rendering
-triangle_list build_distance_mesh(polygon obstacle, unsigned resolution_x, unsigned resolution_y, memory* output);
+static const float SQRT_2 = 1.414214f;
+
+// maximum distance for points and lines.
+// computed such that distance mesh "covers" the full render target in ortho projection.
+inline float max_distance(float scene_bbox_min[2], float scene_bbox_max[2])
+{
+    float w = scene_bbox_max[0] - scene_bbox_min[0];
+    float h = scene_bbox_max[1] - scene_bbox_min[1];
+    float s = (w > h) ? w : h;
+    return s * SQRT_2;
+}
+
+// build polygon distance mesh, suitable to be passed to render interface. polygon must be convex.
+triangle_list build_distance_mesh(polygon obstacle, float max_dist, memory* output);
 
 }
 
