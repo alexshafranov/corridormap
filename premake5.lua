@@ -32,3 +32,15 @@ solution "corridormap"
         warnings "Extra"
         files { "source/**.cpp" }
         includedirs { "include" }
+
+    project "example-voronoi"
+        kind "ConsoleApp"
+        flags { "FatalWarnings", "NoExceptions" }
+        includedirs { "include" }
+        files { "example/voronoi.cpp" }
+        links { "corridormap-library"}
+
+        configuration { "windows" }
+            includedirs { "$(GLFW_DIR)/include" }
+            libdirs { "$(GLFW_DIR)/lib" }
+            links { "opengl32", "glfw3" }
