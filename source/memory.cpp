@@ -19,29 +19,53 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORRIDORMAP_TYPES_H_
-#define CORRIDORMAP_TYPES_H_
+#include <stdlib.h>
+#include <stdint.h>
+
+#include "corridormap/memory.h"
 
 namespace corridormap {
 
-// 2d ostacle polygon
-struct polygon
+inline void* align_ptr(void* ptr, size_t value)
 {
-    // number of vertices.
-    unsigned nverts;
-    // vertcies in ccw order. length is nverts*2.
-    float* vertcies;
-};
-
-// 3d triangle list suitable for rendering.
-struct triangle_list
-{
-    // number of triangles.
-    unsigned ntris;
-    // vertex position data. length is ntris*3*3.
-    float* vertices;
-};
-
+    return reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(ptr) + (value - 1)) & ~(value - 1));
 }
 
-#endif
+void* memory_malloc::allocate(size_t size, size_t align)
+{
+    align = align < sizeof(uint32_t) ? sizeof(uint32_t) : align;
+    void* p = malloc(sizeof(uint32_t) + align + size);
+
+    uint32_t* pad = static_cast<uint32_t*>(p);
+    pad[0] = 0;
+    ++pad;
+
+    uint32_t* data = static_cast<uint32_t*>(align_ptr(pad, align));
+
+    for (; pad < data; ++pad)
+    {
+        pad[0] = 0xffffffff;
+    }
+
+    return data;
+}
+
+void memory_malloc::deallocate(void* ptr)
+{
+    if (!ptr)
+    {
+        return;
+    }
+
+    uint32_t* p = reinterpret_cast<uint32_t*>(ptr);
+
+    do
+    {
+        --p;
+    }
+    while (p[0] == 0xffffffff);
+
+    free(p);
+}
+
+}

@@ -28,14 +28,6 @@ namespace corridormap {
 class renderer
 {
 public:
-    // mesh vertex.
-    struct vertex
-    {
-        float x;
-        float y;
-        float z;
-    };
-
     // initialization parameters.
     struct parameters
     {
@@ -44,9 +36,9 @@ public:
         // height of render target.
         unsigned render_target_height;
         // orthographic projection bounding box min.
-        vertex min;
+        float min[3];
         // orthographic projection bounding box max.
-        vertex max;
+        float max[3];
     };
 
     // mesh primitive type.
@@ -65,8 +57,8 @@ public:
     virtual void finalize() = 0;
     // begin scene.
     virtual void begin() = 0;
-    // draw mesh with uniform color.
-    virtual void draw(const vertex* vertices, unsigned count, unsigned color, mesh_primitive_type primitive_type) = 0;
+    // draw mesh with uniform color. length of vertices array is count*3.
+    virtual void draw(const float* vertices, unsigned count, unsigned color, mesh_primitive_type primitive_type) = 0;
     // end scene.
     virtual void end() = 0;
     // copy render target from video memory.

@@ -19,27 +19,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORRIDORMAP_TYPES_H_
-#define CORRIDORMAP_TYPES_H_
+#ifndef CORRIDORMAP_MEMORY_H_
+#define CORRIDORMAP_MEMORY_H_
+
+#include <stddef.h> // size_t
 
 namespace corridormap {
 
-// 2d ostacle polygon
-struct polygon
+class memory
 {
-    // number of vertices.
-    unsigned nverts;
-    // vertcies in ccw order. length is nverts*2.
-    float* vertcies;
+public:
+    virtual ~memory() {}
+    virtual void* allocate(size_t size, size_t align)=0;
+    virtual void  deallocate(void* ptr)=0;
 };
 
-// 3d triangle list suitable for rendering.
-struct triangle_list
+class memory_malloc : public memory
 {
-    // number of triangles.
-    unsigned ntris;
-    // vertex position data. length is ntris*3*3.
-    float* vertices;
+public:
+    virtual void* allocate(size_t size, size_t align);
+    virtual void  deallocate(void* ptr);
 };
 
 }

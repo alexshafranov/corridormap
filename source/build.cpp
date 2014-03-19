@@ -19,29 +19,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORRIDORMAP_TYPES_H_
-#define CORRIDORMAP_TYPES_H_
+#include "corridormap/build.h"
 
 namespace corridormap {
 
-// 2d ostacle polygon
-struct polygon
+triangle_list build_distance_mesh(polygon obstacle, unsigned /*resolution_x*/, unsigned /*resolution_y*/, memory* /*output*/)
 {
-    // number of vertices.
-    unsigned nverts;
-    // vertcies in ccw order. length is nverts*2.
-    float* vertcies;
-};
-
-// 3d triangle list suitable for rendering.
-struct triangle_list
-{
-    // number of triangles.
-    unsigned ntris;
-    // vertex position data. length is ntris*3*3.
-    float* vertices;
-};
-
+    triangle_list result;
+    return result;
 }
 
-#endif
+}
