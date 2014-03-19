@@ -23,9 +23,11 @@
 
 namespace corridormap {
 
-triangle_list build_distance_mesh(polygon obstacle, unsigned /*resolution_x*/, unsigned /*resolution_y*/, memory* /*output*/)
+triangle_list build_distance_mesh(polygon /*obstacle*/, unsigned /*resolution_x*/, unsigned /*resolution_y*/, memory* /*output*/)
 {
     triangle_list result;
+    result.ntris = 0;
+    result.vertices = 0;
     return result;
 }
 
