@@ -1,40 +1,62 @@
+//
+// Copyright (c) 2014 Alexander Shafranov <shafranov@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #ifndef CORRIDORMAP_RENDER_INTERFACE_H_
 #define CORRIDORMAP_RENDER_INTERFACE_H_
 
 namespace corridormap {
 
-struct vertex
-{
-    float x;
-    float y;
-    float z;
-};
-
-// parameters for rendering interface initialization.
-struct renderer_parameters
-{
-    // width of render target.
-    unsigned render_target_width;
-    // height of render target.
-    unsigned render_target_height;
-    // orthographic projection bounding box min.
-    vertex min;
-    // orthographic projection bounding box max.
-    vertex max;
-};
-
-// mesh primitive type.
-enum renderer_primitive_type
-{
-    primitive_type_fan = 0,
-    primitive_type_stripe,
-    primitive_type_list,
-};
-
 // abtract rendering backend interface.
 class renderer
 {
 public:
+    // mesh vertex.
+    struct vertex
+    {
+        float x;
+        float y;
+        float z;
+    };
+
+    // initialization parameters.
+    struct parameters
+    {
+        // width of render target.
+        unsigned render_target_width;
+        // height of render target.
+        unsigned render_target_height;
+        // orthographic projection bounding box min.
+        vertex min;
+        // orthographic projection bounding box max.
+        vertex max;
+    };
+
+    // mesh primitive type.
+    enum primitive_type
+    {
+        primitive_type_fan = 0,
+        primitive_type_stripe,
+        primitive_type_list,
+    };
+
     virtual ~renderer() {}
 
     // initialize renderer.
@@ -44,10 +66,10 @@ public:
     // begin scene.
     virtual void begin() = 0;
     // draw mesh with uniform color.
-    virtual void draw(const vertex* vertices, unsigned count, unsigned color, renderer_primitive_type primitive_type) = 0;
+    virtual void draw(const vertex* vertices, unsigned count, unsigned color, mesh_primitive_type primitive_type) = 0;
     // end scene.
     virtual void end() = 0;
-    // copy render target from vram.
+    // copy render target from video memory.
     virtual void read_pixels(unsigned char* destination) = 0;
 };
 
