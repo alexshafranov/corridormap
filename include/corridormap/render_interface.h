@@ -52,13 +52,13 @@ public:
     virtual ~renderer() {}
 
     // initialize renderer.
-    virtual void initialize(renderer_parameters params) = 0;
+    virtual void initialize(parameters params) = 0;
     // release resources.
     virtual void finalize() = 0;
     // begin scene.
     virtual void begin() = 0;
     // draw mesh with uniform color. length of vertices array is count*3.
-    virtual void draw(const float* vertices, unsigned count, unsigned color, mesh_primitive_type primitive_type) = 0;
+    virtual void draw(const float* vertices, unsigned count, unsigned color, primitive_type pt) = 0;
     // end scene.
     virtual void end() = 0;
     // copy render target from video memory.

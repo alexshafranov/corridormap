@@ -1,4 +1,5 @@
 #include <GLFW/glfw3.h>
+#include "corridormap/render_gl.h"
 
 int main()
 {
@@ -16,6 +17,9 @@ int main()
     }
 
     glfwMakeContextCurrent(window);
+
+    corridormap::renderer_gl render_iface;
+    render_iface.initialize(corridormap::renderer::parameters());
 
     while (!glfwWindowShouldClose(window))
     {
