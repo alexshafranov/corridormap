@@ -27,8 +27,8 @@
 
 namespace corridormap {
 
-static const float CORRIDORMAP_SQRT_2   = 1.41421356f;
-static const float CORRIDORMAP_PI       = 3.14159265f;
+static const float CORRIDORMAP_SQRT_2 = 1.41421356f;
+static const float CORRIDORMAP_PI     = 3.14159265f;
 
 // maximum distance for points and lines.
 // computed such that distance mesh "covers" the full render target in ortho projection.
