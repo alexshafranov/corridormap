@@ -30,8 +30,9 @@ triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_er
     result.ntris = 0;
     result.vertices = 0;
 
-    float cone_half_angle = acos((max_dist - max_error)/max_dist);
-    unsigned cone_triangle_count = static_cast<unsigned>(floor(CORRIDORMAP_PI / cone_half_angle));
+    const float cone_half_angle = acos((max_dist - max_error)/max_dist);
+    const float cone_angle = 2.f * cone_half_angle;
+    const unsigned cone_triangle_count = static_cast<unsigned>(floor(CORRIDORMAP_PI / cone_half_angle));
 
     const size_t vertex_size = 3 * sizeof(float);
     const size_t triangle_size = 3 * vertex_size;
@@ -62,12 +63,12 @@ triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_er
             a[1] = p_y;
             a[2] = 0.f;
 
-            b[0] = max_dist * cos((j+0)*2.f*cone_half_angle);
-            b[1] = max_dist * sin((j+0)*2.f*cone_half_angle);
+            b[0] = max_dist * cos((j+0)*cone_angle);
+            b[1] = max_dist * sin((j+0)*cone_angle);
             b[2] = max_dist;
 
-            c[0] = max_dist * cos((j+1)*2.f*cone_half_angle);
-            c[1] = max_dist * sin((j+1)*2.f*cone_half_angle);
+            c[0] = max_dist * cos((j+1)*cone_angle);
+            c[1] = max_dist * sin((j+1)*cone_angle);
             c[2] = max_dist;
         }
     }
