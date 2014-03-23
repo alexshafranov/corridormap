@@ -53,13 +53,21 @@ solution "corridormap"
             files { "example/glfw/src/win32_*.c", "example/glfw/src/wgl_*.c" }
             defines { "_CRT_SECURE_NO_WARNINGS", "_GLFW_WIN32", "_GLFW_WGL" }
 
+    project "glew"
+        kind "StaticLib"
+        language "C"
+        files { "example/glew/src/glew.c" }
+        defines { "_CRT_SECURE_NO_WARNINGS", "GLEW_STATIC" }
+        includedirs { "example/glew/include" }
+
     project "example-voronoi"
         kind "ConsoleApp"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
-        includedirs { "include", "example/glfw/include" }
+        includedirs { "include", "example/glfw/include", "example/glew/include" }
         files { "example/voronoi.cpp" }
-        links { "corridormap-library", "glfw" }
+        defines { "GLEW_STATIC" }
+        links { "corridormap-library", "glew", "glfw" }
 
         configuration { "windows" }
             links { "opengl32" }

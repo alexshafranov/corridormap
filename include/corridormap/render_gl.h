@@ -48,7 +48,7 @@ static const char* fragment_shader =
 class renderer_gl : public renderer
 {
 public:
-    virtual void initialize(renderer::parameters params)
+    virtual void initialize(renderer::parameters /*params*/)
     {
         glGenVertexArrays(1, &_vertex_array);
         glGenBuffers(1, &_vertex_buffer);
@@ -56,8 +56,8 @@ public:
         _program = glCreateProgram();
         _vertex_shader = glCreateShader(GL_VERTEX_SHADER);
         _fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(_vertex_shader, 1, vertex_shader, 0);
-        glShaderSource(_fragment_shader, 1, fragment_shader, 0);
+        glShaderSource(_vertex_shader, 1, &vertex_shader, 0);
+        glShaderSource(_fragment_shader, 1, &fragment_shader, 0);
         glCompileShader(_vertex_shader);
         glCompileShader(_fragment_shader);
         glAttachShader(_program, _vertex_shader);
@@ -75,7 +75,7 @@ public:
     {
     }
 
-    virtual void draw(const float* vertices, unsigned count, unsigned color, renderer::primitive_type pt)
+    virtual void draw(const float* /*vertices*/, unsigned /*count*/, unsigned /*color*/, renderer::primitive_type /*pt*/)
     {
     }
 
@@ -83,7 +83,7 @@ public:
     {
     }
 
-    virtual void read_pixels(unsigned char* destination)
+    virtual void read_pixels(unsigned char* /*destination*/)
     {
     }
 
