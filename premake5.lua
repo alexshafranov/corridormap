@@ -57,7 +57,7 @@ solution "corridormap"
         kind "ConsoleApp"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
-        includedirs { "include" }
+        includedirs { "include", "example/glfw/include" }
         files { "example/voronoi.cpp" }
         links { "corridormap-library", "glfw" }
 
