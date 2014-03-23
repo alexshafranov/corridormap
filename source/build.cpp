@@ -20,12 +20,15 @@
 // SOFTWARE.
 
 #include <math.h>
+#include "corridormap/assert.h"
 #include "corridormap/build.h"
 
 namespace corridormap {
 
 triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_error, memory* output)
 {
+    corridormap_assert(max_dist > max_error);
+
     triangle_list result;
     result.ntris = 0;
     result.vertices = 0;
