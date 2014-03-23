@@ -18,6 +18,7 @@ int main()
     }
 
     glfwMakeContextCurrent(window);
+    glewInit();
 
     corridormap::renderer_gl render_iface;
     render_iface.initialize(corridormap::renderer::parameters());
@@ -31,6 +32,7 @@ int main()
         ratio = width / (float) height;
 
         glViewport(0, 0, width, height);
+        glClearColor(1.f, 0.f, 1.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glfwSwapBuffers(window);
