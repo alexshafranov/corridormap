@@ -3,8 +3,6 @@ solution "corridormap"
     configurations { "release", "debug" }
     language "C++"
 
-    flags { "NoPCH", "NoRTTI", "FatalWarnings" }
-    warnings "Extra"
     objdir ".build/obj"
 
     configuration "debug"
@@ -28,19 +26,40 @@ solution "corridormap"
 
     project "corridormap-library"
         kind "StaticLib"
-        flags { "FatalWarnings", "NoExceptions" }
+        flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
         files { "source/**.cpp" }
         includedirs { "include" }
 
-    project "example-voronoi"
-        kind "ConsoleApp"
-        flags { "FatalWarnings", "NoExceptions" }
-        includedirs { "include" }
-        files { "example/voronoi.cpp" }
-        links { "corridormap-library"}
+    project "glfw"
+        kind "StaticLib"
+        language "C"
+
+        files { 
+            "example/glfw/src/clipboard.c",
+            "example/glfw/src/context.c",
+            "example/glfw/src/gamma.c",
+            "example/glfw/src/init.c",
+            "example/glfw/src/input.c",
+            "example/glfw/src/joystick.c",
+            "example/glfw/src/monitor.c",
+            "example/glfw/src/time.c",
+            "example/glfw/src/window.c" }
+
+        includedirs { "example/glfw/include" }
+        defines { "_GLFW_USE_OPENGL" }
 
         configuration { "windows" }
-            includedirs { "$(GLFW_DIR)/include" }
-            libdirs { "$(GLFW_DIR)/lib" }
-            links { "opengl32", "glfw3" }
+            files { "example/glfw/src/win32_*.c", "example/glfw/src/wgl_*.c" }
+            defines { "_CRT_SECURE_NO_WARNINGS", "_GLFW_WIN32", "_GLFW_WGL" }
+
+    project "example-voronoi"
+        kind "ConsoleApp"
+        flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
+        warnings "Extra"
+        includedirs { "include" }
+        files { "example/voronoi.cpp" }
+        links { "corridormap-library", "glfw" }
+
+        configuration { "windows" }
+            links { "opengl32" }
