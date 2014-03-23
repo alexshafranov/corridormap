@@ -30,7 +30,7 @@ struct polygon
     // number of vertices.
     unsigned nverts;
     // vertcies in ccw order. length is nverts*2.
-    float* vertcies;
+    float* vertices;
 };
 
 // 3d triangle list suitable for rendering.

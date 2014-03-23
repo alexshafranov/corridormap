@@ -41,6 +41,12 @@ public:
     virtual void  deallocate(void* ptr);
 };
 
+template <typename T>
+T* allocate(memory* mem, size_t size, size_t align=sizeof(void*))
+{
+    return static_cast<T*>(mem->allocate(size, align));
+}
+
 }
 
 #endif
