@@ -54,13 +54,13 @@ triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_er
         float p_x = obstacle.vertices[i*2 + 0];
         float p_y = obstacle.vertices[i*2 + 1];
 
-        float* cone = vertices + i*cone_triangle_count*triangle_size;
+        float* cone = vertices + i*cone_triangle_count*9;
 
         for (unsigned j = 0; j < cone_triangle_count; ++j)
         {
-            float* a = cone + j*triangle_size + 0;
-            float* b = cone + j*triangle_size + 1;
-            float* c = cone + j*triangle_size + 2;
+            float* a = cone + j*9 + 0;
+            float* b = cone + j*9 + 1;
+            float* c = cone + j*9 + 2;
 
             a[0] = p_x;
             a[1] = p_y;

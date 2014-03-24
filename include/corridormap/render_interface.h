@@ -36,9 +36,11 @@ public:
         // height of render target.
         unsigned render_target_height;
         // orthographic projection bounding box min.
-        float min[3];
+        float min[2];
         // orthographic projection bounding box max.
-        float max[3];
+        float max[2];
+        // depth is in [0, far_plane] range.
+        float far_plane;
     };
 
     // mesh primitive type.

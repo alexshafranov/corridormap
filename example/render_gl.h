@@ -166,6 +166,37 @@ public:
             _wvp_location = glGetUniformLocation(_vertex_shader, "wvp");
         }
 
+        // setup orthographic projection
+        {
+            float r = _params.min[0];
+            float l = _params.max[0];
+            float b = _params.min[1];
+            float t = _params.max[1];
+            float n = 0.f;
+            float f = _params.far_plane;
+
+            // matrix is stored in a column major order.
+            _projection[0*4 + 0] = 2.f / (r - l);
+            _projection[0*4 + 1] = 0.f;
+            _projection[0*4 + 2] = 0.f;
+            _projection[0*4 + 3] = 0.f;
+
+            _projection[1*4 + 0] = 0.f;
+            _projection[1*4 + 1] = 2.f / (t - b);
+            _projection[1*4 + 2] = 0.f;
+            _projection[1*4 + 3] = 0.f;
+
+            _projection[2*4 + 0] = 0.f;
+            _projection[2*4 + 1] = 0.f;
+            _projection[2*4 + 2] = 1.f / (f - n);
+            _projection[2*4 + 3] = 0.f;
+
+            _projection[3*4 + 0] = (r + l) / (r - l);
+            _projection[3*4 + 1] = (t + b) / (b - t);
+            _projection[3*4 + 2] = n / (n - f);
+            _projection[3*4 + 3] = 1.f;
+        }
+
         return true;
     }
 
@@ -183,14 +214,30 @@ public:
         glViewport(0, 0, _params.render_target_width, _params.render_target_height);
         glClearColor(1.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(_program);
+        glUniformMatrix4fv(_wvp_location, 1, GL_FALSE, _projection);
     }
 
-    virtual void draw(const float* /*vertices*/, unsigned /*count*/, unsigned /*color*/, renderer::primitive_type /*pt*/)
+    virtual void draw(const float* vertices, unsigned count, unsigned /*color*/, renderer::primitive_type /*pt*/)
     {
+        // upload vertices.
+        glBindVertexArray(_vertex_array);
+        glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
+        glBufferData(GL_ARRAY_BUFFER, count*3*sizeof(float), vertices, GL_STREAM_DRAW);
+
+        // render.
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glDrawArrays(GL_TRIANGLES, 0, count);
+
+        // cleanup.
+        glDisableVertexAttribArray(0);
     }
 
     virtual void end()
     {
+        glUseProgram(0);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     }
 
@@ -217,6 +264,8 @@ private:
     GLuint _vertex_shader;
     GLuint _fragment_shader;
     GLint  _wvp_location;
+
+    GLfloat _projection[4*4];
 };
 
 }
