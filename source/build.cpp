@@ -40,7 +40,7 @@ triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_er
     const size_t vertex_size = 3 * sizeof(float);
     const size_t triangle_size = 3 * vertex_size;
 
-    const unsigned ntris = obstacle.nverts * cone_triangle_count;
+    const unsigned ntris = obstacle.nverts*cone_triangle_count;
 
     float* vertices = allocate<float>(output, ntris*triangle_size);
 
@@ -51,8 +51,8 @@ triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_er
 
     for (unsigned i = 0; i < obstacle.nverts; ++i)
     {
-        float p_x = obstacle.vertices[i*2+0];
-        float p_y = obstacle.vertices[i*2+1];
+        float p_x = obstacle.vertices[i*2 + 0];
+        float p_y = obstacle.vertices[i*2 + 1];
 
         float* cone = vertices + i*cone_triangle_count*triangle_size;
 

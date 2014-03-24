@@ -51,8 +51,8 @@ public:
 
     virtual ~renderer() {}
 
-    // initialize renderer.
-    virtual void initialize(parameters params) = 0;
+    // initialize renderer. returns false on failure.
+    virtual bool initialize(parameters params) = 0;
     // release resources.
     virtual void finalize() = 0;
     // begin scene.

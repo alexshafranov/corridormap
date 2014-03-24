@@ -25,12 +25,14 @@
 #ifndef CORRIDORMAP_RENDER_GL_H_
 #define CORRIDORMAP_RENDER_GL_H_
 
+#include <stdio.h>
 #include "corridormap/render_interface.h"
 
 namespace corridormap {
 
 static const char* vertex_shader =
 "in vec3 position;                                  \n"
+"uniform mat4 wvp;                                  \n"
 "                                                   \n"
 "void main()                                        \n"
 "{                                                  \n"
@@ -45,10 +47,32 @@ static const char* fragment_shader =
 "    out_color = vec4(1.0, 0.0, 1.0, 1.0);          \n"
 "}                                                  \n";
 
+namespace
+{
+    void print_shader_log(GLuint shader)
+    {
+        const int max_buffer_size = 4096;
+
+        char buffer[max_buffer_size + 1];
+        int length = 0;
+
+        glGetShaderInfoLog(shader, max_buffer_size, &length, buffer);
+
+        if (length > max_buffer_size)
+        {
+            length = max_buffer_size;
+        }
+
+        buffer[length] = '\0';
+
+        fprintf(stderr, "compilation log:\n%s\n", buffer);
+    }
+}
+
 class renderer_gl : public renderer
 {
 public:
-    virtual void initialize(renderer::parameters /*params*/)
+    virtual bool initialize(renderer::parameters /*params*/)
     {
         glGenVertexArrays(1, &_vertex_array);
         glGenBuffers(1, &_vertex_buffer);
@@ -56,13 +80,36 @@ public:
         _program = glCreateProgram();
         _vertex_shader = glCreateShader(GL_VERTEX_SHADER);
         _fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+
         glShaderSource(_vertex_shader, 1, &vertex_shader, 0);
         glShaderSource(_fragment_shader, 1, &fragment_shader, 0);
+
+        GLint status;
         glCompileShader(_vertex_shader);
         glCompileShader(_fragment_shader);
+
+        glGetShaderiv(_vertex_shader, GL_COMPILE_STATUS, &status);
+
+        if (status != GL_TRUE)
+        {
+            print_shader_log(_vertex_shader);
+            return false;
+        }
+
+        glGetShaderiv(_fragment_shader, GL_COMPILE_STATUS, &status);
+
+        if (status != GL_TRUE)
+        {
+            print_shader_log(_fragment_shader);
+            return false;
+        }
+
         glAttachShader(_program, _vertex_shader);
         glAttachShader(_program, _fragment_shader);
+
         glBindAttribLocation(_program, 0, "position");
+
+        return true;
     }
 
     virtual void finalize()
