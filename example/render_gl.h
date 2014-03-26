@@ -40,11 +40,11 @@ static const char* vertex_shader =
 "}                                                  \n";
 
 static const char* fragment_shader =
-"out vec4 out_color;                                \n"
+"//out vec4 out_color;                              \n"
 "                                                   \n"
 "void main()                                        \n"
 "{                                                  \n"
-"    out_color = vec4(1.0, 0.0, 1.0, 1.0);          \n"
+"    gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);       \n"
 "}                                                  \n";
 
 namespace
@@ -163,13 +163,21 @@ public:
             glAttachShader(_program, _fragment_shader);
 
             glBindAttribLocation(_program, 0, "position");
-            _wvp_location = glGetUniformLocation(_vertex_shader, "wvp");
+
+            glLinkProgram(_program);
+
+            if (glGetError() != GL_NO_ERROR)
+            {
+                return false;
+            }
+
+            _wvp_location = glGetUniformLocation(_program, "wvp");
         }
 
-        // setup orthographic projection
+        // setup orthographic projection. projection is left-haded, camera is in zero looking in +z direction.
         {
-            float r = _params.min[0];
-            float l = _params.max[0];
+            float l = _params.min[0];
+            float r = _params.max[0];
             float b = _params.min[1];
             float t = _params.max[1];
             float n = 0.f;
@@ -188,12 +196,12 @@ public:
 
             _projection[2*4 + 0] = 0.f;
             _projection[2*4 + 1] = 0.f;
-            _projection[2*4 + 2] = 1.f / (f - n);
+            _projection[2*4 + 2] = 2.f / (f - n);
             _projection[2*4 + 3] = 0.f;
 
-            _projection[3*4 + 0] = (r + l) / (r - l);
+            _projection[3*4 + 0] = (l + r) / (l - r);
             _projection[3*4 + 1] = (t + b) / (b - t);
-            _projection[3*4 + 2] = n / (n - f);
+            _projection[3*4 + 2] = (n + f) / (n - f);
             _projection[3*4 + 3] = 1.f;
         }
 
@@ -212,8 +220,8 @@ public:
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _frame_buffer);
         glViewport(0, 0, _params.render_target_width, _params.render_target_height);
-        glClearColor(1.f, 0.f, 0.f, 1.f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.f, 1.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(_program);
         glUniformMatrix4fv(_wvp_location, 1, GL_FALSE, _projection);
@@ -221,15 +229,21 @@ public:
 
     virtual void draw(const float* vertices, unsigned count, unsigned /*color*/, renderer::primitive_type /*pt*/)
     {
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        // glEnable(GL_CULL_FACE);
+        // glFrontFace(GL_CCW);
+
         // upload vertices.
         glBindVertexArray(_vertex_array);
         glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-        glBufferData(GL_ARRAY_BUFFER, count*3*sizeof(float), vertices, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, count*9*sizeof(float), vertices, GL_STREAM_DRAW);
 
-        // render.
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        glDrawArrays(GL_TRIANGLES, 0, count);
+
+        // render.
+        glDrawArrays(GL_TRIANGLES, 0, count * 3);
 
         // cleanup.
         glDisableVertexAttribArray(0);

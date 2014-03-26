@@ -11,7 +11,7 @@ struct glfw_context
 
     glfw_context()
     {
-        ok = !!glfwInit();
+        ok = (glfwInit() == GL_TRUE);
     }
 
     ~glfw_context()
@@ -64,6 +64,8 @@ int main()
 
     glewInit();
 
+    printf("%s\n", glGetString(GL_VERSION));
+
     corridormap::renderer_gl render_iface;
     corridormap::renderer::parameters render_params;
     render_params.render_target_width = screen_width;
@@ -72,15 +74,23 @@ int main()
     render_params.min[1] = 0.f;
     render_params.max[0] = 100.f;
     render_params.max[1] = 100.f;
-    render_params.far_plane = corridormap::max_distance(render_params.min, render_params.max);
+    // render_params.far_plane = corridormap::max_distance(render_params.min, render_params.max);
+    render_params.far_plane = 100.f;
 
-    float obstacle_verts[8] = { 10.f, 10.f,  90.f, 10.f,  90.f, 90.f,  10.f, 90.f};
-    corridormap::polygon obstacle;
-    obstacle.vertices = obstacle_verts;
-    obstacle.nverts = 4;
+    // float obstacle_verts[8] = { 10.f, 10.f,  90.f, 10.f,  90.f, 90.f,  10.f, 90.f };
+    // corridormap::polygon obstacle;
+    // obstacle.vertices = obstacle_verts;
+    // obstacle.nverts = 4;
 
-    corridormap::memory_malloc mem;
-    corridormap::triangle_list distance_mesh = corridormap::build_distance_mesh(obstacle, render_params.far_plane, 0.1f, &mem);
+    // corridormap::memory_malloc mem;
+    // corridormap::triangle_list distance_mesh = corridormap::build_distance_mesh(obstacle, render_params.far_plane, 0.1f, &mem);
+
+    float obstacle_verts[] =
+    {
+        0.f,    0.f,    0.f,
+        100.f,  0.f,    0.f,
+        0.f,    100.f,  0.f,
+    };
 
     if (!render_iface.initialize(render_params))
     {
@@ -98,11 +108,12 @@ int main()
         ratio = width / (float) height;
 
         glViewport(0, 0, width, height);
-        glClearColor(1.f, 0.f, 1.f, 1.f);
+        glClearColor(1.f, 1.f, 1.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         render_iface.begin();
-        render_iface.draw(distance_mesh.vertices, distance_mesh.ntris, 0xffff0000, corridormap::renderer::primitive_type_list);
+        // render_iface.draw(distance_mesh.vertices, distance_mesh.ntris, 0xffff0000, corridormap::renderer::primitive_type_list);
+        render_iface.draw(obstacle_verts, 1, 0xffff0000, corridormap::renderer::primitive_type_list);
         render_iface.end();
         render_iface.blit_frame_buffer(width, height);
 
