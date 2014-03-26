@@ -70,27 +70,19 @@ int main()
     corridormap::renderer::parameters render_params;
     render_params.render_target_width = screen_width;
     render_params.render_target_height = screen_height;
-    render_params.min[0] = 0.f;
-    render_params.min[1] = 0.f;
-    render_params.max[0] = 100.f;
-    render_params.max[1] = 100.f;
-    // render_params.far_plane = corridormap::max_distance(render_params.min, render_params.max);
-    render_params.far_plane = 100.f;
+    render_params.min[0] = 10.f;
+    render_params.min[1] = 10.f;
+    render_params.max[0] = 90.f;
+    render_params.max[1] = 90.f;
+    render_params.far_plane = corridormap::max_distance(render_params.min, render_params.max);
 
-    // float obstacle_verts[8] = { 10.f, 10.f,  90.f, 10.f,  90.f, 90.f,  10.f, 90.f };
-    // corridormap::polygon obstacle;
-    // obstacle.vertices = obstacle_verts;
-    // obstacle.nverts = 4;
+    float obstacle_verts[8] = { 10.f, 10.f,  90.f, 10.f,  90.f, 90.f,  10.f, 90.f };
+    corridormap::polygon obstacle;
+    obstacle.vertices = obstacle_verts;
+    obstacle.nverts = 4;
 
-    // corridormap::memory_malloc mem;
-    // corridormap::triangle_list distance_mesh = corridormap::build_distance_mesh(obstacle, render_params.far_plane, 0.1f, &mem);
-
-    float obstacle_verts[] =
-    {
-        0.f,    0.f,    0.f,
-        100.f,  0.f,    0.f,
-        0.f,    100.f,  0.f,
-    };
+    corridormap::memory_malloc mem;
+    corridormap::triangle_list distance_mesh = corridormap::build_distance_mesh(obstacle, render_params.far_plane, 0.1f, &mem);
 
     if (!render_iface.initialize(render_params))
     {
@@ -112,8 +104,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         render_iface.begin();
-        // render_iface.draw(distance_mesh.vertices, distance_mesh.ntris, 0xffff0000, corridormap::renderer::primitive_type_list);
-        render_iface.draw(obstacle_verts, 1, 0xffff0000, corridormap::renderer::primitive_type_list);
+        render_iface.draw(distance_mesh.vertices, distance_mesh.ntris, 0xffff0000, corridormap::renderer::primitive_type_list);
         render_iface.end();
         render_iface.blit_frame_buffer(width, height);
 
