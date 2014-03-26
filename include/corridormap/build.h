@@ -30,6 +30,9 @@ namespace corridormap {
 static const float CORRIDORMAP_SQRT_2 = 1.41421356f;
 static const float CORRIDORMAP_PI     = 3.14159265f;
 
+// compute 2d bounding box of the input footprint.
+bbox2 bounds(const footprint& f);
+
 // maximum distance for points and lines.
 // computed such that distance mesh "covers" the full render target in ortho projection.
 inline float max_distance(float scene_bbox_min[2], float scene_bbox_max[2])

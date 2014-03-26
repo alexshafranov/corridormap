@@ -42,6 +42,28 @@ struct triangle_list
     float* vertices;
 };
 
+// 2d bounding box.
+struct bbox2
+{
+    float min[2];
+    float max[2];
+};
+
+// obstacles represented as a set of 2d convex polygons. polys are stored in CCW order.
+struct footprint
+{
+    // the number of polygons.
+    int num_polys;
+    // the total number of vertices.
+    int num_verts;
+    // x coords indexed in [0..total_verts] range
+    float* x;
+    // y coords indexed in [0..total_verts] range
+    float* y;
+    // array of vertex counts per poly, indexed in [0..num_polys]
+    int* num_poly_verts;
+};
+
 }
 
 #endif

@@ -20,10 +20,30 @@
 // SOFTWARE.
 
 #include <math.h>
+#include <float.h>
 #include "corridormap/assert.h"
 #include "corridormap/build.h"
 
 namespace corridormap {
+
+bbox2 bounds(const footprint& f)
+{
+    bbox2 result;
+    result.min[0] = +FLT_MAX;
+    result.min[1] = +FLT_MAX;
+    result.max[0] = -FLT_MAX;
+    result.max[1] = -FLT_MAX;
+
+    for (int i = 0; i < f.num_verts; ++i)
+    {
+        result.min[0] = f.x[i] < result.min[0] ? f.x[i] : result.min[0];
+        result.min[1] = f.y[i] < result.min[1] ? f.y[i] : result.min[1];
+        result.max[0] = f.x[i] > result.max[0] ? f.x[i] : result.max[0];
+        result.max[1] = f.y[i] > result.max[1] ? f.y[i] : result.max[1];
+    }
+
+    return result;
+}
 
 triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_error, memory* output)
 {
