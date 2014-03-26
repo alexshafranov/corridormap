@@ -24,24 +24,6 @@
 
 namespace corridormap {
 
-// 2d ostacle polygon
-struct polygon
-{
-    // number of vertices.
-    unsigned nverts;
-    // vertcies in ccw order. length is nverts*2.
-    float* vertices;
-};
-
-// 3d triangle list suitable for rendering.
-struct triangle_list
-{
-    // number of triangles.
-    unsigned ntris;
-    // vertex position data. length is ntris*3*3.
-    float* vertices;
-};
-
 // 2d bounding box.
 struct bbox2
 {
@@ -56,12 +38,35 @@ struct footprint
     int num_polys;
     // the total number of vertices.
     int num_verts;
-    // x coords indexed in [0..total_verts] range
+    // x coords indexed in [0..total_verts] range.
     float* x;
-    // y coords indexed in [0..total_verts] range
+    // y coords indexed in [0..total_verts] range.
     float* y;
-    // array of vertex counts per poly, indexed in [0..num_polys]
+    // array of vertex counts per poly, indexed in [0..num_polys] range.
     int* num_poly_verts;
+};
+
+// 3d vertex used for distance_mesh.
+struct vertex
+{
+    float x;
+    float y;
+    float z;
+};
+
+// segmented distance mesh suitable for rendering.
+// each segment represents one footprint polygon.
+// triangles are stored as list in ccw order.
+struct distance_mesh
+{
+    // the number of segments.
+    int num_segments;
+    // the total number of vertices.
+    int num_verts;
+    // vertex array indexed in [0..num_verts] range.
+    vertex* verts;
+    // the number of vertices per segment. indexed in [0..num_segments] range.
+    int* num_segment_verts;
 };
 
 }

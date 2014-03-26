@@ -25,26 +25,31 @@
 #include "corridormap/types.h"
 #include "corridormap/memory.h"
 
+namespace corridormap { class renderer; }
+
 namespace corridormap {
 
-static const float CORRIDORMAP_SQRT_2 = 1.41421356f;
-static const float CORRIDORMAP_PI     = 3.14159265f;
-
-// compute 2d bounding box of the input footprint.
+// computes 2d bounding box of the input footprint.
 bbox2 bounds(const footprint& f);
 
 // maximum distance for points and lines.
 // computed such that distance mesh "covers" the full render target in ortho projection.
-inline float max_distance(float scene_bbox_min[2], float scene_bbox_max[2])
-{
-    float w = scene_bbox_max[0] - scene_bbox_min[0];
-    float h = scene_bbox_max[1] - scene_bbox_min[1];
-    float s = (w > h) ? w : h;
-    return s * CORRIDORMAP_SQRT_2;
-}
+float max_distance(bbox2 scene_bbox);
 
-// build polygon distance mesh, suitable to be passed to render interface. polygon must be convex.
-triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_error, memory* output);
+// computes required number of triangles to represent a point distance mesh (cone).
+int point_distance_mesh_tris(float max_dist, float max_error);
+
+// computes upper bound on number of vertices required for distance mesh.
+int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error);
+
+// allocates distanece mesh.
+distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error);
+
+// build distance mesh for the input footprint. polygon vertex becomes a cone sector, edge - a "tent".
+void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist, float max_error);
+
+// renders distance mesh using the specified render interface.
+void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 
 }
 

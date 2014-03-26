@@ -64,25 +64,36 @@ int main()
 
     glewInit();
 
-    printf("%s\n", glGetString(GL_VERSION));
+    corridormap::memory_malloc mem;
+
+    float obstacle_verts_x[] = { 10.f, 90.f, 90.f, 10.f };
+    float obstacle_verts_y[] = { 10.f, 10.f, 90.f, 90.f };
+    int num_poly_verts = 4;
+
+    corridormap::footprint obstacles;
+    obstacles.x = obstacle_verts_x;
+    obstacles.y = obstacle_verts_y;
+    obstacles.num_polys = 1;
+    obstacles.num_verts = 4;
+    obstacles.num_poly_verts = &num_poly_verts;
+
+    corridormap::bbox2 obstacle_bounds = corridormap::bounds(obstacles);
+
+    const float max_dist = corridormap::max_distance(obstacle_bounds);
+    const float max_error = 0.1f;
+
+    corridormap::distance_mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles, max_dist, max_error);
+    corridormap::build_distance_mesh(obstacles, mesh, max_dist, max_error);
 
     corridormap::renderer_gl render_iface;
     corridormap::renderer::parameters render_params;
     render_params.render_target_width = screen_width;
     render_params.render_target_height = screen_height;
-    render_params.min[0] = 10.f;
-    render_params.min[1] = 10.f;
-    render_params.max[0] = 90.f;
-    render_params.max[1] = 90.f;
-    render_params.far_plane = corridormap::max_distance(render_params.min, render_params.max);
-
-    float obstacle_verts[8] = { 10.f, 10.f,  90.f, 10.f,  90.f, 90.f,  10.f, 90.f };
-    corridormap::polygon obstacle;
-    obstacle.vertices = obstacle_verts;
-    obstacle.nverts = 4;
-
-    corridormap::memory_malloc mem;
-    corridormap::triangle_list distance_mesh = corridormap::build_distance_mesh(obstacle, render_params.far_plane, 0.1f, &mem);
+    render_params.min[0] = obstacle_bounds.min[0];
+    render_params.min[1] = obstacle_bounds.min[1];
+    render_params.max[0] = obstacle_bounds.max[0];
+    render_params.max[1] = obstacle_bounds.max[1];
+    render_params.far_plane = max_dist;
 
     if (!render_iface.initialize(render_params))
     {
@@ -93,19 +104,15 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        float ratio;
         int width, height;
-
         glfwGetFramebufferSize(window, &width, &height);
-        ratio = width / (float) height;
+
+        corridormap::render_distance_mesh(&render_iface, mesh);
 
         glViewport(0, 0, width, height);
         glClearColor(1.f, 1.f, 1.f, 1.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-        render_iface.begin();
-        render_iface.draw(distance_mesh.vertices, distance_mesh.ntris, 0xffff0000, corridormap::renderer::primitive_type_list);
-        render_iface.end();
         render_iface.blit_frame_buffer(width, height);
 
         glfwSwapBuffers(window);

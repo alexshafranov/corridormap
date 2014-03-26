@@ -22,9 +22,16 @@
 #include <math.h>
 #include <float.h>
 #include "corridormap/assert.h"
+#include "corridormap/render_interface.h"
 #include "corridormap/build.h"
 
 namespace corridormap {
+
+namespace
+{
+    const float CORRIDORMAP_SQRT_2 = 1.41421356f;
+    const float CORRIDORMAP_PI     = 3.14159265f;
+}
 
 bbox2 bounds(const footprint& f)
 {
@@ -45,61 +52,109 @@ bbox2 bounds(const footprint& f)
     return result;
 }
 
-triangle_list build_distance_mesh(polygon obstacle, float max_dist, float max_error, memory* output)
+float max_distance(bbox2 scene_bbox)
+{
+    float w = scene_bbox.max[0] - scene_bbox.min[0];
+    float h = scene_bbox.max[1] - scene_bbox.min[1];
+    float s = (w > h) ? w : h;
+    return s * CORRIDORMAP_SQRT_2;
+}
+
+int point_distance_mesh_tris(float max_dist, float max_error)
+{
+    float cone_half_angle = acos((max_dist - max_error)/max_dist);
+    unsigned cone_triangle_count = static_cast<unsigned>(floor(CORRIDORMAP_PI / cone_half_angle));
+    return cone_triangle_count;
+}
+
+int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error)
+{
+    int point_tris = point_distance_mesh_tris(max_dist, max_error);
+    // point_tris triangles per vertex and 4 triangles per edge.
+    return point_tris * f.num_verts * 3 + f.num_verts * 4 * 3;
+}
+
+distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error)
+{
+    distance_mesh result;
+    result.num_segments = 0;
+    result.num_verts = 0;
+    int max_verts = max_distance_mesh_verts(f, max_dist, max_error);
+    result.verts = allocate<vertex>(mem, max_verts * sizeof(vertex));
+    result.num_segment_verts = allocate<int>(mem, f.num_polys * sizeof(int));
+    return result;
+}
+
+void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist, float max_error)
 {
     corridormap_assert(max_dist > max_error);
 
-    triangle_list result;
-    result.ntris = 0;
-    result.vertices = 0;
-
     const float cone_half_angle = acos((max_dist - max_error)/max_dist);
     const float cone_angle = 2.f * cone_half_angle;
-    const unsigned cone_triangle_count = static_cast<unsigned>(floor(CORRIDORMAP_PI / cone_half_angle));
+    const int cone_triangle_count = static_cast<unsigned>(floor(CORRIDORMAP_PI / cone_half_angle));
 
-    const size_t vertex_size = 3 * sizeof(float);
-    const size_t triangle_size = 3 * vertex_size;
+    int in_vertex_offset = 0;
+    int out_vertex_offset = 0;
 
-    const unsigned ntris = obstacle.nverts*cone_triangle_count;
-
-    float* vertices = allocate<float>(output, ntris*triangle_size);
-
-    if (!vertices)
+    for (int i = 0; i < in.num_polys; ++i)
     {
-        return result;
-    }
+        const float* poly_x = in.x + in_vertex_offset;
+        const float* poly_y = in.y + in_vertex_offset;
+        int num_poly_verts = in.num_poly_verts[i];
+        vertex* verts = out.verts + out_vertex_offset;
 
-    for (unsigned i = 0; i < obstacle.nverts; ++i)
-    {
-        float p_x = obstacle.vertices[i*2 + 0];
-        float p_y = obstacle.vertices[i*2 + 1];
-
-        float* cone = vertices + i*cone_triangle_count*9;
-
-        for (unsigned j = 0; j < cone_triangle_count; ++j)
+        for (int j = 0; j < num_poly_verts; ++j)
         {
-            float* a = cone + j*9 + 0;
-            float* b = cone + j*9 + 1;
-            float* c = cone + j*9 + 2;
+            float x = poly_x[j];
+            float y = poly_y[j];
 
-            a[0] = p_x;
-            a[1] = p_y;
-            a[2] = 0.f;
+            vertex* cone = verts + j*cone_triangle_count*3;
 
-            b[0] = max_dist * cos((j+0)*cone_angle);
-            b[1] = max_dist * sin((j+0)*cone_angle);
-            b[2] = max_dist;
+            for (int k = 0; k < cone_triangle_count; ++k)
+            {
+                vertex* a = cone + k*3 + 0;
+                vertex* b = cone + k*3 + 1;
+                vertex* c = cone + k*3 + 2;
 
-            c[0] = max_dist * cos((j+1)*cone_angle);
-            c[1] = max_dist * sin((j+1)*cone_angle);
-            c[2] = max_dist;
+                a->x = x;
+                a->y = y;
+                a->z = 0.f;
+
+                b->x = max_dist * cos((k+0)*cone_angle);
+                b->y = max_dist * sin((k+0)*cone_angle);
+                b->z = max_dist;
+
+                c->x = max_dist * cos((k+1)*cone_angle);
+                c->y = max_dist * sin((k+1)*cone_angle);
+                c->z = max_dist;
+            }
+
+            out_vertex_offset += cone_triangle_count;
         }
+
+        in_vertex_offset += num_poly_verts;
     }
 
-    result.vertices = vertices;
-    result.ntris = ntris;
+    out.num_segments = in.num_polys;
+    out.num_verts = out_vertex_offset;
+}
 
-    return result;
+void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
+{
+    render_iface->begin();
+
+    int vertices_offset = 0;
+
+    for (int i = 0; i < mesh.num_segments; ++i)
+    {
+        int num_verts = mesh.num_segment_verts[i];
+        const vertex* vertices = mesh.verts + vertices_offset;
+        unsigned color = static_cast<unsigned>(i);
+        render_iface->draw(vertices, num_verts / 3, color);
+        vertices_offset += num_verts;
+    }
+
+    render_iface->end();
 }
 
 }

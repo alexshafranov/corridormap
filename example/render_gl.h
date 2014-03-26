@@ -26,6 +26,7 @@
 #define CORRIDORMAP_RENDER_GL_H_
 
 #include <stdio.h>
+#include "corridormap/types.h"
 #include "corridormap/render_interface.h"
 
 namespace corridormap {
@@ -227,7 +228,7 @@ public:
         glUniformMatrix4fv(_wvp_location, 1, GL_FALSE, _projection);
     }
 
-    virtual void draw(const float* vertices, unsigned count, unsigned /*color*/, renderer::primitive_type /*pt*/)
+    virtual void draw(const vertex* vertices, unsigned tri_count, unsigned /*color*/)
     {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
@@ -237,13 +238,13 @@ public:
         // upload vertices.
         glBindVertexArray(_vertex_array);
         glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-        glBufferData(GL_ARRAY_BUFFER, count*9*sizeof(float), vertices, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, tri_count*3*sizeof(vertex), vertices, GL_STREAM_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), 0);
 
         // render.
-        glDrawArrays(GL_TRIANGLES, 0, count * 3);
+        glDrawArrays(GL_TRIANGLES, 0, tri_count * 3);
 
         // cleanup.
         glDisableVertexAttribArray(0);

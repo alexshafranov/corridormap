@@ -22,6 +22,8 @@
 #ifndef CORRIDORMAP_RENDER_INTERFACE_H_
 #define CORRIDORMAP_RENDER_INTERFACE_H_
 
+namespace corridormap { struct vertex; }
+
 namespace corridormap {
 
 // abtract rendering backend interface.
@@ -43,14 +45,6 @@ public:
         float far_plane;
     };
 
-    // mesh primitive type.
-    enum primitive_type
-    {
-        primitive_type_fan = 0,
-        primitive_type_stripe,
-        primitive_type_list,
-    };
-
     virtual ~renderer() {}
 
     // initialize renderer. returns false on failure.
@@ -59,8 +53,8 @@ public:
     virtual void finalize() = 0;
     // begin scene.
     virtual void begin() = 0;
-    // draw mesh with uniform color. length of vertices array is count*3.
-    virtual void draw(const float* vertices, unsigned count, unsigned color, primitive_type pt) = 0;
+    // draw mesh with uniform color. length of vertices array is tri_count*3.
+    virtual void draw(const vertex* vertices, unsigned tri_count, unsigned color) = 0;
     // end scene.
     virtual void end() = 0;
     // copy render target from video memory.
