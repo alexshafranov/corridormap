@@ -241,9 +241,9 @@ public:
         // set color for fragment shader.
         glUniform3f(
             _color_location,
-            ((color & 0x000000ff) >>  0)/255.f,
+            ((color & 0x00ff0000) >> 16)/255.f,
             ((color & 0x0000ff00) >>  8)/255.f,
-            ((color & 0x00ff0000) >> 16)/255.f);
+            ((color & 0x000000ff) >>  0)/255.f);
 
         // upload vertices.
         glBindVertexArray(_vertex_array);

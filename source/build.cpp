@@ -159,4 +159,22 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
     render_iface->end();
 }
 
+void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh, unsigned int* colors, int ncolors)
+{
+    render_iface->begin();
+
+    int vertices_offset = 0;
+
+    for (int i = 0; i < mesh.num_segments; ++i)
+    {
+        int num_verts = mesh.num_segment_verts[i];
+        const vertex* vertices = mesh.verts + vertices_offset;
+        unsigned color = colors[i % ncolors];
+        render_iface->draw(vertices, num_verts / 3, color);
+        vertices_offset += num_verts;
+    }
+
+    render_iface->end();
+}
+
 }

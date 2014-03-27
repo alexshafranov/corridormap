@@ -60,6 +60,19 @@ namespace
 {
     const int screen_width = 1280;
     const int screen_height = 720;
+
+    // colors to use for diagram instead of indices.
+    unsigned colors[] =
+    {
+        0xffff0000, 0xff00ff00, 0xff0000ff, 0xffffff00, 0xffff00ff, 0xff00ffff, 0xff7f7f7f,
+        0xff800000, 0xff008000, 0xff000080, 0xff808000, 0xff800080, 0xff008080, 0xff808080,
+        0xffc00000, 0xff00c000, 0xff0000c0, 0xffc0c000, 0xffc000c0, 0xff00c0c0, 0xffc0c0c0,
+        0xff400000, 0xff004000, 0xff000040, 0xff404000, 0xff400040, 0xff004040, 0xff404040,
+        0xff200000, 0xff002000, 0xff000020, 0xff202000, 0xff200020, 0xff002020, 0xff202020,
+        0xff600000, 0xff006000, 0xff000060, 0xff606000, 0xff600060, 0xff006060, 0xff606060,
+        0xffa00000, 0xff00a000, 0xff0000a0, 0xffa0a000, 0xffa000a0, 0xff00a0a0, 0xffa0a0a0,
+        0xffe00000, 0xff00e000, 0xff0000e0, 0xffe0e000, 0xffe000e0, 0xff00e0e0, 0xffe0e0e0,
+    };
 }
 
 int main()
@@ -128,7 +141,7 @@ int main()
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
-        corridormap::render_distance_mesh(&render_iface, mesh);
+        corridormap::render_distance_mesh(&render_iface, mesh, colors, sizeof(colors)/sizeof(colors[0]));
 
         glViewport(0, 0, width, height);
         glClearColor(1.f, 1.f, 1.f, 1.f);

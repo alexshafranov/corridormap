@@ -48,8 +48,11 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
 // build distance mesh for the input footprint. polygon vertex becomes a cone sector, edge - a "tent".
 void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist, float max_error);
 
-// renders distance mesh using the specified render interface.
+// renders distance mesh using the specified render interface. color of a segment is segment_index + 1.
 void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
+
+// renders distance mesh using the specified render interface. color of a segment is colors[segment_index % ncolors].
+void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh, unsigned int* colors, int ncolors);
 
 }
 
