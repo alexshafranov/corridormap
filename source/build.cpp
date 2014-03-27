@@ -129,10 +129,12 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
                 c->z = max_dist;
             }
 
-            out_vertex_offset += cone_triangle_count;
+            out_vertex_offset += cone_triangle_count * 3;
         }
 
         in_vertex_offset += num_poly_verts;
+
+        out.num_segment_verts[i] = num_poly_verts * cone_triangle_count * 3;
     }
 
     out.num_segments = in.num_polys;
