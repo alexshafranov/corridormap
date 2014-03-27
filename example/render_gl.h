@@ -228,15 +228,16 @@ public:
 
         glUseProgram(_program);
         glUniformMatrix4fv(_wvp_location, 1, GL_FALSE, _projection);
+
+        glEnable(GL_CULL_FACE);
+        glFrontFace(GL_CCW);
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
     }
 
     virtual void draw(const vertex* vertices, unsigned tri_count, unsigned color)
     {
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        // glEnable(GL_CULL_FACE);
-        // glFrontFace(GL_CCW);
-
         // set color for fragment shader.
         glUniform3f(
             _color_location,
