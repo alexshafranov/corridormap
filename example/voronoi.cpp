@@ -118,6 +118,7 @@ int main()
 
     corridormap::distance_mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles, max_dist, max_error);
     corridormap::build_distance_mesh(obstacles, mesh, max_dist, max_error);
+    corridormap::set_segment_colors(mesh, colors, sizeof(colors)/sizeof(colors[0]));
 
     corridormap::renderer_gl render_iface;
     corridormap::renderer::parameters render_params;
@@ -141,7 +142,7 @@ int main()
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
-        corridormap::render_distance_mesh(&render_iface, mesh, colors, sizeof(colors)/sizeof(colors[0]));
+        corridormap::render_distance_mesh(&render_iface, mesh);
 
         glViewport(0, 0, width, height);
         glClearColor(1.f, 1.f, 1.f, 1.f);
@@ -154,6 +155,7 @@ int main()
     }
 
     render_iface.finalize();
+    corridormap::deallocate_distance_mesh(&mem, mesh);
 
     return 0;
 }

@@ -42,17 +42,20 @@ int point_distance_mesh_tris(float max_dist, float max_error);
 // computes upper bound on number of vertices required for distance mesh.
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error);
 
-// allocates distanece mesh.
+// allocates distanece mesh data arrays.
 distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error);
+
+// deallocates distance mesh data arrays. 'mem' has to be the same that was used for allocation.
+void deallocate_distance_mesh(memory* mem, distance_mesh& mesh);
 
 // build distance mesh for the input footprint. polygon vertex becomes a cone sector, edge - a "tent".
 void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist, float max_error);
 
-// renders distance mesh using the specified render interface. color of a segment is segment_index + 1.
+// renders distance mesh using the specified render interface.
 void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 
-// renders distance mesh using the specified render interface. color of a segment is colors[segment_index % ncolors].
-void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh, unsigned int* colors, int ncolors);
+// sets color of a segment as colors[segment_index % ncolors].
+void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
 
 }
 

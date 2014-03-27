@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <string.h>
 #include "corridormap/assert.h"
 #include "corridormap/render_interface.h"
 #include "corridormap/build.h"
@@ -82,7 +83,16 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
     int max_verts = max_distance_mesh_verts(f, max_dist, max_error);
     result.verts = allocate<vertex>(mem, max_verts * sizeof(vertex));
     result.num_segment_verts = allocate<int>(mem, f.num_polys * sizeof(int));
+    result.segment_colors = allocate<unsigned int>(mem, f.num_polys * sizeof(unsigned int));
     return result;
+}
+
+void deallocate_distance_mesh(memory* mem, distance_mesh& mesh)
+{
+    mem->deallocate(mesh.verts);
+    mem->deallocate(mesh.num_segment_verts);
+    mem->deallocate(mesh.segment_colors);
+    memset(&mesh, 0, sizeof(distance_mesh));
 }
 
 void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist, float max_error)
@@ -135,6 +145,7 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
         in_vertex_offset += num_poly_verts;
 
         out.num_segment_verts[i] = num_poly_verts * cone_triangle_count * 3;
+        out.segment_colors[i] = i + 1;
     }
 
     out.num_segments = in.num_polys;
@@ -150,8 +161,8 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
     for (int i = 0; i < mesh.num_segments; ++i)
     {
         int num_verts = mesh.num_segment_verts[i];
+        unsigned color = mesh.segment_colors[i];
         const vertex* vertices = mesh.verts + vertices_offset;
-        unsigned color = static_cast<unsigned>(i) + 1;
         render_iface->draw(vertices, num_verts / 3, color);
         vertices_offset += num_verts;
     }
@@ -159,22 +170,12 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
     render_iface->end();
 }
 
-void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh, unsigned int* colors, int ncolors)
+void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors)
 {
-    render_iface->begin();
-
-    int vertices_offset = 0;
-
     for (int i = 0; i < mesh.num_segments; ++i)
     {
-        int num_verts = mesh.num_segment_verts[i];
-        const vertex* vertices = mesh.verts + vertices_offset;
-        unsigned color = colors[i % ncolors];
-        render_iface->draw(vertices, num_verts / 3, color);
-        vertices_offset += num_verts;
+        mesh.segment_colors[i] = colors[i % ncolors];
     }
-
-    render_iface->end();
 }
 
 }

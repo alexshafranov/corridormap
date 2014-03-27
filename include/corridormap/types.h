@@ -67,6 +67,8 @@ struct distance_mesh
     vertex* verts;
     // the number of vertices per segment. indexed in [0..num_segments] range.
     int* num_segment_verts;
+    // segment colors. indexed in [0..num_segments] range.
+    unsigned int* segment_colors;
 };
 
 }
