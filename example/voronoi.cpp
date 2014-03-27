@@ -89,14 +89,14 @@ int main()
 
     float obstacle_verts_x[] = { 10.f, 90.f, 90.f, 10.f };
     float obstacle_verts_y[] = { 10.f, 10.f, 90.f, 90.f };
-    int num_poly_verts = 4;
+    int num_poly_verts[] = { 1, 1, 1, 1 };
 
     corridormap::footprint obstacles;
     obstacles.x = obstacle_verts_x;
     obstacles.y = obstacle_verts_y;
-    obstacles.num_polys = 1;
+    obstacles.num_polys = 4;
     obstacles.num_verts = 4;
-    obstacles.num_poly_verts = &num_poly_verts;
+    obstacles.num_poly_verts = num_poly_verts;
 
     corridormap::bbox2 obstacle_bounds = corridormap::bounds(obstacles);
 

@@ -63,7 +63,7 @@ float max_distance(bbox2 scene_bbox)
 int point_distance_mesh_tris(float max_dist, float max_error)
 {
     float cone_half_angle = acos((max_dist - max_error)/max_dist);
-    unsigned cone_triangle_count = static_cast<unsigned>(floor(CORRIDORMAP_PI / cone_half_angle));
+    unsigned cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI / cone_half_angle));
     return cone_triangle_count;
 }
 
@@ -90,8 +90,8 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
     corridormap_assert(max_dist > max_error);
 
     const float cone_half_angle = acos((max_dist - max_error)/max_dist);
-    const float cone_angle = 2.f * cone_half_angle;
-    const int cone_triangle_count = static_cast<unsigned>(floor(CORRIDORMAP_PI / cone_half_angle));
+    const int cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI / cone_half_angle));
+    const float cone_angle = 2.f * CORRIDORMAP_PI / cone_triangle_count;
 
     int in_vertex_offset = 0;
     int out_vertex_offset = 0;
@@ -120,12 +120,12 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
                 a->y = y;
                 a->z = 0.f;
 
-                b->x = max_dist * cos((k+0)*cone_angle);
-                b->y = max_dist * sin((k+0)*cone_angle);
+                b->x = x + max_dist * cos((k+0)*cone_angle);
+                b->y = y + max_dist * sin((k+0)*cone_angle);
                 b->z = max_dist;
 
-                c->x = max_dist * cos((k+1)*cone_angle);
-                c->y = max_dist * sin((k+1)*cone_angle);
+                c->x = x + max_dist * cos((k+1)*cone_angle);
+                c->y = y + max_dist * sin((k+1)*cone_angle);
                 c->z = max_dist;
             }
 

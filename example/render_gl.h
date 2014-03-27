@@ -223,7 +223,7 @@ public:
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _frame_buffer);
         glViewport(0, 0, _params.render_target_width, _params.render_target_height);
-        glClearColor(0.f, 1.f, 0.f, 1.f);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(_program);
