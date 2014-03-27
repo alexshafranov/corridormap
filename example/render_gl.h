@@ -32,8 +32,8 @@
 namespace corridormap {
 
 static const char* vertex_shader =
-"in vec3 position;                                  \n"
 "uniform mat4 wvp;                                  \n"
+"in vec3 position;                                  \n"
 "                                                   \n"
 "void main()                                        \n"
 "{                                                  \n"
@@ -41,11 +41,12 @@ static const char* vertex_shader =
 "}                                                  \n";
 
 static const char* fragment_shader =
-"//out vec4 out_color;                              \n"
+"uniform vec3 const_color;                          \n"
+"out vec4 out_color;                                \n"
 "                                                   \n"
 "void main()                                        \n"
 "{                                                  \n"
-"    gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);       \n"
+"    out_color = vec4(const_color.rgb, 1.0);        \n"
 "}                                                  \n";
 
 namespace
@@ -173,6 +174,7 @@ public:
             }
 
             _wvp_location = glGetUniformLocation(_program, "wvp");
+            _color_location = glGetUniformLocation(_program, "const_color");
         }
 
         // setup orthographic projection. projection is left-haded, camera is in zero looking in +z direction.
@@ -228,12 +230,19 @@ public:
         glUniformMatrix4fv(_wvp_location, 1, GL_FALSE, _projection);
     }
 
-    virtual void draw(const vertex* vertices, unsigned tri_count, unsigned /*color*/)
+    virtual void draw(const vertex* vertices, unsigned tri_count, unsigned color)
     {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         // glEnable(GL_CULL_FACE);
         // glFrontFace(GL_CCW);
+
+        // set color for fragment shader.
+        glUniform3f(
+            _color_location,
+            ((color & 0x000000ff) >>  0)/255.f,
+            ((color & 0x0000ff00) >>  8)/255.f,
+            ((color & 0x00ff0000) >> 16)/255.f);
 
         // upload vertices.
         glBindVertexArray(_vertex_array);
@@ -279,6 +288,7 @@ private:
     GLuint _vertex_shader;
     GLuint _fragment_shader;
     GLint  _wvp_location;
+    GLint  _color_location;
 
     GLfloat _projection[4*4];
 };

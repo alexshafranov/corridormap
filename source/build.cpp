@@ -151,7 +151,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
     {
         int num_verts = mesh.num_segment_verts[i];
         const vertex* vertices = mesh.verts + vertices_offset;
-        unsigned color = static_cast<unsigned>(i);
+        unsigned color = static_cast<unsigned>(i) + 1;
         render_iface->draw(vertices, num_verts / 3, color);
         vertices_offset += num_verts;
     }
