@@ -113,18 +113,18 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
         int num_poly_verts = in.num_poly_verts[i];
         vertex* verts = out.verts + out_vertex_offset;
 
-        int v0_idx = num_poly_verts - 2;
-        int v1_idx = num_poly_verts - 1;
-        int v2_idx = 0;
+        int prev_idx = num_poly_verts - 2;
+        int curr_idx = num_poly_verts - 1;
+        int next_idx = 0;
 
-        for (; v2_idx < num_poly_verts; v0_idx = v1_idx, v1_idx = v2_idx++)
+        for (; next_idx < num_poly_verts; prev_idx = curr_idx, curr_idx = next_idx++)
         {
-            float v0[] = { poly_x[v0_idx], poly_y[v0_idx] };
-            float v1[] = { poly_x[v1_idx], poly_y[v1_idx] };
-            float v2[] = { poly_x[v2_idx], poly_y[v2_idx] };
+            float prev[] = { poly_x[prev_idx], poly_y[prev_idx] };
+            float curr[] = { poly_x[curr_idx], poly_y[curr_idx] };
+            float next[] = { poly_x[next_idx], poly_y[next_idx] };
 
-            float e0[] = { v0[0] - v1[0], v0[1] - v1[1] };
-            float e1[] = { v2[0] - v1[0], v2[1] - v1[1] };
+            float e0[] = { prev[0] - curr[0], prev[1] - curr[1] };
+            float e1[] = { next[0] - curr[0], next[1] - curr[1] };
 
             float len_e0 = sqrt(e0[0]*e0[0] + e0[1]*e0[1]);
             corridormap_assert(len_e0 > 0.f);
@@ -140,6 +140,8 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
             float angle_cone_sector_step = angle_cone_sector / angle_cone_sector_steps;
             float angle_start = atan2(e0[1]/len_e0, e0[0]/len_e0);
 
+            // 1. generate cone sectors for each vertex.
+
             vertex* cone = verts + out_vertex_offset;
 
             for (int k = 0; k < angle_cone_sector_steps; ++k)
@@ -148,20 +150,42 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
                 vertex* b = cone + k*3 + 1;
                 vertex* c = cone + k*3 + 2;
 
-                a->x = v1[0];
-                a->y = v1[1];
+                a->x = curr[0];
+                a->y = curr[1];
                 a->z = 0.f;
 
-                b->x = v1[0] + max_dist * cos(angle_start + (k+0)*angle_cone_sector_step);
-                b->y = v1[1] + max_dist * sin(angle_start + (k+0)*angle_cone_sector_step);
+                b->x = curr[0] + max_dist * cos(angle_start + (k+0)*angle_cone_sector_step);
+                b->y = curr[1] + max_dist * sin(angle_start + (k+0)*angle_cone_sector_step);
                 b->z = max_dist;
 
-                c->x = v1[0] + max_dist * cos(angle_start + (k+1)*angle_cone_sector_step);
-                c->y = v1[1] + max_dist * sin(angle_start + (k+1)*angle_cone_sector_step);
+                c->x = curr[0] + max_dist * cos(angle_start + (k+1)*angle_cone_sector_step);
+                c->y = curr[1] + max_dist * sin(angle_start + (k+1)*angle_cone_sector_step);
                 c->z = max_dist;
             }
 
             out_vertex_offset += angle_cone_sector_steps * 3;
+
+            vertex* tent = verts + out_vertex_offset;
+
+            // 2. generate tent for (curr, next) edge.
+            {
+                float nx = max_dist * -e1[1]/len_e1;
+                float ny = max_dist * +e1[0]/len_e1;
+
+                vertex a = { curr[0], curr[1], 0.f };
+                vertex b = { next[0], next[1], 0.f };
+                vertex c = { curr[0] + nx, curr[1] + ny, max_dist };
+                vertex d = { next[0] + nx, next[1] + ny, max_dist };
+                vertex e = { curr[0] - nx, curr[1] - ny, max_dist };
+                vertex f = { next[0] - nx, next[1] - ny, max_dist };
+
+                tent[0]  = a; tent[1]  = b; tent[2]  = c;
+                tent[3]  = c; tent[4]  = b; tent[5]  = d;
+                tent[6]  = a; tent[7]  = e; tent[8]  = b;
+                tent[9]  = b; tent[10] = e; tent[11] = f;
+            }
+
+            out_vertex_offset += 12;
         }
 
         in_vertex_offset += num_poly_verts;

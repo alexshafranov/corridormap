@@ -128,7 +128,7 @@ int main()
     render_params.min[1] = obstacle_bounds.min[1] - 10.f;
     render_params.max[0] = obstacle_bounds.max[0] + 10.f;
     render_params.max[1] = obstacle_bounds.max[1] + 10.f;
-    render_params.far_plane = max_dist;
+    render_params.far_plane = max_dist + 0.1f;
 
     if (!render_iface.initialize(render_params))
     {
