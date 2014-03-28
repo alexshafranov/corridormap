@@ -58,7 +58,7 @@ struct glfw_window_context
 
 namespace
 {
-    const int screen_width = 1280;
+    const int screen_width = 720;
     const int screen_height = 720;
 
     // colors to use for diagram instead of indices.
@@ -102,14 +102,14 @@ int main()
 
     float obstacle_verts_x[] = { 10.f, 90.f, 90.f, 10.f };
     float obstacle_verts_y[] = { 10.f, 10.f, 90.f, 90.f };
-    int num_poly_verts[] = { 1, 1, 1, 1 };
+    int num_poly_verts = 4;
 
     corridormap::footprint obstacles;
     obstacles.x = obstacle_verts_x;
     obstacles.y = obstacle_verts_y;
-    obstacles.num_polys = 4;
+    obstacles.num_polys = 1;
     obstacles.num_verts = 4;
-    obstacles.num_poly_verts = num_poly_verts;
+    obstacles.num_poly_verts = &num_poly_verts;
 
     corridormap::bbox2 obstacle_bounds = corridormap::bounds(obstacles);
 
@@ -124,10 +124,10 @@ int main()
     corridormap::renderer::parameters render_params;
     render_params.render_target_width = screen_width;
     render_params.render_target_height = screen_height;
-    render_params.min[0] = obstacle_bounds.min[0];
-    render_params.min[1] = obstacle_bounds.min[1];
-    render_params.max[0] = obstacle_bounds.max[0];
-    render_params.max[1] = obstacle_bounds.max[1];
+    render_params.min[0] = obstacle_bounds.min[0] - 10.f;
+    render_params.min[1] = obstacle_bounds.min[1] - 10.f;
+    render_params.max[0] = obstacle_bounds.max[0] + 10.f;
+    render_params.max[1] = obstacle_bounds.max[1] + 10.f;
     render_params.far_plane = max_dist;
 
     if (!render_iface.initialize(render_params))

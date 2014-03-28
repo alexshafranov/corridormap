@@ -113,38 +113,60 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
         int num_poly_verts = in.num_poly_verts[i];
         vertex* verts = out.verts + out_vertex_offset;
 
-        for (int j = 0; j < num_poly_verts; ++j)
+        int v0_idx = num_poly_verts - 2;
+        int v1_idx = num_poly_verts - 1;
+        int v2_idx = 0;
+
+        for (; v2_idx < num_poly_verts; v0_idx = v1_idx, v1_idx = v2_idx++)
         {
-            float x = poly_x[j];
-            float y = poly_y[j];
+            float v0[] = { poly_x[v0_idx], poly_y[v0_idx] };
+            float v1[] = { poly_x[v1_idx], poly_y[v1_idx] };
+            float v2[] = { poly_x[v2_idx], poly_y[v2_idx] };
 
-            vertex* cone = verts + j*cone_triangle_count*3;
+            float e0[] = { v0[0] - v1[0], v0[1] - v1[1] };
+            float e1[] = { v2[0] - v1[0], v2[1] - v1[1] };
 
-            for (int k = 0; k < cone_triangle_count; ++k)
+            float len_e0 = sqrt(e0[0]*e0[0] + e0[1]*e0[1]);
+            corridormap_assert(len_e0 > 0.f);
+
+            float len_e1 = sqrt(e1[0]*e1[0] + e1[1]*e1[1]);
+            corridormap_assert(len_e1 > 0.f);
+
+            float cos_inner = (e0[0]*e1[0] + e0[1]*e1[1]) / (len_e0*len_e1);
+            float angle_inner = acos(cos_inner);
+            float angle_cone_sector = 2.f * CORRIDORMAP_PI - angle_inner;
+
+            int angle_cone_sector_steps = static_cast<unsigned>(ceil(angle_cone_sector / cone_angle));
+            float angle_cone_sector_step = angle_cone_sector / angle_cone_sector_steps;
+            float angle_start = atan2(e0[1]/len_e0, e0[0]/len_e0);
+
+            vertex* cone = verts + out_vertex_offset;
+
+            for (int k = 0; k < angle_cone_sector_steps; ++k)
             {
                 vertex* a = cone + k*3 + 0;
                 vertex* b = cone + k*3 + 1;
                 vertex* c = cone + k*3 + 2;
 
-                a->x = x;
-                a->y = y;
+                a->x = v1[0];
+                a->y = v1[1];
                 a->z = 0.f;
 
-                b->x = x + max_dist * cos((k+0)*cone_angle);
-                b->y = y + max_dist * sin((k+0)*cone_angle);
+                b->x = v1[0] + max_dist * cos(angle_start + (k+0)*angle_cone_sector_step);
+                b->y = v1[1] + max_dist * sin(angle_start + (k+0)*angle_cone_sector_step);
                 b->z = max_dist;
 
-                c->x = x + max_dist * cos((k+1)*cone_angle);
-                c->y = y + max_dist * sin((k+1)*cone_angle);
+                c->x = v1[0] + max_dist * cos(angle_start + (k+1)*angle_cone_sector_step);
+                c->y = v1[1] + max_dist * sin(angle_start + (k+1)*angle_cone_sector_step);
                 c->z = max_dist;
             }
 
-            out_vertex_offset += cone_triangle_count * 3;
+            out_vertex_offset += angle_cone_sector_steps * 3;
         }
 
         in_vertex_offset += num_poly_verts;
 
-        out.num_segment_verts[i] = num_poly_verts * cone_triangle_count * 3;
+        out.num_segment_verts[i] = out_vertex_offset;
         out.segment_colors[i] = i + 1;
     }
 
