@@ -30,7 +30,7 @@ namespace corridormap { class renderer; }
 namespace corridormap {
 
 // computes 2d bounding box of the input footprint.
-bbox2 bounds(const footprint& f);
+bbox2 bounds(const footprint& f, float border);
 
 // maximum distance for points and lines.
 // computed such that distance mesh "covers" the full render target in ortho projection.
@@ -49,7 +49,7 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
 void deallocate_distance_mesh(memory* mem, distance_mesh& mesh);
 
 // build distance mesh for the input footprint. polygon vertex becomes a cone sector, edge - a "tent".
-void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist, float max_error);
+void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float max_error, distance_mesh& out);
 
 // renders distance mesh using the specified render interface.
 void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);

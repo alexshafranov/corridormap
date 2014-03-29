@@ -111,23 +111,24 @@ int main()
     obstacles.num_verts = sizeof(obstacle_verts_x)/sizeof(obstacle_verts_x[0]);
     obstacles.num_poly_verts = num_poly_verts;
 
-    corridormap::bbox2 obstacle_bounds = corridormap::bounds(obstacles);
+    const float border = 10.f;
+    corridormap::bbox2 obstacle_bounds = corridormap::bounds(obstacles, border);
 
     const float max_dist = corridormap::max_distance(obstacle_bounds);
     const float max_error = 0.1f;
 
     corridormap::distance_mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles, max_dist, max_error);
-    corridormap::build_distance_mesh(obstacles, mesh, max_dist, max_error);
+    corridormap::build_distance_mesh(obstacles, obstacle_bounds, max_dist, max_error, mesh);
     corridormap::set_segment_colors(mesh, colors, sizeof(colors)/sizeof(colors[0]));
 
     corridormap::renderer_gl render_iface;
     corridormap::renderer::parameters render_params;
     render_params.render_target_width = screen_width;
     render_params.render_target_height = screen_height;
-    render_params.min[0] = obstacle_bounds.min[0] - 10.f;
-    render_params.min[1] = obstacle_bounds.min[1] - 10.f;
-    render_params.max[0] = obstacle_bounds.max[0] + 10.f;
-    render_params.max[1] = obstacle_bounds.max[1] + 10.f;
+    render_params.min[0] = obstacle_bounds.min[0];
+    render_params.min[1] = obstacle_bounds.min[1];
+    render_params.max[0] = obstacle_bounds.max[0];
+    render_params.max[1] = obstacle_bounds.max[1];
     render_params.far_plane = max_dist + 0.1f;
 
     if (!render_iface.initialize(render_params))

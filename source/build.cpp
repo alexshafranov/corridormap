@@ -34,7 +34,7 @@ namespace
     const float CORRIDORMAP_PI     = 3.14159265f;
 }
 
-bbox2 bounds(const footprint& f)
+bbox2 bounds(const footprint& f, float border)
 {
     bbox2 result;
     result.min[0] = +FLT_MAX;
@@ -49,6 +49,11 @@ bbox2 bounds(const footprint& f)
         result.max[0] = f.x[i] > result.max[0] ? f.x[i] : result.max[0];
         result.max[1] = f.y[i] > result.max[1] ? f.y[i] : result.max[1];
     }
+
+    result.min[0] -= border;
+    result.min[1] -= border;
+    result.max[0] += border;
+    result.max[1] += border;
 
     return result;
 }
@@ -71,8 +76,8 @@ int point_distance_mesh_tris(float max_dist, float max_error)
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error)
 {
     int point_tris = point_distance_mesh_tris(max_dist, max_error);
-    // point_tris triangles per vertex and 4 triangles per edge.
-    return point_tris * f.num_verts * 3 + f.num_verts * 4 * 3;
+    // point_tris triangles per vertex plus 4 triangles per edge plus four border planes.
+    return point_tris * f.num_verts * 3 + f.num_verts * 4 * 3 + 6 * 4;
 }
 
 distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error)
@@ -82,8 +87,10 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
     result.num_verts = 0;
     int max_verts = max_distance_mesh_verts(f, max_dist, max_error);
     result.verts = allocate<vertex>(mem, max_verts * sizeof(vertex));
-    result.num_segment_verts = allocate<int>(mem, f.num_polys * sizeof(int));
-    result.segment_colors = allocate<unsigned int>(mem, f.num_polys * sizeof(unsigned int));
+    // one segment for border and num_polys segments for obstacles.
+    result.num_segment_verts = allocate<int>(mem, (1 + f.num_polys)*sizeof(int));
+    // border is the first segment.
+    result.segment_colors = allocate<unsigned int>(mem, (1 + f.num_polys)*sizeof(unsigned int));
     return result;
 }
 
@@ -95,7 +102,7 @@ void deallocate_distance_mesh(memory* mem, distance_mesh& mesh)
     memset(&mesh, 0, sizeof(distance_mesh));
 }
 
-void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist, float max_error)
+void build_distance_mesh(const footprint& in, bbox2 /*bbox*/, float max_dist, float max_error, distance_mesh& out)
 {
     corridormap_assert(max_dist > max_error);
 
