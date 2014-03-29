@@ -22,9 +22,9 @@
 #include <stdio.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "render_gl.h"
 #include "corridormap/memory.h"
 #include "corridormap/build.h"
+#include "corridormap/render_gl.h"
 
 struct glfw_context
 {

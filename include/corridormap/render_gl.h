@@ -19,8 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Example OpenGL implementation of the render interface.
-// OpenGL header has to be included before including this file.
+// opengl 3 implementation of the render interface. opengl headers have to be included before including this file.
 
 #ifndef CORRIDORMAP_RENDER_GL_H_
 #define CORRIDORMAP_RENDER_GL_H_
