@@ -103,10 +103,10 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
     const int cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI / cone_half_angle));
     const float cone_angle = 2.f * CORRIDORMAP_PI / cone_triangle_count;
 
-    int out_vertex_offset = 0;
-
+    // input
     const float* poly_x = in.x;
     const float* poly_y = in.y;
+    // output
     vertex* verts = out.verts;
 
     for (int i = 0; i < in.num_polys; ++i)
@@ -142,14 +142,11 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
             float angle_start = atan2(e0[1]/len_e0, e0[0]/len_e0);
 
             // 1. generate cone sectors for each vertex.
-
-            vertex* cone = verts + out_vertex_offset;
-
-            for (int k = 0; k < angle_cone_sector_steps; ++k)
+            for (int k = 0; k < angle_cone_sector_steps; ++k, num_segment_verts += 3)
             {
-                vertex* a = cone + k*3 + 0;
-                vertex* b = cone + k*3 + 1;
-                vertex* c = cone + k*3 + 2;
+                vertex* a = verts++;
+                vertex* b = verts++;
+                vertex* c = verts++;
 
                 a->x = curr[0];
                 a->y = curr[1];
@@ -164,12 +161,7 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
                 c->z = max_dist;
             }
 
-            num_segment_verts += angle_cone_sector_steps*3;
-            out_vertex_offset += angle_cone_sector_steps*3;
-
             // 2. generate tent for (curr, next) edge.
-
-            vertex* tent = verts + out_vertex_offset;
             {
                 float nx = max_dist * -e1[1]/len_e1;
                 float ny = max_dist * +e1[0]/len_e1;
@@ -181,14 +173,13 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
                 vertex e = { curr[0] - nx, curr[1] - ny, max_dist };
                 vertex f = { next[0] - nx, next[1] - ny, max_dist };
 
-                tent[0]  = a; tent[1]  = b; tent[2]  = c;
-                tent[3]  = c; tent[4]  = b; tent[5]  = d;
-                tent[6]  = a; tent[7]  = e; tent[8]  = b;
-                tent[9]  = b; tent[10] = e; tent[11] = f;
-            }
+                *verts++ = a; *verts++ = b; *verts++ = c;
+                *verts++ = c; *verts++ = b; *verts++ = d;
+                *verts++ = a; *verts++ = e; *verts++ = b;
+                *verts++ = b; *verts++ = e; *verts++ = f;
 
-            num_segment_verts += 12;
-            out_vertex_offset += 12;
+                num_segment_verts += 12;
+            }
         }
 
         poly_x += num_poly_verts;
@@ -199,7 +190,7 @@ void build_distance_mesh(const footprint& in, distance_mesh& out, float max_dist
     }
 
     out.num_segments = in.num_polys;
-    out.num_verts = out_vertex_offset;
+    out.num_verts = static_cast<int>(verts - out.verts);
 }
 
 void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
