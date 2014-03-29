@@ -102,7 +102,52 @@ void deallocate_distance_mesh(memory* mem, distance_mesh& mesh)
     memset(&mesh, 0, sizeof(distance_mesh));
 }
 
-void build_distance_mesh(const footprint& in, bbox2 /*bbox*/, float max_dist, float max_error, distance_mesh& out)
+namespace
+{
+    inline int build_cone_sector(vertex*& output, float pos[2], int steps, float step_angle, float start_angle, float radius)
+    {
+        int nverts = 0;
+
+        for (int i = 0; i < steps; ++i, nverts += 3)
+        {
+            vertex* a = output++;
+            vertex* b = output++;
+            vertex* c = output++;
+
+            a->x = pos[0];
+            a->y = pos[1];
+            a->z = 0.f;
+
+            b->x = pos[0] + radius * cos(start_angle + (i+0)*step_angle);
+            b->y = pos[1] + radius * sin(start_angle + (i+0)*step_angle);
+            b->z = radius;
+
+            c->x = pos[0] + radius * cos(start_angle + (i+1)*step_angle);
+            c->y = pos[1] + radius * sin(start_angle + (i+1)*step_angle);
+            c->z = radius;
+        }
+
+        return nverts;
+    }
+
+    inline int build_tent_side(vertex*& output, float a[2], float b[2], float len, float size)
+    {
+        float nx = -(b[1] - a[1]) / len;
+        float ny = +(b[0] - a[0]) / len;
+
+        vertex p0 = { a[0], a[1], 0.f };
+        vertex p1 = { b[0], b[1], 0.f };
+        vertex p2 = { a[0] + size * nx, a[1] + size * ny, size };
+        vertex p3 = { b[0] + size * nx, b[1] + size * ny, size };
+
+        *output++ = p0; *output++ = p1; *output++ = p2;
+        *output++ = p2; *output++ = p1; *output++ = p3;
+
+        return 6;
+    }
+}
+
+void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float max_error, distance_mesh& out)
 {
     corridormap_assert(max_dist > max_error);
 
@@ -115,6 +160,24 @@ void build_distance_mesh(const footprint& in, bbox2 /*bbox*/, float max_dist, fl
     const float* poly_y = in.y;
     // output
     vertex* verts = out.verts;
+
+    // 1. generate borders.
+    {
+        float corner_lt[] = { bbox.min[0], bbox.max[1] };
+        float corner_rb[] = { bbox.max[0], bbox.min[1] };
+
+        float len_x = bbox.max[0] - bbox.min[0];
+        float len_y = bbox.max[1] - bbox.min[1];
+
+        int num_border_verts = 0;
+        num_border_verts += build_tent_side(verts, bbox.min, corner_rb, len_x, max_dist);
+        num_border_verts += build_tent_side(verts, corner_rb, bbox.max, len_y, max_dist);
+        num_border_verts += build_tent_side(verts, bbox.max, corner_lt, len_x, max_dist);
+        num_border_verts += build_tent_side(verts, corner_lt, bbox.min, len_y, max_dist);
+
+        out.segment_colors[0] = 0;
+        out.num_segment_verts[0] = num_border_verts;
+    }
 
     for (int i = 0; i < in.num_polys; ++i)
     {
@@ -148,55 +211,22 @@ void build_distance_mesh(const footprint& in, bbox2 /*bbox*/, float max_dist, fl
             float angle_cone_sector_step = angle_cone_sector / angle_cone_sector_steps;
             float angle_start = atan2(e0[1]/len_e0, e0[0]/len_e0);
 
-            // 1. generate cone sectors for each vertex.
-            for (int k = 0; k < angle_cone_sector_steps; ++k, num_segment_verts += 3)
-            {
-                vertex* a = verts++;
-                vertex* b = verts++;
-                vertex* c = verts++;
+            // 2. generate cone sector for the current vertex.
+            num_segment_verts += build_cone_sector(verts, curr, angle_cone_sector_steps, angle_cone_sector_step, angle_start, max_dist);
 
-                a->x = curr[0];
-                a->y = curr[1];
-                a->z = 0.f;
-
-                b->x = curr[0] + max_dist * cos(angle_start + (k+0)*angle_cone_sector_step);
-                b->y = curr[1] + max_dist * sin(angle_start + (k+0)*angle_cone_sector_step);
-                b->z = max_dist;
-
-                c->x = curr[0] + max_dist * cos(angle_start + (k+1)*angle_cone_sector_step);
-                c->y = curr[1] + max_dist * sin(angle_start + (k+1)*angle_cone_sector_step);
-                c->z = max_dist;
-            }
-
-            // 2. generate tent for (curr, next) edge.
-            {
-                float nx = max_dist * -e1[1]/len_e1;
-                float ny = max_dist * +e1[0]/len_e1;
-
-                vertex a = { curr[0], curr[1], 0.f };
-                vertex b = { next[0], next[1], 0.f };
-                vertex c = { curr[0] + nx, curr[1] + ny, max_dist };
-                vertex d = { next[0] + nx, next[1] + ny, max_dist };
-                vertex e = { curr[0] - nx, curr[1] - ny, max_dist };
-                vertex f = { next[0] - nx, next[1] - ny, max_dist };
-
-                *verts++ = a; *verts++ = b; *verts++ = c;
-                *verts++ = c; *verts++ = b; *verts++ = d;
-                *verts++ = a; *verts++ = e; *verts++ = b;
-                *verts++ = b; *verts++ = e; *verts++ = f;
-
-                num_segment_verts += 12;
-            }
+            // 3. generate tent for (curr, next) edge.
+            num_segment_verts += build_tent_side(verts, curr, next, len_e1, max_dist);
+            num_segment_verts += build_tent_side(verts, next, curr, len_e1, max_dist);
         }
 
         poly_x += num_poly_verts;
         poly_y += num_poly_verts;
 
-        out.num_segment_verts[i] = num_segment_verts;
+        out.num_segment_verts[i + 1] = num_segment_verts;
         out.segment_colors[i] = i + 1;
     }
 
-    out.num_segments = in.num_polys;
+    out.num_segments = 1 + in.num_polys;
     out.num_verts = static_cast<int>(verts - out.verts);
 }
 
