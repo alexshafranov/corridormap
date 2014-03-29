@@ -45,7 +45,7 @@ int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error)
 // allocates distanece mesh data arrays.
 distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error);
 
-// deallocates distance mesh data arrays. 'mem' has to be the same that was used for allocation.
+// deallocates distance mesh data arrays. 'mem' must be the same that was used for allocation.
 void deallocate_distance_mesh(memory* mem, distance_mesh& mesh);
 
 // build distance mesh for the input footprint. polygon vertex becomes a cone sector, edge - a "tent".
