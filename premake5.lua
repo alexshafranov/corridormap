@@ -60,6 +60,11 @@ solution "corridormap"
         defines { "_CRT_SECURE_NO_WARNINGS", "GLEW_STATIC" }
         includedirs { "example/glew/include" }
 
+    project "clew"
+        kind "StaticLib"
+        language "C"
+        files { "example/clew/clew.c" }
+
     project "example-voronoi"
         kind "ConsoleApp"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
