@@ -29,7 +29,7 @@ solution "corridormap"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
         files { "source/**.cpp" }
-        includedirs { "include" }
+        includedirs { "include", "deps/OpenCL" }
 
     project "glfw"
         kind "StaticLib"
