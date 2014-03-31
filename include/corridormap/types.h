@@ -22,6 +22,8 @@
 #ifndef CORRIDORMAP_TYPES_H_
 #define CORRIDORMAP_TYPES_H_
 
+#include <CL/opencl.h>
+
 namespace corridormap {
 
 // 2d bounding box.
@@ -69,6 +71,23 @@ struct distance_mesh
     int* num_segment_verts;
     // segment colors. indexed in [0..num_segments] range.
     unsigned int* segment_colors;
+};
+
+enum kernel_ids
+{
+    kernel_id_mark_poi = 0,
+    kernel_id_count,
+};
+
+// holds opencl api objects used by the library.
+struct opencl_runtime
+{
+    // opencl context.
+    cl_context context;
+    // opencl command queue.
+    cl_command_queue queue;
+    // array of kernel objects used by the library.
+    cl_kernel kernels[kernel_id_count];
 };
 
 }

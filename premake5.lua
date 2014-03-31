@@ -69,7 +69,7 @@ solution "corridormap"
         kind "ConsoleApp"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
-        includedirs { "include", "example/glfw/include", "example/glew/include" }
+        includedirs { "include", "deps/OpenCL", "example/glfw/include", "example/glew/include" }
         files { "example/voronoi.cpp" }
         defines { "GLEW_STATIC" }
         links { "corridormap-library", "glew", "glfw" }
