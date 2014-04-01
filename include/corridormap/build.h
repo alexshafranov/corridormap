@@ -54,7 +54,7 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 // renders distance mesh using the specified render interface.
 void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 
-// sets color of a segment as colors[segment_index % ncolors].
+// sets color of a segment to colors[segment_index % ncolors].
 void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
 
 }
