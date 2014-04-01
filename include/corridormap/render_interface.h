@@ -22,6 +22,8 @@
 #ifndef CORRIDORMAP_RENDER_INTERFACE_H_
 #define CORRIDORMAP_RENDER_INTERFACE_H_
 
+#include <CL/opencl.h>
+
 namespace corridormap { struct vertex; }
 
 namespace corridormap {
@@ -59,6 +61,9 @@ public:
     virtual void end() = 0;
     // copy render target from video memory.
     virtual void read_pixels(unsigned char* destination) = 0;
+
+    // create shared opencl context.
+    virtual cl_context create_opencl_context(cl_platform_id platform, cl_int* error_code) = 0;
 };
 
 }

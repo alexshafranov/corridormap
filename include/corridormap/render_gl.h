@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// opengl 3 implementation of the render interface. opengl headers have to be included before including this file.
+// opengl 3 implementation of the render interface.
 
 #ifndef CORRIDORMAP_RENDER_GL_H_
 #define CORRIDORMAP_RENDER_GL_H_
@@ -275,6 +275,21 @@ public:
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBlitFramebuffer(0, 0, _params.render_target_width, _params.render_target_height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    }
+
+    virtual cl_context create_opencl_context(cl_platform_id platform, cl_int* error_code)
+    {
+        #ifdef _WIN32
+            cl_context_properties properties[] =
+            {
+                CL_GL_CONTEXT_KHR, reinterpret_cast<cl_context_properties>(wglGetCurrentContext()),
+                CL_WGL_HDC_KHR, reinterpret_cast<cl_context_properties>(wglGetCurrentDC()),
+                CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(platform),
+                0,
+            };
+        #endif
+
+        return clCreateContextFromType(properties, CL_DEVICE_TYPE_GPU, 0, 0, error_code);
     }
 
 private:

@@ -21,6 +21,12 @@
 
 #include <stdio.h>
 #include <GL/glew.h>
+#include <clew.h>
+
+#ifdef _WIN32
+    #include <GL/wglew.h>
+#endif
+
 #include <GLFW/glfw3.h>
 #include "corridormap/memory.h"
 #include "corridormap/build.h"

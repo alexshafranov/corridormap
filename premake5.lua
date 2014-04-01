@@ -69,10 +69,10 @@ solution "corridormap"
         kind "ConsoleApp"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
-        includedirs { "include", "deps/OpenCL", "example/glfw/include", "example/glew/include" }
+        includedirs { "include", "deps/OpenCL", "example/glfw/include", "example/glew/include", "example/clew" }
         files { "example/voronoi.cpp" }
         defines { "GLEW_STATIC" }
-        links { "corridormap-library", "glew", "glfw" }
+        links { "corridormap-library", "glew", "glfw", "clew" }
 
         configuration { "windows" }
             links { "opengl32" }
