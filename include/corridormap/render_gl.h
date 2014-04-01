@@ -277,19 +277,38 @@ public:
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     }
 
-    virtual cl_context create_opencl_context(cl_platform_id platform, cl_int* error_code)
+    virtual opencl_shared create_opencl_shared(cl_int* error_code)
     {
+        opencl_shared result;
+        memset(&result, 0, sizeof(result));
+
         #ifdef _WIN32
             cl_context_properties properties[] =
             {
                 CL_GL_CONTEXT_KHR, reinterpret_cast<cl_context_properties>(wglGetCurrentContext()),
                 CL_WGL_HDC_KHR, reinterpret_cast<cl_context_properties>(wglGetCurrentDC()),
-                CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(platform),
+                CL_CONTEXT_PLATFORM, 0,
                 0,
             };
         #endif
 
-        return clCreateContextFromType(properties, CL_DEVICE_TYPE_GPU, 0, 0, error_code);
+        clGetGLContextInfoKHR_fn pclGetGLContextInfoKHR = reinterpret_cast<clGetGLContextInfoKHR_fn>(clGetExtensionFunctionAddress("clGetGLContextInfoKHR"));
+
+        *error_code = pclGetGLContextInfoKHR(properties, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(result.device), &result.device, 0);
+
+        if (*error_code != CL_SUCCESS)
+        {
+            return result;
+        }
+
+        cl_platform_id platform;
+        clGetDeviceInfo(result.device, CL_DEVICE_PLATFORM, sizeof(platform), &platform, 0);
+
+        properties[sizeof(properties)/sizeof(properties[0]) - 2] = reinterpret_cast<cl_context_properties>(platform);
+
+        result.context = clCreateContextFromType(properties, CL_DEVICE_TYPE_GPU, 0, 0, error_code);
+
+        return result;
     }
 
 private:

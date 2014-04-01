@@ -47,6 +47,13 @@ public:
         float far_plane;
     };
 
+    // opencl context and device for this renderer's GPU.
+    struct opencl_shared
+    {
+        cl_context    context;
+        cl_device_id  device;
+    };
+
     virtual ~renderer() {}
 
     // initialize renderer. returns false on failure.
@@ -63,7 +70,7 @@ public:
     virtual void read_pixels(unsigned char* destination) = 0;
 
     // create shared opencl context.
-    virtual cl_context create_opencl_context(cl_platform_id platform, cl_int* error_code) = 0;
+    virtual opencl_shared create_opencl_shared(cl_int* error_code) = 0;
 };
 
 }

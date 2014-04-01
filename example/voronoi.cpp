@@ -144,6 +144,15 @@ int main()
         return 1;
     }
 
+    if (clewInit("OpenCL.dll") != CLEW_SUCCESS)
+    {
+        render_iface.finalize();
+        return 1;
+    }
+
+    cl_int err;
+    render_iface.create_opencl_shared(&err);
+
     while (!glfwWindowShouldClose(window))
     {
         int width, height;
