@@ -104,6 +104,11 @@ int main()
 
     glewInit();
 
+    if (clewInit("OpenCL.dll") != CLEW_SUCCESS)
+    {
+        return 1;
+    }
+
     const unsigned char* vendor = glGetString(GL_VENDOR);
     const unsigned char* version = glGetString(GL_VERSION);
 
@@ -145,12 +150,6 @@ int main()
     if (!render_iface.initialize(render_params, &mem))
     {
         fprintf(stderr, "failed to initialize render interface.\n");
-        render_iface.finalize();
-        return 1;
-    }
-
-    if (clewInit("OpenCL.dll") != CLEW_SUCCESS)
-    {
         render_iface.finalize();
         return 1;
     }
