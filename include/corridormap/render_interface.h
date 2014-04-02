@@ -25,6 +25,7 @@
 #include <CL/opencl.h>
 
 namespace corridormap { struct vertex; }
+namespace corridormap { class memory; }
 
 namespace corridormap {
 
@@ -50,14 +51,15 @@ public:
     // opencl context and device for this renderer's GPU.
     struct opencl_shared
     {
-        cl_context    context;
-        cl_device_id  device;
+        cl_platform_id  platform;
+        cl_device_id    device;
+        cl_context      context;
     };
 
     virtual ~renderer() {}
 
     // initialize renderer. returns false on failure.
-    virtual bool initialize(parameters params) = 0;
+    virtual bool initialize(parameters params, memory* scratch_memory) = 0;
     // release resources.
     virtual void finalize() = 0;
     // begin scene.
@@ -70,7 +72,7 @@ public:
     virtual void read_pixels(unsigned char* destination) = 0;
 
     // create shared opencl context.
-    virtual opencl_shared create_opencl_shared(cl_int* error_code) = 0;
+    virtual opencl_shared create_opencl_shared() = 0;
 };
 
 }

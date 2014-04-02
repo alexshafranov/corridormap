@@ -104,6 +104,11 @@ int main()
 
     glewInit();
 
+    const unsigned char* vendor = glGetString(GL_VENDOR);
+    const unsigned char* version = glGetString(GL_VERSION);
+
+    printf("opengl vendor=%s version=%s\n", vendor, version);
+
     corridormap::memory_malloc mem;
 
     float obstacle_verts_x[] = { 10.f, 50.f, 30.f,  70.f, 80.f, 90.f, 90.f, 80.f, 70.f, 60.f, 60.f,  10.f, 40.f, 40.f, 10.f,  50.f, 80.f, 70.f, };
@@ -137,7 +142,7 @@ int main()
     render_params.max[1] = obstacle_bounds.max[1];
     render_params.far_plane = max_dist + 0.1f;
 
-    if (!render_iface.initialize(render_params))
+    if (!render_iface.initialize(render_params, &mem))
     {
         fprintf(stderr, "failed to initialize render interface.\n");
         render_iface.finalize();
@@ -150,8 +155,7 @@ int main()
         return 1;
     }
 
-    cl_int err;
-    render_iface.create_opencl_shared(&err);
+    render_iface.create_opencl_shared();
 
     while (!glfwWindowShouldClose(window))
     {
