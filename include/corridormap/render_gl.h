@@ -43,21 +43,22 @@ static const char* vertex_shader =
 
 static const char* fragment_shader =
 "#version 330                                       \n"
-"uniform vec3 const_color;                          \n"
+"uniform vec4 const_color;                          \n"
 "out vec4 out_color;                                \n"
 "                                                   \n"
 "void main()                                        \n"
 "{                                                  \n"
-"    out_color = vec4(const_color.rgb, 1.0);        \n"
+"    out_color = const_color;                       \n"
 "}                                                  \n";
 
 static const char* debug_quad_vertex_shader =
 "#version 330                                   \n"
 "in vec3 position;                              \n"
-"in vec2 uv;                                    \n"
+"out vec2 uv;                                   \n"
 "                                               \n"
 "void main()                                    \n"
 "{                                              \n"
+"   uv = position.xy * 0.5 + 0.5;               \n"
 "   gl_Position = vec4(position.xyz, 1.0);      \n"
 "}                                              \n";
 
@@ -182,7 +183,7 @@ public:
             }
 
             glBindTexture(GL_TEXTURE_2D, _output_textures[1]);
-            glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, params.render_target_width, params.render_target_height);
+            glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, params.render_target_width, params.render_target_height);
 
             if (glGetError() != GL_NO_ERROR)
             {
@@ -276,8 +277,10 @@ public:
     virtual void begin()
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _frame_buffer);
+
         glViewport(0, 0, _params.render_target_width, _params.render_target_height);
-        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClearColor(1.f, 1.f, 1.f, 1.f);
+        glClearDepth(1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(_draw_shader.program);
@@ -288,17 +291,24 @@ public:
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
+        glDepthMask(GL_TRUE);
     }
 
     virtual void draw(const vertex* vertices, unsigned tri_count, unsigned color)
     {
         // set color for fragment shader.
-        glUniform3f(
+        glUniform4f(
             _color_location,
+            ((color & 0xff000000) >> 24)/255.f,
             ((color & 0x00ff0000) >> 16)/255.f,
             ((color & 0x0000ff00) >>  8)/255.f,
             ((color & 0x000000ff) >>  0)/255.f);
 
+        draw_array(vertices, tri_count);
+    }
+
+    void draw_array(const vertex* vertices, unsigned tri_count)
+    {
         // upload vertices.
         glBindVertexArray(_vertex_array);
         glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
@@ -326,10 +336,39 @@ public:
 
     void blit_frame_buffer(int width, int height)
     {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, _frame_buffer);
+        // enable back-buffer.
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0, 0, _params.render_target_width, _params.render_target_height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+        glViewport(0, 0, width, height);
+        glClearColor(1.f, 1.f, 1.f, 1.f);
+        glClearDepth(1.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // state.
+        glEnable(GL_CULL_FACE);
+        glFrontFace(GL_CCW);
+        glDisable(GL_DEPTH_TEST);
+        // glDepthMask(GL_FALSE);
+
+        // texture.
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, _output_textures[0]);
+
+        vertex quad[] =
+        {
+            {-1.f, -1.f,  1.f},
+            { 1.f, -1.f,  1.f},
+            {-1.f,  1.f,  1.f},
+            {-1.f,  1.f,  1.f},
+            { 1.f, -1.f,  1.f},
+            { 1.f,  1.f,  1.f},
+        };
+
+        glUseProgram(_debug_quad_shader.program);
+        draw_array(quad, 2);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glUseProgram(0);
     }
 
     virtual opencl_shared create_opencl_shared()
