@@ -51,6 +51,27 @@ static const char* fragment_shader =
 "    out_color = vec4(const_color.rgb, 1.0);        \n"
 "}                                                  \n";
 
+static const char* debug_quad_vertex_shader =
+"#version 330                                   \n"
+"in vec3 position;                              \n"
+"in vec2 uv;                                    \n"
+"                                               \n"
+"void main()                                    \n"
+"{                                              \n"
+"   gl_Position = vec4(position.xyz, 1.0);      \n"
+"}                                              \n";
+
+static const char* debug_quad_fragment_shader =
+"#version 330                                   \n"
+"uniform sampler2D t;                           \n"
+"in vec2 uv;                                    \n"
+"out vec4 out_color;                            \n"
+"                                               \n"
+"void main()                                    \n"
+"{                                              \n"
+"   out_color = vec4(texture(t, uv).rgb, 1.0);  \n"
+"}                                              \n";
+
 namespace
 {
     void print_shader_log(GLuint shader)
@@ -70,6 +91,71 @@ namespace
         buffer[length] = '\0';
 
         fprintf(stderr, "compilation log:\n%s\n", buffer);
+    }
+
+    struct shader
+    {
+        GLuint program;
+        GLuint vertex_shader;
+        GLuint fragment_shader;
+    };
+
+    shader create_shader(const char* vs_source, const char* fs_source)
+    {
+        shader result;
+        memset(&result, 0, sizeof(shader));
+
+        GLuint program = glCreateProgram();
+        GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+        GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+
+        glShaderSource(vertex_shader, 1, &vs_source, 0);
+        glShaderSource(fragment_shader, 1, &fs_source, 0);
+
+        GLint status;
+        glCompileShader(vertex_shader);
+        glCompileShader(fragment_shader);
+
+        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &status);
+
+        if (status != GL_TRUE)
+        {
+            print_shader_log(vertex_shader);
+            return result;
+        }
+
+        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &status);
+
+        if (status != GL_TRUE)
+        {
+            print_shader_log(fragment_shader);
+            return result;
+        }
+
+        glAttachShader(program, vertex_shader);
+        glAttachShader(program, fragment_shader);
+
+        glBindAttribLocation(program, 0, "position");
+
+        glLinkProgram(program);
+
+        if (glGetError() != GL_NO_ERROR)
+        {
+            return result;
+        }
+
+        result.program = program;
+        result.vertex_shader = vertex_shader;
+        result.fragment_shader = fragment_shader;
+
+        return result;
+    }
+
+    void destroy_shader(shader& s)
+    {
+        glDeleteShader(s.vertex_shader);
+        glDeleteShader(s.fragment_shader);
+        glDeleteShader(s.program);
     }
 }
 
@@ -135,50 +221,10 @@ public:
         glGenVertexArrays(1, &_vertex_array);
         glGenBuffers(1, &_vertex_buffer);
 
-        // initialize shaders and shader attributes.
-        {
-            _program = glCreateProgram();
-            _vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-            _fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-
-            glShaderSource(_vertex_shader, 1, &vertex_shader, 0);
-            glShaderSource(_fragment_shader, 1, &fragment_shader, 0);
-
-            GLint status;
-            glCompileShader(_vertex_shader);
-            glCompileShader(_fragment_shader);
-
-            glGetShaderiv(_vertex_shader, GL_COMPILE_STATUS, &status);
-
-            if (status != GL_TRUE)
-            {
-                print_shader_log(_vertex_shader);
-                return false;
-            }
-
-            glGetShaderiv(_fragment_shader, GL_COMPILE_STATUS, &status);
-
-            if (status != GL_TRUE)
-            {
-                print_shader_log(_fragment_shader);
-                return false;
-            }
-
-            glAttachShader(_program, _vertex_shader);
-            glAttachShader(_program, _fragment_shader);
-
-            glBindAttribLocation(_program, 0, "position");
-
-            glLinkProgram(_program);
-
-            if (glGetError() != GL_NO_ERROR)
-            {
-                return false;
-            }
-
-            _wvp_location = glGetUniformLocation(_program, "wvp");
-            _color_location = glGetUniformLocation(_program, "const_color");
-        }
+        // initialize shaders and shader parameters.
+        _draw_shader = create_shader(vertex_shader, fragment_shader);
+        _wvp_location = glGetUniformLocation(_draw_shader.program, "wvp");
+        _color_location = glGetUniformLocation(_draw_shader.program, "const_color");
 
         // setup orthographic projection. projection is left-haded, camera is in zero looking in +z direction.
         {
@@ -211,11 +257,16 @@ public:
             _projection[3*4 + 3] = 1.f;
         }
 
+        // initialize debug shaders.
+        _debug_quad_shader = create_shader(debug_quad_vertex_shader, debug_quad_fragment_shader);
+
         return true;
     }
 
     virtual void finalize()
     {
+        destroy_shader(_draw_shader);
+        destroy_shader(_debug_quad_shader);
         glDeleteBuffers(1, &_vertex_buffer);
         glDeleteVertexArrays(1, &_vertex_array);
         glDeleteTextures(2, _output_textures);
@@ -229,7 +280,7 @@ public:
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(_program);
+        glUseProgram(_draw_shader.program);
         glUniformMatrix4fv(_wvp_location, 1, GL_FALSE, _projection);
 
         glEnable(GL_CULL_FACE);
@@ -343,15 +394,17 @@ private:
 
     GLuint _frame_buffer;
     GLuint _output_textures[2];
+
     GLuint _vertex_array;
     GLuint _vertex_buffer;
-    GLuint _program;
-    GLuint _vertex_shader;
-    GLuint _fragment_shader;
+
+    shader _draw_shader;
     GLint  _wvp_location;
     GLint  _color_location;
 
     GLfloat _projection[4*4];
+
+    shader _debug_quad_shader;
 };
 
 }
