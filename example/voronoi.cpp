@@ -165,7 +165,25 @@ int main()
         return 1;
     }
 
-    render_iface.create_opencl_shared();
+    corridormap::renderer::opencl_shared cl_shared = render_iface.create_opencl_shared();
+    corridormap::opencl_runtime cl_runtime = corridormap::init_opencl_runtime(cl_shared);
+
+    // build kernels.
+    {
+        corridormap::compilation_status status = corridormap::build_kernels(cl_runtime);
+
+        if (status.kernel != corridormap::kernel_id_count)
+        {
+            fprintf(stderr, "failed to build kernels: code=%d, kernel=%d\n", status.code, status.kernel);
+            size_t build_log_size;
+            clGetProgramBuildInfo(cl_runtime.programs[status.kernel], cl_runtime.device, CL_PROGRAM_BUILD_LOG, 0, 0, &build_log_size);
+            char* build_log = corridormap::allocate<char>(&mem, build_log_size);
+            clGetProgramBuildInfo(cl_runtime.programs[status.kernel], cl_runtime.device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log, 0);
+            fprintf(stderr, "build log: %s\n", build_log);
+            render_iface.finalize();
+            return 1;
+        }
+    }
 
     while (!glfwWindowShouldClose(window))
     {

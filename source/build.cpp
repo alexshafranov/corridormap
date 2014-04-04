@@ -29,6 +29,7 @@
 #include "corridormap/assert.h"
 #include "corridormap/render_interface.h"
 #include "corridormap/build.h"
+#include "kernels.h"
 
 namespace corridormap {
 
@@ -274,6 +275,7 @@ opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared)
     }
 
     runtime.context = shared.context;
+    runtime.device = shared.device;
 
     return runtime;
 }
@@ -286,6 +288,35 @@ void term_opencl_runtime(opencl_runtime& runtime)
     {
         clReleaseKernel(runtime.kernels[i]);
     }
+}
+
+compilation_status build_kernels(opencl_runtime& runtime)
+{
+    compilation_status status;
+    status.code = CL_SUCCESS;
+    status.kernel = kernel_id_count;
+
+    for (int i = 0; i < kernel_id_count; ++i)
+    {
+        status.kernel = static_cast<kernel_id>(i);
+
+        runtime.programs[i] = clCreateProgramWithSource(runtime.context, 1, &kernel_mark_poi_src, 0, &status.code);
+
+        if (status.code != CL_SUCCESS)
+        {
+            return status;
+        }
+
+        status.code = clBuildProgram(runtime.programs[i], 1, &runtime.device, 0, 0, 0);
+
+        if (status.code != CL_SUCCESS)
+        {
+            return status;
+        }
+    }
+
+    status.kernel = kernel_id_count;
+    return status;
 }
 
 }

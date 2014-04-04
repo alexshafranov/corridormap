@@ -73,7 +73,7 @@ struct distance_mesh
     unsigned int* segment_colors;
 };
 
-enum kernel_ids
+enum kernel_id
 {
     kernel_id_mark_poi = 0,
     kernel_id_count,
@@ -86,8 +86,21 @@ struct opencl_runtime
     cl_context context;
     // opencl command queue.
     cl_command_queue queue;
+    // opencl device.
+    cl_device_id device;
     // array of kernel objects used by the library.
     cl_kernel kernels[kernel_id_count];
+    // array of kernel programs.
+    cl_program programs[kernel_id_count];
+};
+
+// represents the result of corridormap::build_kernels.
+struct compilation_status
+{
+    // opencl error code.
+    cl_int    code;
+    // kernel_id during which build the error happened or kernel_id_count on success.
+    kernel_id kernel;
 };
 
 }

@@ -35,7 +35,7 @@ bbox2 bounds(const footprint& f, float border);
 // computed such that distance mesh "covers" the full render target in ortho projection.
 float max_distance(bbox2 scene_bbox);
 
-// computes required number of triangles to represent a point distance mesh (cone).
+// computes required number of triangles to represent a distance mesh for vertex (cone).
 int vertex_distance_mesh_tris(float max_dist, float max_error);
 
 // computes upper bound on number of vertices required for distance mesh.
@@ -61,6 +61,9 @@ opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared);
 
 // releases queue, kernels and context.
 void term_opencl_runtime(opencl_runtime& runtime);
+
+// creates and compiles library's opencl kernels.
+compilation_status build_kernels(opencl_runtime& runtime);
 
 }
 
