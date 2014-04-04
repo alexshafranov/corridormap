@@ -24,14 +24,18 @@ solution "corridormap"
     configuration { "release", "x64" }
         targetdir "bin/x64/release"
 
+    project "clew"
+        kind "StaticLib"
+        language "C"
+        files { "deps/clew/clew.c" }
+
     project "corridormap-library"
         kind "StaticLib"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
         files { "source/**.cpp" }
         defines { "CORRIDORMAP_CONFIG_USE_CLEW" }
-        includedirs { "include", "deps/OpenCL", "example/clew" }
-        links { "clew" }
+        includedirs { "include", "deps/OpenCL", "deps/clew" }
 
     project "glfw"
         kind "StaticLib"
@@ -62,16 +66,11 @@ solution "corridormap"
         defines { "_CRT_SECURE_NO_WARNINGS", "GLEW_STATIC" }
         includedirs { "example/glew/include" }
 
-    project "clew"
-        kind "StaticLib"
-        language "C"
-        files { "example/clew/clew.c" }
-
     project "example-voronoi"
         kind "ConsoleApp"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
-        includedirs { "include", "deps/OpenCL", "example/glfw/include", "example/glew/include", "example/clew" }
+        includedirs { "include", "deps/OpenCL", "deps/clew", "example/glfw/include", "example/glew/include" }
         files { "example/voronoi.cpp" }
         defines { "GLEW_STATIC" }
         links { "corridormap-library", "glew", "glfw", "clew" }
