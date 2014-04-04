@@ -278,4 +278,14 @@ opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared)
     return runtime;
 }
 
+void term_opencl_runtime(opencl_runtime& runtime)
+{
+    clReleaseCommandQueue(runtime.queue);
+
+    for (int i = 0; i < kernel_id_count; ++i)
+    {
+        clReleaseKernel(runtime.kernels[i]);
+    }
+}
+
 }
