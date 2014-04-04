@@ -36,7 +36,7 @@ bbox2 bounds(const footprint& f, float border);
 float max_distance(bbox2 scene_bbox);
 
 // computes required number of triangles to represent a point distance mesh (cone).
-int point_distance_mesh_tris(float max_dist, float max_error);
+int vertex_distance_mesh_tris(float max_dist, float max_error);
 
 // computes upper bound on number of vertices required for distance mesh.
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error);
