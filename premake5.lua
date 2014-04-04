@@ -29,7 +29,9 @@ solution "corridormap"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         warnings "Extra"
         files { "source/**.cpp" }
-        includedirs { "include", "deps/OpenCL" }
+        defines { "CORRIDORMAP_CONFIG_USE_CLEW" }
+        includedirs { "include", "deps/OpenCL", "example/clew" }
+        links { "clew" }
 
     project "glfw"
         kind "StaticLib"

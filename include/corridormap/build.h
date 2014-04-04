@@ -23,9 +23,8 @@
 #define CORRIDORMAP_BUILD_H_
 
 #include "corridormap/types.h"
+#include "corridormap/render_interface.h"
 #include "corridormap/memory.h"
-
-namespace corridormap { class renderer; }
 
 namespace corridormap {
 
@@ -56,6 +55,9 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 
 // sets color of a segment to colors[segment_index % ncolors].
 void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
+
+// inits library opencl runtime from render interface shared context, creates opencl command queue.
+opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared);
 
 }
 

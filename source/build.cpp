@@ -19,6 +19,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifdef CORRIDORMAP_CONFIG_USE_CLEW
+#include <clew.h>
+#endif
+
 #include <math.h>
 #include <float.h>
 #include <string.h>
@@ -254,6 +258,24 @@ void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors)
     {
         mesh.segment_colors[i] = colors[i % ncolors];
     }
+}
+
+opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared)
+{
+    opencl_runtime runtime;
+    memset(&runtime, 0, sizeof(opencl_runtime));
+
+    cl_int error_code;
+    runtime.queue = clCreateCommandQueue(shared.context, shared.device, 0, &error_code);
+
+    if (error_code != CL_SUCCESS)
+    {
+        return runtime;
+    }
+
+    runtime.context = shared.context;
+
+    return runtime;
 }
 
 }
