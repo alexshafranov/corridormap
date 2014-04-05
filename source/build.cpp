@@ -327,6 +327,13 @@ compilation_status build_kernels(opencl_runtime& runtime)
         {
             return status;
         }
+
+        runtime.kernels[i] = clCreateKernel(runtime.programs[i], "main", &status.code);
+
+        if (status.code != CL_SUCCESS)
+        {
+            return status;
+        }
     }
 
     status.kernel = kernel_id_count;
