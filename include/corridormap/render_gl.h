@@ -432,6 +432,16 @@ public:
         return clCreateFromGLTexture2D(shared_context, flags, GL_TEXTURE_2D, 0, _output_textures[0], error_code);
     }
 
+    virtual cl_int acquire_shared(cl_command_queue queue, cl_mem object)
+    {
+        return clEnqueueAcquireGLObjects(queue, 1, &object, 0, 0, 0);
+    }
+
+    virtual cl_int release_shared(cl_command_queue queue, cl_mem object)
+    {
+        return clEnqueueReleaseGLObjects(queue, 1, &object, 0, 0, 0);
+    }
+
 private:
     renderer::parameters _params;
     memory* _scratch_memory;
