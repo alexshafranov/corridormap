@@ -62,6 +62,12 @@ opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared);
 // releases queue, kernels and context.
 void term_opencl_runtime(opencl_runtime& runtime);
 
+// returns source code for the kernel with specified id.
+const char* get_kernel_source(kernel_id id);
+
+// returns entry point function name for the kernel with specified id.
+const char* get_kernel_entry_point(kernel_id id);
+
 // creates and compiles library's opencl kernels.
 compilation_status build_kernels(opencl_runtime& runtime);
 
