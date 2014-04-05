@@ -65,6 +65,12 @@ void term_opencl_runtime(opencl_runtime& runtime);
 // creates and compiles library's opencl kernels.
 compilation_status build_kernels(opencl_runtime& runtime);
 
+// allocates runtime.voronoi_vertices_img and runtime.voronoi_edges_img based on the input image size.
+cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
+
+// marks voronoi vertices and egdes in runtime.voronoi_vertices_img and voronoi_edges_img from voronoi_image.
+cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
+
 }
 
 #endif

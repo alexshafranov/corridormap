@@ -281,6 +281,9 @@ opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared)
 
 void term_opencl_runtime(opencl_runtime& runtime)
 {
+    clReleaseMemObject(runtime.voronoi_vertices_img);
+    clReleaseMemObject(runtime.voronoi_edges_img);
+
     clReleaseCommandQueue(runtime.queue);
 
     for (int i = 0; i < kernel_id_count; ++i)
@@ -346,6 +349,43 @@ compilation_status build_kernels(opencl_runtime& runtime)
 
     status.kernel = kernel_id_count;
     return status;
+}
+
+cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
+{
+    cl_int error_code;
+
+    size_t width;
+    clGetImageInfo(voronoi_image, CL_IMAGE_WIDTH, sizeof(width), &width, 0);
+
+    size_t height;
+    clGetImageInfo(voronoi_image, CL_IMAGE_HEIGHT, sizeof(height), &height, 0);
+
+    // RGBA8 must be supported by all implementations according to OpenCL 1.1 specification.
+    cl_image_format format;
+    format.image_channel_order = CL_RGBA;
+    format.image_channel_data_type = CL_UNSIGNED_INT8;
+
+    runtime.voronoi_vertices_img = clCreateImage2D(runtime.context, CL_MEM_READ_WRITE, &format, width, height, 0, 0, &error_code);
+
+    if (error_code != CL_SUCCESS)
+    {
+        return error_code;
+    }
+
+    runtime.voronoi_edges_img = clCreateImage2D(runtime.context, CL_MEM_READ_WRITE, &format, width, height, 0, 0, &error_code);
+
+    if (error_code != CL_SUCCESS)
+    {
+        return error_code;
+    }
+
+    return CL_SUCCESS;
+}
+
+cl_int mark_voronoi_features(opencl_runtime& /*runtime*/, cl_mem /*voronoi_image*/)
+{
+    return CL_SUCCESS;
 }
 
 }

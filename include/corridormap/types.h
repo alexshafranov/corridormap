@@ -94,6 +94,10 @@ struct opencl_runtime
     cl_kernel kernels[kernel_id_count];
     // array of kernel programs.
     cl_program programs[kernel_id_count];
+    // 2d image with voronoi vertices marked.
+    cl_mem voronoi_vertices_img;
+    // 2d image with voronoi edges marked.
+    cl_mem voronoi_edges_img;
 };
 
 // represents the result of corridormap::build_kernels.
