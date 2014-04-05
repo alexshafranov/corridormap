@@ -29,7 +29,6 @@
 #include "corridormap/assert.h"
 #include "corridormap/render_interface.h"
 #include "corridormap/build.h"
-#include "kernels.h"
 
 namespace corridormap {
 
@@ -290,6 +289,21 @@ void term_opencl_runtime(opencl_runtime& runtime)
     }
 }
 
+#define CORRIDORMAP_KERNEL_ID(NAME) extern const char* kernel_##NAME##_source;
+#include "corridormap/kernel_id.inl"
+#undef CORRIDORMAP_KERNEL_ID
+
+namespace
+{
+    const char* kernel_source[] =
+    {
+        #define CORRIDORMAP_KERNEL_ID(NAME) kernel_##NAME##_source,
+        #include "corridormap/kernel_id.inl"
+        #undef CORRIDORMAP_KERNEL_ID
+        0,
+    };
+}
+
 compilation_status build_kernels(opencl_runtime& runtime)
 {
     compilation_status status;
@@ -300,7 +314,7 @@ compilation_status build_kernels(opencl_runtime& runtime)
     {
         status.kernel = static_cast<kernel_id>(i);
 
-        runtime.programs[i] = clCreateProgramWithSource(runtime.context, 1, &kernel_mark_poi_src, 0, &status.code);
+        runtime.programs[i] = clCreateProgramWithSource(runtime.context, 1, &kernel_source[i], 0, &status.code);
 
         if (status.code != CL_SUCCESS)
         {
