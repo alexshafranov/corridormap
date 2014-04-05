@@ -75,7 +75,9 @@ struct distance_mesh
 
 enum kernel_id
 {
-    kernel_id_mark_poi = 0,
+    #define CORRIDORMAP_KERNEL_ID(NAME) kernel_id_##NAME,
+    #include "corridormap/kernel_id.inl"
+    #undef CORRIDORMAP_KERNEL_ID
     kernel_id_count,
 };
 
