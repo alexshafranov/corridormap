@@ -188,6 +188,29 @@ int main()
         }
     }
 
+    {
+        cl_int error_code;
+        cl_mem voronoi_image = render_iface.share_pixels(cl_runtime.context, CL_MEM_READ_ONLY, &error_code);
+
+        if (error_code != CL_SUCCESS)
+        {
+            fprintf(stderr, "failed to create opencl voronoi image.\n");
+            return 1;
+        }
+
+        corridormap::allocate_voronoi_features(cl_runtime, voronoi_image);
+
+        render_iface.acquire_shared(cl_runtime.queue, voronoi_image);
+        error_code = corridormap::mark_voronoi_features(cl_runtime, voronoi_image);
+        render_iface.release_shared(cl_runtime.queue, voronoi_image);
+
+        if (error_code != CL_SUCCESS)
+        {
+            fprintf(stderr, "failed to run mark_poi.\n");
+            return 1;
+        }
+    }
+
     while (!glfwWindowShouldClose(window))
     {
         int width, height;
