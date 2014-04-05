@@ -427,6 +427,11 @@ public:
         return result;
     }
 
+    virtual cl_mem share_pixels(cl_context shared_context, cl_mem_flags flags, cl_int* error_code)
+    {
+        return clCreateFromGLTexture2D(shared_context, flags, GL_TEXTURE_2D, 0, _output_textures[0], error_code);
+    }
+
 private:
     renderer::parameters _params;
     memory* _scratch_memory;

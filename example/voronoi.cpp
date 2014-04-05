@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <GL/glew.h>
 #include <clew.h>
+#include <clew_gl.h>
 
 #ifdef _WIN32
     #include <GL/wglew.h>

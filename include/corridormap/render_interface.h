@@ -73,6 +73,8 @@ public:
 
     // create shared opencl context.
     virtual opencl_shared create_opencl_shared() = 0;
+    // creates opencl memory object shared with rendered backbuffer.
+    virtual cl_mem share_pixels(cl_context shared_context, cl_mem_flags flags, cl_int* error_code) = 0;
 };
 
 }

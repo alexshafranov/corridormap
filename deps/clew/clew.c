@@ -7,6 +7,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "clew.h"
+#include "clew_gl.h"
 
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
@@ -110,6 +111,17 @@ PFNCLENQUEUEMARKER                  __clewEnqueueMarker                 = NULL;
 PFNCLENQUEUEWAITFOREVENTS           __clewEnqueueWaitForEvents          = NULL;
 PFNCLENQUEUEBARRIER                 __clewEnqueueBarrier                = NULL;
 PFNCLGETEXTENSIONFUNCTIONADDRESS    __clewGetExtensionFunctionAddress   = NULL;
+
+PFNCLCREATEFROMGLBUFFER             __clewCreateFromGLBuffer             = NULL;
+PFNCLCREATEFROMGLTEXTURE            __clewCreateFromGLTexture            = NULL;
+PFNCLCREATEFROMGLRENDERBUFFER       __clewCreateFromGLRenderbuffer       = NULL;
+PFNCLGETGLOBJECTINFO                __clewGetGLObjectInfo                = NULL;
+PFNCLGETGLTEXTUREINFO               __clewGetGLTextureInfo               = NULL;
+PFNCLENQUEUEACQUIREGLOBJECTS        __clewEnqueueAcquireGLObjects        = NULL;
+PFNCLENQUEUERELEASEGLOBJECTS        __clewEnqueueReleaseGLObjects        = NULL;
+PFNCLCREATEFROMGLTEXTURE2D          __clewCreateFromGLTexture2D          = NULL;
+PFNCLCREATEFROMGLTEXTURE3D          __clewCreateFromGLTexture3D          = NULL;
+PFNCLGETGLCONTEXTINFOKHR            __clewGetGLContextInfoKHR            = NULL;
 
 
 void clewExit(void)
@@ -230,6 +242,17 @@ int clewInit(const char* path)
     __clewEnqueueWaitForEvents          = (PFNCLENQUEUEWAITFOREVENTS        )CLEW_DYNLIB_IMPORT(module, "clEnqueueWaitForEvents");
     __clewEnqueueBarrier                = (PFNCLENQUEUEBARRIER              )CLEW_DYNLIB_IMPORT(module, "clEnqueueBarrier");
     __clewGetExtensionFunctionAddress   = (PFNCLGETEXTENSIONFUNCTIONADDRESS )CLEW_DYNLIB_IMPORT(module, "clGetExtensionFunctionAddress");
+
+    __clewCreateFromGLBuffer            = (PFNCLCREATEFROMGLBUFFER          )CLEW_DYNLIB_IMPORT(module, "clCreateFromGLBuffer");
+    __clewCreateFromGLTexture           = (PFNCLCREATEFROMGLTEXTURE         )CLEW_DYNLIB_IMPORT(module, "clCreateFromGLTexture");
+    __clewCreateFromGLRenderbuffer      = (PFNCLCREATEFROMGLRENDERBUFFER    )CLEW_DYNLIB_IMPORT(module, "clCreateFromGLRenderbuffer");
+    __clewGetGLObjectInfo               = (PFNCLGETGLOBJECTINFO             )CLEW_DYNLIB_IMPORT(module, "clGetGLObjectInfo");
+    __clewGetGLTextureInfo              = (PFNCLGETGLTEXTUREINFO            )CLEW_DYNLIB_IMPORT(module, "clGetGLTextureInfo");
+    __clewEnqueueAcquireGLObjects       = (PFNCLENQUEUEACQUIREGLOBJECTS     )CLEW_DYNLIB_IMPORT(module, "clEnqueueAcquireGLObjects");
+    __clewEnqueueReleaseGLObjects       = (PFNCLENQUEUERELEASEGLOBJECTS     )CLEW_DYNLIB_IMPORT(module, "clEnqueueReleaseGLObjects");
+    __clewCreateFromGLTexture2D         = (PFNCLCREATEFROMGLTEXTURE2D       )CLEW_DYNLIB_IMPORT(module, "clCreateFromGLTexture2D");
+    __clewCreateFromGLTexture3D         = (PFNCLCREATEFROMGLTEXTURE2D       )CLEW_DYNLIB_IMPORT(module, "clCreateFromGLTexture3D");
+    __clewGetGLContextInfoKHR           = (PFNCLGETGLCONTEXTINFOKHR         )CLEW_DYNLIB_IMPORT(module, "clGetGLContextInfoKHR");
 
     return CLEW_SUCCESS;
 }
