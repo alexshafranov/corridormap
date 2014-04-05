@@ -35,7 +35,7 @@ const char* kernel_mark_poi_source = \
 "    return result;                                                                                 \n"
 "}                                                                                                  \n"
 "                                                                                                   \n"
-"kernel void main(                                                                                  \n"
+"kernel void mark_poi(                                                                              \n"
 "    read_only  image2d_t voronoi,                                                                  \n"
 "    write_only image2d_t vertex_marks,                                                             \n"
 "    write_only image2d_t edge_marks,                                                               \n"

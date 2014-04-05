@@ -166,6 +166,8 @@ int main()
         return 1;
     }
 
+    corridormap::render_distance_mesh(&render_iface, mesh);
+
     corridormap::renderer::opencl_shared cl_shared = render_iface.create_opencl_shared();
     corridormap::opencl_runtime cl_runtime = corridormap::init_opencl_runtime(cl_shared);
 
@@ -190,8 +192,6 @@ int main()
     {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
-
-        corridormap::render_distance_mesh(&render_iface, mesh);
 
         render_iface.blit_frame_buffer(width, height);
 

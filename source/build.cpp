@@ -302,6 +302,14 @@ namespace
         #undef CORRIDORMAP_KERNEL_ID
         0,
     };
+
+    const char* kernel_entry_points[] =
+    {
+        #define CORRIDORMAP_KERNEL_ID(NAME) #NAME,
+        #include "corridormap/kernel_id.inl"
+        #undef CORRIDORMAP_KERNEL_ID
+        0,
+    };
 }
 
 compilation_status build_kernels(opencl_runtime& runtime)
@@ -328,7 +336,7 @@ compilation_status build_kernels(opencl_runtime& runtime)
             return status;
         }
 
-        runtime.kernels[i] = clCreateKernel(runtime.programs[i], "main", &status.code);
+        runtime.kernels[i] = clCreateKernel(runtime.programs[i], kernel_entry_points[i], &status.code);
 
         if (status.code != CL_SUCCESS)
         {
