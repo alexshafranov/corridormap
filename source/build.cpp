@@ -412,4 +412,23 @@ cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
     return clEnqueueNDRangeKernel(runtime.queue, kernel, 2, 0, global_work_size, 0, 0, 0, 0);
 }
 
+cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color)
+{
+    size_t width;
+    clGetImageInfo(voronoi_image, CL_IMAGE_WIDTH, sizeof(width), &width, 0);
+
+    size_t height;
+    clGetImageInfo(voronoi_image, CL_IMAGE_HEIGHT, sizeof(height), &height, 0);
+
+    size_t global_work_size[] = { width, height };
+
+    cl_kernel kernel = runtime.kernels[kernel_id_mark_poi_debug];
+
+    clSetKernelArg(kernel, 0, sizeof(cl_mem), &marks_image);
+    clSetKernelArg(kernel, 1, sizeof(cl_mem), &voronoi_image);
+    clSetKernelArg(kernel, 2, sizeof(unsigned int), &color);
+
+    return clEnqueueNDRangeKernel(runtime.queue, kernel, 2, 0, global_work_size, 0, 0, 0, 0);
+}
+
 }

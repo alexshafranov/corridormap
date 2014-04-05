@@ -328,6 +328,7 @@ public:
     {
         glUseProgram(0);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glFinish();
     }
 
     virtual void read_pixels(unsigned char* /*destination*/)
@@ -353,15 +354,16 @@ public:
         // texture.
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, _output_textures[0]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         vertex quad[] =
         {
-            {-1.f, -1.f,  1.f},
-            { 1.f, -1.f,  1.f},
-            {-1.f,  1.f,  1.f},
-            {-1.f,  1.f,  1.f},
-            { 1.f, -1.f,  1.f},
-            { 1.f,  1.f,  1.f},
+            {-1.f, -1.f,  0.f},
+            { 1.f, -1.f,  0.f},
+            {-1.f,  1.f,  0.f},
+            {-1.f,  1.f,  0.f},
+            { 1.f, -1.f,  0.f},
+            { 1.f,  1.f,  0.f},
         };
 
         glUseProgram(_debug_quad_shader.program);

@@ -77,6 +77,9 @@ cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 // marks voronoi vertices and egdes in runtime.voronoi_vertices_img and voronoi_edges_img from voronoi_image.
 cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 
+// draw marks back to original voronoi image.
+cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color);
+
 }
 
 #endif
