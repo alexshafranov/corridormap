@@ -20,3 +20,4 @@
 // SOFTWARE.
 
 CORRIDORMAP_KERNEL_ID(mark_poi)
+CORRIDORMAP_KERNEL_ID(mark_poi_debug)

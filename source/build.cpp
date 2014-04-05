@@ -408,8 +408,6 @@ cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
     clSetKernelArg(kernel, 0, sizeof(cl_mem), &voronoi_image);
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &runtime.voronoi_vertices_img);
     clSetKernelArg(kernel, 2, sizeof(cl_mem), &runtime.voronoi_edges_img);
-    clSetKernelArg(kernel, 3, sizeof(size_t), &width);
-    clSetKernelArg(kernel, 4, sizeof(size_t), &height);
 
     return clEnqueueNDRangeKernel(runtime.queue, kernel, 2, 0, global_work_size, 0, 0, 0, 0);
 }

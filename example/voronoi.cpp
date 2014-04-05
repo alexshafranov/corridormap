@@ -190,7 +190,7 @@ int main()
 
     {
         cl_int error_code;
-        cl_mem voronoi_image = render_iface.share_pixels(cl_runtime.context, CL_MEM_READ_ONLY, &error_code);
+        cl_mem voronoi_image = render_iface.share_pixels(cl_runtime.context, CL_MEM_READ_WRITE, &error_code);
 
         if (error_code != CL_SUCCESS)
         {
