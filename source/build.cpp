@@ -305,24 +305,11 @@ namespace
         #undef CORRIDORMAP_KERNEL_ID
         0,
     };
-
-    const char* kernel_entry_point[] =
-    {
-        #define CORRIDORMAP_KERNEL_ID(NAME) #NAME,
-        #include "corridormap/kernel_id.inl"
-        #undef CORRIDORMAP_KERNEL_ID
-        0,
-    };
 }
 
 const char* get_kernel_source(kernel_id id)
 {
     return kernel_source[id];
-}
-
-const char* get_kernel_entry_point(kernel_id id)
-{
-    return kernel_entry_point[id];
 }
 
 compilation_status build_kernels(opencl_runtime& runtime)
@@ -349,7 +336,7 @@ compilation_status build_kernels(opencl_runtime& runtime)
             return status;
         }
 
-        runtime.kernels[i] = clCreateKernel(runtime.programs[i], kernel_entry_point[i], &status.code);
+        runtime.kernels[i] = clCreateKernel(runtime.programs[i], "run", &status.code);
 
         if (status.code != CL_SUCCESS)
         {
@@ -403,7 +390,7 @@ cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
 
     size_t global_work_size[] = { width, height };
 
-    cl_kernel kernel = runtime.kernels[kernel_id_mark_poi];
+    cl_kernel kernel = runtime.kernels[kernel_id_mark_features];
 
     clSetKernelArg(kernel, 0, sizeof(cl_mem), &voronoi_image);
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &runtime.voronoi_vertices_img);
@@ -422,7 +409,7 @@ cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_
 
     size_t global_work_size[] = { width, height };
 
-    cl_kernel kernel = runtime.kernels[kernel_id_mark_poi_debug];
+    cl_kernel kernel = runtime.kernels[kernel_id_mark_features_debug];
 
     clSetKernelArg(kernel, 0, sizeof(cl_mem), &marks_image);
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &voronoi_image);

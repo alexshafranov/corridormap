@@ -21,7 +21,7 @@
 
 namespace corridormap {
 
-const char* kernel_mark_poi_source = \
+const char* kernel_mark_features_source = \
 
 "const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE|CLK_ADDRESS_CLAMP|CLK_FILTER_NEAREST;        \n"
 "                                                                                                   \n"
@@ -35,7 +35,7 @@ const char* kernel_mark_poi_source = \
 "    return result;                                                                                 \n"
 "}                                                                                                  \n"
 "                                                                                                   \n"
-"kernel void mark_poi(                                                                              \n"
+"kernel void run(                                                                                   \n"
 "    read_only  image2d_t voronoi,                                                                  \n"
 "    write_only image2d_t vertex_marks,                                                             \n"
 "    write_only image2d_t edge_marks)                                                               \n"
@@ -72,11 +72,11 @@ const char* kernel_mark_poi_source = \
 "    write_imageui(vertex_marks, (int2)(gid0, gid1), vmark);                                        \n"
 "}                                                                                                  \n";
 
-const char* kernel_mark_poi_debug_source = \
+const char* kernel_mark_features_debug_source = \
 
 "const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE|CLK_ADDRESS_CLAMP|CLK_FILTER_NEAREST;        \n"
 "                                                                                                   \n"
-"kernel void mark_poi_debug(                                                                        \n"
+"kernel void run(                                                                                   \n"
 "    read_only  image2d_t marks,                                                                    \n"
 "    write_only image2d_t voronoi,                                                                  \n"
 "    const uint color)                                                                              \n"
