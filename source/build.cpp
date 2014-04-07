@@ -36,6 +36,9 @@ namespace
 {
     const float CORRIDORMAP_SQRT_2 = 1.41421356f;
     const float CORRIDORMAP_PI     = 3.14159265f;
+
+    // border gets a distance mesh (half tent) per side.
+    enum { num_border_segments = 4 };
 }
 
 bbox2 bounds(const footprint& f, float border)
@@ -91,10 +94,9 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
     result.num_verts = 0;
     int max_verts = max_distance_mesh_verts(f, max_dist, max_error);
     result.verts = allocate<vertex>(mem, max_verts * sizeof(vertex));
-    // one segment for border and num_polys segments for obstacles.
-    result.num_segment_verts = allocate<int>(mem, (1 + f.num_polys)*sizeof(int));
-    // border is the first segment.
-    result.segment_colors = allocate<unsigned int>(mem, (1 + f.num_polys)*sizeof(unsigned int));
+    // 4 segments for border and num_polys segments for obstacles.
+    result.num_segment_verts = allocate<int>(mem, (num_border_segments + f.num_polys)*sizeof(int));
+    result.segment_colors = allocate<unsigned int>(mem, (num_border_segments + f.num_polys)*sizeof(unsigned int));
     return result;
 }
 
@@ -173,14 +175,15 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
         float len_x = bbox.max[0] - bbox.min[0];
         float len_y = bbox.max[1] - bbox.min[1];
 
-        int num_border_verts = 0;
-        num_border_verts += build_tent_side(verts, bbox.min, corner_rb, len_x, max_dist);
-        num_border_verts += build_tent_side(verts, corner_rb, bbox.max, len_y, max_dist);
-        num_border_verts += build_tent_side(verts, bbox.max, corner_lt, len_x, max_dist);
-        num_border_verts += build_tent_side(verts, corner_lt, bbox.min, len_y, max_dist);
+        out.num_segment_verts[0] = build_tent_side(verts, bbox.min, corner_rb, len_x, max_dist);
+        out.num_segment_verts[1] = build_tent_side(verts, corner_rb, bbox.max, len_y, max_dist);
+        out.num_segment_verts[2] = build_tent_side(verts, bbox.max, corner_lt, len_x, max_dist);
+        out.num_segment_verts[3] = build_tent_side(verts, corner_lt, bbox.min, len_y, max_dist);
 
-        out.segment_colors[0] = 0;
-        out.num_segment_verts[0] = num_border_verts;
+        for (int i = 0; i < num_border_segments; ++i)
+        {
+            out.segment_colors[i] = i;
+        }
     }
 
     for (int i = 0; i < in.num_polys; ++i)
@@ -226,11 +229,11 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
         poly_x += num_poly_verts;
         poly_y += num_poly_verts;
 
-        out.num_segment_verts[i + 1] = num_segment_verts;
-        out.segment_colors[i] = i + 1;
+        out.num_segment_verts[i + num_border_segments] = num_segment_verts;
+        out.segment_colors[i] = i + num_border_segments;
     }
 
-    out.num_segments = 1 + in.num_polys;
+    out.num_segments = num_border_segments + in.num_polys;
     out.num_verts = static_cast<int>(verts - out.verts);
 }
 
