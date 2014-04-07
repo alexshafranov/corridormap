@@ -75,7 +75,7 @@ cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 
 // draw marks back to original voronoi image.
-cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color);
+cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color, unsigned int border);
 
 }
 

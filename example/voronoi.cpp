@@ -202,7 +202,8 @@ int main()
 
         render_iface.acquire_shared(cl_runtime.queue, voronoi_image);
         error_code = corridormap::mark_voronoi_features(cl_runtime, voronoi_image);
-        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_edges_img, 0xff000000);
+        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_edges_img, 0xff000000, 2);
+        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_vertices_img, 0xffffffff, 4);
         render_iface.release_shared(cl_runtime.queue, voronoi_image);
 
         if (error_code != CL_SUCCESS)
