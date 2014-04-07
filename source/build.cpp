@@ -37,7 +37,7 @@ namespace
     const float CORRIDORMAP_SQRT_2 = 1.41421356f;
     const float CORRIDORMAP_PI     = 3.14159265f;
 
-    // border gets a distance mesh (half tent) per side.
+    // border gets a distance mesh segment (half tent) per side.
     enum { num_border_segments = 4 };
 }
 
