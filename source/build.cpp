@@ -414,10 +414,10 @@ cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_
 
     cl_kernel kernel = runtime.kernels[kernel_id_mark_features_debug];
 
-    cl_uint color_value = color;
-    cl_int border_value = border;
-    cl_uint width_value = width;
-    cl_uint height_value = height;
+    cl_uint color_value = static_cast<cl_uint>(color);
+    cl_int border_value = static_cast<cl_int>(border);
+    cl_uint width_value = static_cast<cl_uint>(width);
+    cl_uint height_value = static_cast<cl_uint>(height);
 
     clSetKernelArg(kernel, 0, sizeof(cl_mem), &marks_image);
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &voronoi_image);
