@@ -296,7 +296,9 @@ void term_opencl_runtime(opencl_runtime& runtime)
 }
 
 #define CORRIDORMAP_KERNEL_ID(NAME) extern const char* kernel_##NAME##_source;
+#define CORRIDORMAP_KERNEL_ID_GROUP(NAME, GROUP) extern const char* kernel_##GROUP##_source;
 #include "corridormap/kernel_id.inl"
+#undef CORRIDORMAP_KERNEL_ID_GROUP
 #undef CORRIDORMAP_KERNEL_ID
 
 namespace
@@ -304,6 +306,16 @@ namespace
     const char* kernel_source[] =
     {
         #define CORRIDORMAP_KERNEL_ID(NAME) kernel_##NAME##_source,
+        #define CORRIDORMAP_KERNEL_ID_GROUP(NAME, GROUP) kernel_##GROUP##_source,
+        #include "corridormap/kernel_id.inl"
+        #undef CORRIDORMAP_KERNEL_ID_GROUP
+        #undef CORRIDORMAP_KERNEL_ID
+        0,
+    };
+
+    const char* kernel_entry_points[] =
+    {
+        #define CORRIDORMAP_KERNEL_ID(NAME) #NAME,
         #include "corridormap/kernel_id.inl"
         #undef CORRIDORMAP_KERNEL_ID
         0,
@@ -339,7 +351,7 @@ compilation_status build_kernels(opencl_runtime& runtime)
             return status;
         }
 
-        runtime.kernels[i] = clCreateKernel(runtime.programs[i], "run", &status.code);
+        runtime.kernels[i] = clCreateKernel(runtime.programs[i], kernel_entry_points[i], &status.code);
 
         if (status.code != CL_SUCCESS)
         {
