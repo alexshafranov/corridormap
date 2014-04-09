@@ -33,7 +33,7 @@ const char* kernel_mark_features_source = \
 "           (uint)(255.f * color.s3) << 0  ;                                                            \n"
 "}                                                                                                      \n"
 "                                                                                                       \n"
-"kernel void mark_features(                                                                             \n"
+"kernel void run(                                                                                       \n"
 "    read_only  image2d_t voronoi,                                                                      \n"
 "    write_only image2d_t vertex_marks,                                                                 \n"
 "    write_only image2d_t edge_marks)                                                                   \n"
@@ -74,7 +74,7 @@ const char* kernel_mark_features_debug_source = \
 
 "const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE|CLK_ADDRESS_CLAMP|CLK_FILTER_NEAREST;            \n"
 "                                                                                                       \n"
-"kernel void mark_features_debug(                                                                       \n"
+"kernel void run(                                                                                       \n"
 "    read_only  image2d_t marks,                                                                        \n"
 "    write_only image2d_t voronoi,                                                                      \n"
 "    const uint color,                                                                                  \n"
