@@ -21,3 +21,4 @@
 
 CORRIDORMAP_KERNEL_ID(mark_features)
 CORRIDORMAP_KERNEL_ID(mark_features_debug)
+CORRIDORMAP_KERNEL_ID(scan_reduce)
