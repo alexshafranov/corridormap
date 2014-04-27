@@ -22,3 +22,4 @@
 CORRIDORMAP_KERNEL_ID(mark_features)
 CORRIDORMAP_KERNEL_ID(mark_features_debug)
 CORRIDORMAP_KERNEL_ID(compaction_reduce)
+CORRIDORMAP_KERNEL_ID(compaction_scan_partials)
