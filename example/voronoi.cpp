@@ -78,6 +78,9 @@ namespace
     const int screen_width = 720;
     const int screen_height = 720;
 
+    const int render_target_width = 4096;
+    const int render_target_height = 4096;
+
     // colors to use for diagram instead of indices.
     unsigned colors[] =
     {
@@ -151,8 +154,8 @@ int main()
 
     corridormap::renderer_gl render_iface;
     corridormap::renderer::parameters render_params;
-    render_params.render_target_width = screen_width;
-    render_params.render_target_height = screen_height;
+    render_params.render_target_width = render_target_width;
+    render_params.render_target_height = render_target_height;
     render_params.min[0] = obstacle_bounds.min[0];
     render_params.min[1] = obstacle_bounds.min[1];
     render_params.max[0] = obstacle_bounds.max[0];
@@ -203,8 +206,8 @@ int main()
 
         render_iface.acquire_shared(cl_runtime.queue, voronoi_image);
         error_code = corridormap::mark_voronoi_features(cl_runtime, voronoi_image);
-        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_edges_img, 0xff000000, 2);
-        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_vertices_img, 0xffffffff, 4);
+        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_edges_img, 0xff000000, 8);
+        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_vertices_img, 0xffffffff, 16);
         error_code = corridormap::compact_voronoi_features(cl_runtime);
         render_iface.release_shared(cl_runtime.queue, voronoi_image);
 
