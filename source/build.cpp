@@ -481,22 +481,48 @@ cl_int compact_voronoi_features(opencl_runtime& runtime)
     cl_uint pixel_count = static_cast<cl_uint>(width * height);
 
     cl_kernel kernel_reduce = runtime.kernels[kernel_id_compaction_reduce];
-    // cl_kernel kernel_scan = runtime.kernels[kernel_id_compaction_scan_partials];
-    // cl_kernel kernel_output = runtime.kernels[kernel_id_compaction_output];
+    cl_kernel kernel_scan = runtime.kernels[kernel_id_compaction_scan_partials];
+    cl_kernel kernel_output = runtime.kernels[kernel_id_compaction_output];
 
     size_t max_wgsize = 0;
     clGetKernelWorkGroupInfo(kernel_reduce, runtime.device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &max_wgsize, 0);
 
     size_t wg_size = (max_wgsize >= 128) ? 128 : max_wgsize;
     const size_t simd_size = 32;
+    const size_t local_mem_size = 2 * wg_size * sizeof(cl_uint);
+
+    // 1. reduce.
 
     clSetKernelArg(kernel_reduce, 0, sizeof(cl_mem), &runtime.voronoi_vertices_img);
     clSetKernelArg(kernel_reduce, 1, sizeof(cl_mem), &runtime.compaction_sums_buf);
-    clSetKernelArg(kernel_reduce, 2, 2 * wg_size * sizeof(cl_uint), 0);
+    clSetKernelArg(kernel_reduce, 2, local_mem_size, 0);
     clSetKernelArg(kernel_reduce, 3, sizeof(cl_uint), &pixel_count);
 
     size_t reduce_global_work_size = 2 * wg_size * simd_size;
     error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_reduce, 1, 0, &reduce_global_work_size, &wg_size, 0, 0, 0);
+    CORRIDORMAP_CHECK_OCL(error_code);
+
+    // 2. scan partials.
+
+    clSetKernelArg(kernel_scan, 0, sizeof(cl_mem), &runtime.compaction_sums_buf);
+    clSetKernelArg(kernel_scan, 1, sizeof(cl_mem), &runtime.compaction_offsets_buf);
+    clSetKernelArg(kernel_scan, 2, local_mem_size, 0);
+
+    size_t scan_global_work_size = wg_size;
+    error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_scan, 1, 0, &scan_global_work_size, &wg_size, 0, 0, 0);
+    CORRIDORMAP_CHECK_OCL(error_code);
+
+    // 3. compacted output.
+
+    clSetKernelArg(kernel_output, 0, sizeof(cl_mem), &runtime.voronoi_vertices_img);
+    clSetKernelArg(kernel_output, 1, sizeof(cl_mem), &runtime.voronoi_vertices_compacted_buf);
+    clSetKernelArg(kernel_output, 2, sizeof(cl_mem), &runtime.compaction_sums_buf);
+    clSetKernelArg(kernel_output, 3, sizeof(cl_mem), &runtime.compaction_offsets_buf);
+    clSetKernelArg(kernel_output, 4, local_mem_size, 0);
+    clSetKernelArg(kernel_output, 5, sizeof(cl_uint), &pixel_count);
+
+    size_t output_global_work_size = 2 * wg_size * simd_size;
+    error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_output, 1, 0, &output_global_work_size, &wg_size, 0, 0, 0);
     CORRIDORMAP_CHECK_OCL(error_code);
 
     return error_code;
