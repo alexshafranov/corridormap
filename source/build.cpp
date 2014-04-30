@@ -525,6 +525,11 @@ cl_int compact_voronoi_features(opencl_runtime& runtime)
     error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_output, 1, 0, &output_global_work_size, &wg_size, 0, 0, 0);
     CORRIDORMAP_CHECK_OCL(error_code);
 
+    const size_t result_offset = 2*wg_size*sizeof(cl_uint);
+
+    error_code = clEnqueueReadBuffer(runtime.queue, runtime.compaction_offsets_buf, CL_TRUE, result_offset, sizeof(cl_uint), &runtime.voronoi_vertex_marks_count, 0, 0, 0);
+    CORRIDORMAP_CHECK_OCL(error_code);
+
     return error_code;
 }
 

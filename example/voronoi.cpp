@@ -215,6 +215,8 @@ int main()
         }
 
         clFinish(cl_runtime.queue);
+
+        printf("voronoi vertices: %d\n", cl_runtime.voronoi_vertex_marks_count);
     }
 
     while (!glfwWindowShouldClose(window))
