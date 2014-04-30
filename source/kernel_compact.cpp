@@ -138,10 +138,15 @@ const char* kernel_compaction_scan_partials_source = \
 "    block_data[lid + 0] = sums[lid + 0];                                                                                   \n"
 "    block_data[lid + block_size] = sums[lid + block_size];                                                                 \n"
 "                                                                                                                           \n"
-"    scan_block(block_data, block_size*2, lid, block_size);                                                                 \n"
+"    uint sum = scan_block(block_data, block_size*2, lid, block_size);                                                      \n"
 "                                                                                                                           \n"
 "    offsets[lid + 0] = block_data[lid + 0];                                                                                \n"
 "    offsets[lid + block_size] = block_data[lid + block_size];                                                              \n"
+"                                                                                                                           \n"
+"    if (lid == block_size - 1)                                                                                             \n"
+"    {                                                                                                                      \n"
+"        offsets[block_size] = sum;                                                                                         \n"
+"    }                                                                                                                      \n"
 "}                                                                                                                          \n";
 
 const char* kernel_compaction_output_source = \

@@ -451,7 +451,7 @@ cl_int allocate_compacted_voronoi_features(opencl_runtime& runtime)
     cl_mem sums_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, 2*wg_size*sizeof(cl_uint), 0, &error_code);
     CORRIDORMAP_CHECK_OCL(error_code);
 
-    cl_mem offsets_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, 2*wg_size*sizeof(cl_uint), 0, &error_code);
+    cl_mem offsets_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, (1 + 2*wg_size) * sizeof(cl_uint), 0, &error_code);
     CORRIDORMAP_CHECK_OCL(error_code);
 
     cl_mem vertex_features_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, width*height*sizeof(cl_uint), 0, &error_code);
