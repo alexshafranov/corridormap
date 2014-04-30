@@ -98,6 +98,18 @@ struct opencl_runtime
     cl_mem voronoi_vertices_img;
     // 2d image with voronoi edges marked.
     cl_mem voronoi_edges_img;
+    // compactly stores indices of non-zero elements in voronoi_vertices_img.
+    cl_mem voronoi_vertices_compacted_buf;
+    // compactly indices of non-zero elements in voronoi_edges_img.
+    cl_mem voronoi_edges_compacted_buf;
+    // intermediate buffer for compaction kernels.
+    cl_mem compaction_sums_buf;
+    // intermediate buffer for compaction kernels.
+    cl_mem compaction_offsets_buf;
+    // number of voronoi vertices.
+    size_t voronoi_vertex_marks_count;
+    // number of points forming voronoi edges.
+    size_t voronoi_edge_marks_count;
 };
 
 // represents the result of corridormap::build_kernels.

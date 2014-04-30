@@ -68,7 +68,7 @@ const char* get_kernel_source(kernel_id id);
 // creates and compiles library's opencl kernels.
 compilation_status build_kernels(opencl_runtime& runtime);
 
-// allocates runtime.voronoi_vertices_img and runtime.voronoi_edges_img based on the input image size.
+// allocates output data for mark features kernel.
 cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 
 // marks voronoi vertices and egdes in runtime.voronoi_vertices_img and voronoi_edges_img from voronoi_image.
@@ -76,6 +76,12 @@ cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 
 // draw marks back to original voronoi image.
 cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color, unsigned int border);
+
+// allocates output data for gpu compaction
+cl_int allocate_voronoi_features_compact(opencl_runtime& runtime);
+
+// compact voronoi features on gpu, storing results in runtime.voronoi_vertices_compacted_buf and runtime.voronoi_edges_compacted_buf buffers.
+cl_int compact_voronoi_features(opencl_runtime& runtime);
 
 }
 
