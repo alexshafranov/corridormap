@@ -431,7 +431,7 @@ cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_
     return clEnqueueNDRangeKernel(runtime.queue, kernel, 2, 0, global_work_size, 0, 0, 0, 0);
 }
 
-cl_int allocate_voronoi_features_compact(opencl_runtime& runtime)
+cl_int allocate_compacted_voronoi_features(opencl_runtime& runtime)
 {
     cl_int error_code;
 
