@@ -59,7 +59,7 @@ void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
 // inits library opencl runtime from render interface shared context, creates opencl command queue.
 opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared);
 
-// releases queue, kernels and context.
+// releases opencl objects.
 void term_opencl_runtime(opencl_runtime& runtime);
 
 // returns source code for the kernel with specified id.
