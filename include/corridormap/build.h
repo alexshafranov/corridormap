@@ -72,13 +72,13 @@ compilation_status build_kernels(opencl_runtime& runtime);
 cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 
 // marks voronoi vertices and egdes in runtime.voronoi_vertices_img and voronoi_edges_img from voronoi_image.
-cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_event* event=0);
+cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 
 // draw marks back to original voronoi image.
 cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color, unsigned int border);
 
 // compact voronoi features on gpu, storing results in runtime.voronoi_vertices_compacted_buf and runtime.voronoi_edges_compacted_buf buffers.
-cl_int compact_voronoi_features(opencl_runtime& runtime, cl_event* event=0);
+cl_int compact_voronoi_features(opencl_runtime& runtime);
 
 }
 

@@ -385,7 +385,7 @@ cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
     return CL_SUCCESS;
 }
 
-cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_event* event)
+cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
 {
     size_t width;
     clGetImageInfo(voronoi_image, CL_IMAGE_WIDTH, sizeof(width), &width, 0);
@@ -401,7 +401,7 @@ cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_e
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &runtime.voronoi_vertices_img);
     clSetKernelArg(kernel, 2, sizeof(cl_mem), &runtime.voronoi_edges_img);
 
-    return clEnqueueNDRangeKernel(runtime.queue, kernel, 2, 0, global_work_size, 0, 0, 0, event);
+    return clEnqueueNDRangeKernel(runtime.queue, kernel, 2, 0, global_work_size, 0, 0, 0, 0);
 }
 
 cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color, unsigned int border)
@@ -448,7 +448,7 @@ namespace
 
 namespace
 {
-    cl_int compact_features(opencl_runtime& runtime, cl_mem image, cl_mem sums_buf, cl_mem offsets_buf, cl_mem* compacted_buf, size_t* count, cl_event* event)
+    cl_int compact_features(opencl_runtime& runtime, cl_mem image, cl_mem sums_buf, cl_mem offsets_buf, cl_mem* compacted_buf, size_t* count)
     {
         cl_int error_code;
 
@@ -503,13 +503,7 @@ namespace
 
         if (*count == 0)
         {
-            if (event)
-            {
-                *event = event_read;
-            }
-
             compacted_buf = 0;
-
             return error_code;
         }
 
@@ -525,22 +519,18 @@ namespace
         clSetKernelArg(kernel_output, 5, sizeof(cl_uint), &pixel_count);
 
         size_t output_global_work_size = 2*wg_size*simd_size;
-        error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_output, 1, 0, &output_global_work_size, &wg_size, 1, &event_scan, &event_output);
+        error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_output, 1, 0, &output_global_work_size, &wg_size, 0, 0, &event_output);
         CORRIDORMAP_CHECK_OCL(error_code);
 
-        if (event)
-        {
-            *event = event_output;
-        }
+        clWaitForEvents(1, &event_output);
 
         return error_code;
     }
 }
 
-cl_int compact_voronoi_features(opencl_runtime& runtime, cl_event* result_event)
+cl_int compact_voronoi_features(opencl_runtime& runtime)
 {
     cl_int error_code;
-    cl_event event;
 
     size_t wg_size = get_compaction_wgsize(runtime);
 
@@ -553,12 +543,10 @@ cl_int compact_voronoi_features(opencl_runtime& runtime, cl_event* result_event)
     runtime.compaction_sums_buf = sums_buf;
     runtime.compaction_offsets_buf = offsets_buf;
 
-    error_code = compact_features(runtime, runtime.voronoi_vertices_img, sums_buf, offsets_buf, &runtime.voronoi_vertices_compacted_buf, &runtime.voronoi_vertex_marks_count, &event);
+    error_code = compact_features(runtime, runtime.voronoi_vertices_img, sums_buf, offsets_buf, &runtime.voronoi_vertices_compacted_buf, &runtime.voronoi_vertex_marks_count);
     CORRIDORMAP_CHECK_OCL(error_code);
 
-    clEnqueueWaitForEvents(runtime.queue, 1, &event);
-
-    error_code = compact_features(runtime, runtime.voronoi_edges_img, sums_buf, offsets_buf, &runtime.voronoi_edges_compacted_buf, &runtime.voronoi_edge_marks_count, result_event);
+    error_code = compact_features(runtime, runtime.voronoi_edges_img, sums_buf, offsets_buf, &runtime.voronoi_edges_compacted_buf, &runtime.voronoi_edge_marks_count);
     CORRIDORMAP_CHECK_OCL(error_code);
 
     return error_code;
