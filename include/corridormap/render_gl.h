@@ -349,7 +349,7 @@ public:
         glEnable(GL_CULL_FACE);
         glFrontFace(GL_CCW);
         glDisable(GL_DEPTH_TEST);
-        // glDepthMask(GL_FALSE);
+        glDepthMask(GL_FALSE);
 
         // texture.
         glActiveTexture(GL_TEXTURE0);

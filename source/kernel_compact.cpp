@@ -143,9 +143,9 @@ const char* kernel_compaction_scan_partials_source = \
 "    offsets[lid + 0] = block_data[lid + 0];                                                                                \n"
 "    offsets[lid + block_size] = block_data[lid + block_size];                                                              \n"
 "                                                                                                                           \n"
-"    if (lid == block_size - 1)                                                                                             \n"
+"    if (lid == 0)                                                                                                          \n"
 "    {                                                                                                                      \n"
-"        offsets[block_size] = sum;                                                                                         \n"
+"        offsets[2 * block_size] = sum;                                                                                     \n"
 "    }                                                                                                                      \n"
 "}                                                                                                                          \n";
 

@@ -431,6 +431,21 @@ cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_
     return clEnqueueNDRangeKernel(runtime.queue, kernel, 2, 0, global_work_size, 0, 0, 0, 0);
 }
 
+namespace
+{
+    size_t get_compaction_wgsize(opencl_runtime& runtime)
+    {
+        cl_kernel kernel_reduce = runtime.kernels[kernel_id_compaction_reduce];
+
+        size_t max_wgsize = 0;
+        clGetKernelWorkGroupInfo(kernel_reduce, runtime.device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &max_wgsize, 0);
+
+        size_t wg_size = (max_wgsize >= 128) ? 128 : max_wgsize;
+
+        return wg_size;
+    }
+}
+
 cl_int allocate_compacted_voronoi_features(opencl_runtime& runtime)
 {
     cl_int error_code;
@@ -441,12 +456,7 @@ cl_int allocate_compacted_voronoi_features(opencl_runtime& runtime)
     size_t height;
     clGetImageInfo(runtime.voronoi_vertices_img, CL_IMAGE_HEIGHT, sizeof(height), &height, 0);
 
-    cl_kernel kernel_reduce = runtime.kernels[kernel_id_compaction_reduce];
-
-    size_t max_wgsize = 0;
-    clGetKernelWorkGroupInfo(kernel_reduce, runtime.device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &max_wgsize, 0);
-
-    size_t wg_size = (max_wgsize >= 128) ? 128 : max_wgsize;
+    size_t wg_size = get_compaction_wgsize(runtime);
 
     cl_mem sums_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, 2*wg_size*sizeof(cl_uint), 0, &error_code);
     CORRIDORMAP_CHECK_OCL(error_code);
@@ -484,12 +494,10 @@ cl_int compact_voronoi_features(opencl_runtime& runtime)
     cl_kernel kernel_scan = runtime.kernels[kernel_id_compaction_scan_partials];
     cl_kernel kernel_output = runtime.kernels[kernel_id_compaction_output];
 
-    size_t max_wgsize = 0;
-    clGetKernelWorkGroupInfo(kernel_reduce, runtime.device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &max_wgsize, 0);
+    size_t wg_size = get_compaction_wgsize(runtime);
 
-    size_t wg_size = (max_wgsize >= 128) ? 128 : max_wgsize;
     const size_t simd_size = 32;
-    const size_t local_mem_size = 2 * wg_size * sizeof(cl_uint);
+    const size_t local_mem_size = 2*wg_size*sizeof(cl_uint);
 
     // 1. reduce.
 
@@ -498,7 +506,7 @@ cl_int compact_voronoi_features(opencl_runtime& runtime)
     clSetKernelArg(kernel_reduce, 2, local_mem_size, 0);
     clSetKernelArg(kernel_reduce, 3, sizeof(cl_uint), &pixel_count);
 
-    size_t reduce_global_work_size = 2 * wg_size * simd_size;
+    size_t reduce_global_work_size = 2*wg_size*simd_size;
     error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_reduce, 1, 0, &reduce_global_work_size, &wg_size, 0, 0, 0);
     CORRIDORMAP_CHECK_OCL(error_code);
 
@@ -521,12 +529,11 @@ cl_int compact_voronoi_features(opencl_runtime& runtime)
     clSetKernelArg(kernel_output, 4, local_mem_size, 0);
     clSetKernelArg(kernel_output, 5, sizeof(cl_uint), &pixel_count);
 
-    size_t output_global_work_size = 2 * wg_size * simd_size;
+    size_t output_global_work_size = 2*wg_size*simd_size;
     error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_output, 1, 0, &output_global_work_size, &wg_size, 0, 0, 0);
     CORRIDORMAP_CHECK_OCL(error_code);
 
     const size_t result_offset = 2*wg_size*sizeof(cl_uint);
-
     error_code = clEnqueueReadBuffer(runtime.queue, runtime.compaction_offsets_buf, CL_TRUE, result_offset, sizeof(cl_uint), &runtime.voronoi_vertex_marks_count, 0, 0, 0);
     CORRIDORMAP_CHECK_OCL(error_code);
 
