@@ -202,7 +202,6 @@ int main()
         }
 
         corridormap::allocate_voronoi_features(cl_runtime, voronoi_image);
-        corridormap::allocate_compacted_voronoi_features(cl_runtime);
 
         render_iface.acquire_shared(cl_runtime.queue, voronoi_image);
         error_code = corridormap::mark_voronoi_features(cl_runtime, voronoi_image);

@@ -102,10 +102,6 @@ struct opencl_runtime
     cl_mem voronoi_vertices_compacted_buf;
     // compactly indices of non-zero elements in voronoi_edges_img.
     cl_mem voronoi_edges_compacted_buf;
-    // intermediate buffer for compaction kernels.
-    cl_mem compaction_sums_buf;
-    // intermediate buffer for compaction kernels.
-    cl_mem compaction_offsets_buf;
     // number of voronoi vertices.
     size_t voronoi_vertex_marks_count;
     // number of points forming voronoi edges.

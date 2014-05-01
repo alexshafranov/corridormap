@@ -294,8 +294,6 @@ void term_opencl_runtime(opencl_runtime& runtime)
     clReleaseMemObject(runtime.voronoi_edges_img);
     clReleaseMemObject(runtime.voronoi_vertices_compacted_buf);
     clReleaseMemObject(runtime.voronoi_edges_compacted_buf);
-    clReleaseMemObject(runtime.compaction_sums_buf);
-    clReleaseMemObject(runtime.compaction_offsets_buf);
 
     clReleaseCommandQueue(runtime.queue);
 
@@ -446,41 +444,9 @@ namespace
     }
 }
 
-cl_int allocate_compacted_voronoi_features(opencl_runtime& runtime)
-{
-    cl_int error_code;
-
-    size_t width;
-    clGetImageInfo(runtime.voronoi_vertices_img, CL_IMAGE_WIDTH, sizeof(width), &width, 0);
-
-    size_t height;
-    clGetImageInfo(runtime.voronoi_vertices_img, CL_IMAGE_HEIGHT, sizeof(height), &height, 0);
-
-    size_t wg_size = get_compaction_wgsize(runtime);
-
-    cl_mem sums_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, 2*wg_size*sizeof(cl_uint), 0, &error_code);
-    CORRIDORMAP_CHECK_OCL(error_code);
-
-    cl_mem offsets_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, (1 + 2*wg_size) * sizeof(cl_uint), 0, &error_code);
-    CORRIDORMAP_CHECK_OCL(error_code);
-
-    cl_mem vertex_features_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, width*height*sizeof(cl_uint), 0, &error_code);
-    CORRIDORMAP_CHECK_OCL(error_code);
-
-    cl_mem edge_features_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, width*height*sizeof(cl_uint), 0, &error_code);
-    CORRIDORMAP_CHECK_OCL(error_code);
-
-    runtime.compaction_sums_buf = sums_buf;
-    runtime.compaction_offsets_buf = offsets_buf;
-    runtime.voronoi_vertices_compacted_buf = vertex_features_buf;
-    runtime.voronoi_edges_compacted_buf = edge_features_buf;
-
-    return error_code;
-}
-
 namespace
 {
-    cl_int compact_features(opencl_runtime& runtime, cl_mem image, size_t* count, cl_event* event)
+    cl_int compact_features(opencl_runtime& runtime, cl_mem image, cl_mem sums_buf, cl_mem offsets_buf, cl_mem* compacted_buf, size_t* count, cl_event* event)
     {
         cl_int error_code;
 
@@ -503,12 +469,13 @@ namespace
 
         cl_event event_reduce;
         cl_event event_scan;
+        cl_event event_read;
         cl_event event_output;
 
         // 1. reduce.
 
         clSetKernelArg(kernel_reduce, 0, sizeof(cl_mem), &image);
-        clSetKernelArg(kernel_reduce, 1, sizeof(cl_mem), &runtime.compaction_sums_buf);
+        clSetKernelArg(kernel_reduce, 1, sizeof(cl_mem), &sums_buf);
         clSetKernelArg(kernel_reduce, 2, local_mem_size, 0);
         clSetKernelArg(kernel_reduce, 3, sizeof(cl_uint), &pixel_count);
 
@@ -518,29 +485,45 @@ namespace
 
         // 2. scan partials.
 
-        clSetKernelArg(kernel_scan, 0, sizeof(cl_mem), &runtime.compaction_sums_buf);
-        clSetKernelArg(kernel_scan, 1, sizeof(cl_mem), &runtime.compaction_offsets_buf);
+        clSetKernelArg(kernel_scan, 0, sizeof(cl_mem), &sums_buf);
+        clSetKernelArg(kernel_scan, 1, sizeof(cl_mem), &offsets_buf);
         clSetKernelArg(kernel_scan, 2, local_mem_size, 0);
 
         size_t scan_global_work_size = wg_size;
         error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_scan, 1, 0, &scan_global_work_size, &wg_size, 1, &event_reduce, &event_scan);
         CORRIDORMAP_CHECK_OCL(error_code);
 
+        const size_t result_offset = 2*wg_size*sizeof(cl_uint);
+        error_code = clEnqueueReadBuffer(runtime.queue, offsets_buf, CL_FALSE, result_offset, sizeof(cl_uint), count, 1, &event_scan, &event_read);
+        CORRIDORMAP_CHECK_OCL(error_code);
+
+        clWaitForEvents(1, &event_read);
+
+        if (*count == 0)
+        {
+            if (event)
+            {
+                *event = event_read;
+            }
+
+            compacted_buf = 0;
+
+            return error_code;
+        }
+
+        *compacted_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, (*count)*sizeof(cl_uint), 0, &error_code);
+
         // 3. compacted output.
 
         clSetKernelArg(kernel_output, 0, sizeof(cl_mem), &image);
-        clSetKernelArg(kernel_output, 1, sizeof(cl_mem), &runtime.voronoi_vertices_compacted_buf);
-        clSetKernelArg(kernel_output, 2, sizeof(cl_mem), &runtime.compaction_sums_buf);
-        clSetKernelArg(kernel_output, 3, sizeof(cl_mem), &runtime.compaction_offsets_buf);
+        clSetKernelArg(kernel_output, 1, sizeof(cl_mem), compacted_buf);
+        clSetKernelArg(kernel_output, 2, sizeof(cl_mem), &sums_buf);
+        clSetKernelArg(kernel_output, 3, sizeof(cl_mem), &offsets_buf);
         clSetKernelArg(kernel_output, 4, local_mem_size, 0);
         clSetKernelArg(kernel_output, 5, sizeof(cl_uint), &pixel_count);
 
         size_t output_global_work_size = 2*wg_size*simd_size;
         error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_output, 1, 0, &output_global_work_size, &wg_size, 1, &event_scan, &event_output);
-        CORRIDORMAP_CHECK_OCL(error_code);
-
-        const size_t result_offset = 2*wg_size*sizeof(cl_uint);
-        error_code = clEnqueueReadBuffer(runtime.queue, runtime.compaction_offsets_buf, CL_FALSE, result_offset, sizeof(cl_uint), count, 1, &event_scan, 0);
         CORRIDORMAP_CHECK_OCL(error_code);
 
         if (event)
@@ -557,12 +540,20 @@ cl_int compact_voronoi_features(opencl_runtime& runtime, cl_event* result_event)
     cl_int error_code;
     cl_event event;
 
-    error_code = compact_features(runtime, runtime.voronoi_vertices_img, &runtime.voronoi_vertex_marks_count, &event);
+    size_t wg_size = get_compaction_wgsize(runtime);
+
+    cl_mem sums_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, 2*wg_size*sizeof(cl_uint), 0, &error_code);
+    CORRIDORMAP_CHECK_OCL(error_code);
+
+    cl_mem offsets_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, (1 + 2*wg_size) * sizeof(cl_uint), 0, &error_code);
+    CORRIDORMAP_CHECK_OCL(error_code);
+
+    error_code = compact_features(runtime, runtime.voronoi_vertices_img, sums_buf, offsets_buf, &runtime.voronoi_vertices_compacted_buf, &runtime.voronoi_vertex_marks_count, &event);
     CORRIDORMAP_CHECK_OCL(error_code);
 
     clEnqueueWaitForEvents(runtime.queue, 1, &event);
 
-    error_code = compact_features(runtime, runtime.voronoi_edges_img, &runtime.voronoi_edge_marks_count, result_event);
+    error_code = compact_features(runtime, runtime.voronoi_edges_img, sums_buf, offsets_buf, &runtime.voronoi_edges_compacted_buf, &runtime.voronoi_edge_marks_count, result_event);
     CORRIDORMAP_CHECK_OCL(error_code);
 
     return error_code;
