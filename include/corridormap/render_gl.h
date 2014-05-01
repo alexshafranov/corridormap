@@ -164,17 +164,41 @@ class renderer_gl : public renderer
 {
 public:
 
+    renderer_gl()
+        : _scratch_memory(0)
+        , _frame_buffer(0)
+        , _color_buffer_texture(0)
+        , _depth_buffer_texture(0)
+        , _vertex_array(0)
+        , _vertex_buffer(0)
+    {
+        memset(&_draw_shader, 0, sizeof(shader));
+        memset(&_debug_quad_shader, 0, sizeof(shader));
+    }
+
+    virtual ~renderer_gl()
+    {
+        destroy_shader(_draw_shader);
+        destroy_shader(_debug_quad_shader);
+        glDeleteBuffers(1, &_vertex_buffer);
+        glDeleteVertexArrays(1, &_vertex_array);
+        glDeleteTextures(1, &_depth_buffer_texture);
+        glDeleteTextures(1, &_color_buffer_texture);
+        glDeleteFramebuffers(1, &_frame_buffer);
+    }
+
     virtual bool initialize(renderer::parameters params, memory* scratch_memory)
     {
         _params = params;
         _scratch_memory = scratch_memory;
 
         glGenFramebuffers(1, &_frame_buffer);
-        glGenTextures(2, _output_textures);
+        glGenTextures(1, &_color_buffer_texture);
+        glGenTextures(1, &_depth_buffer_texture);
 
         // initialize output textures
         {
-            glBindTexture(GL_TEXTURE_2D, _output_textures[0]);
+            glBindTexture(GL_TEXTURE_2D, _color_buffer_texture);
             glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, params.render_target_width, params.render_target_height);
 
             if (glGetError() != GL_NO_ERROR)
@@ -182,7 +206,7 @@ public:
                 return false;
             }
 
-            glBindTexture(GL_TEXTURE_2D, _output_textures[1]);
+            glBindTexture(GL_TEXTURE_2D, _depth_buffer_texture);
             glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, params.render_target_width, params.render_target_height);
 
             if (glGetError() != GL_NO_ERROR)
@@ -197,14 +221,14 @@ public:
         {
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _frame_buffer);
 
-            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _output_textures[0], 0);
+            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _color_buffer_texture, 0);
 
             if (glGetError() != GL_NO_ERROR)
             {
                 return false;
             }
 
-            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _output_textures[1], 0);
+            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_buffer_texture, 0);
 
             if (glGetError() != GL_NO_ERROR)
             {
@@ -262,16 +286,6 @@ public:
         _debug_quad_shader = create_shader(debug_quad_vertex_shader, debug_quad_fragment_shader);
 
         return true;
-    }
-
-    virtual void finalize()
-    {
-        destroy_shader(_draw_shader);
-        destroy_shader(_debug_quad_shader);
-        glDeleteBuffers(1, &_vertex_buffer);
-        glDeleteVertexArrays(1, &_vertex_array);
-        glDeleteTextures(2, _output_textures);
-        glDeleteFramebuffers(1, &_frame_buffer);
     }
 
     virtual void begin()
@@ -353,7 +367,7 @@ public:
 
         // texture.
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, _output_textures[0]);
+        glBindTexture(GL_TEXTURE_2D, _color_buffer_texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -432,7 +446,7 @@ public:
 
     virtual cl_mem share_pixels(cl_context shared_context, cl_mem_flags flags, cl_int* error_code)
     {
-        return clCreateFromGLTexture2D(shared_context, flags, GL_TEXTURE_2D, 0, _output_textures[0], error_code);
+        return clCreateFromGLTexture2D(shared_context, flags, GL_TEXTURE_2D, 0, _color_buffer_texture, error_code);
     }
 
     virtual cl_int acquire_shared(cl_command_queue queue, cl_mem object)
@@ -450,7 +464,8 @@ private:
     memory* _scratch_memory;
 
     GLuint _frame_buffer;
-    GLuint _output_textures[2];
+    GLuint _color_buffer_texture;
+    GLuint _depth_buffer_texture;
 
     GLuint _vertex_array;
     GLuint _vertex_buffer;
@@ -459,9 +474,9 @@ private:
     GLint  _wvp_location;
     GLint  _color_location;
 
-    GLfloat _projection[4*4];
-
     shader _debug_quad_shader;
+
+    GLfloat _projection[4*4];
 };
 
 }

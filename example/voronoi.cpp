@@ -165,7 +165,6 @@ int main()
     if (!render_iface.initialize(render_params, &mem))
     {
         fprintf(stderr, "failed to initialize render interface.\n");
-        render_iface.finalize();
         return 1;
     }
 
@@ -186,7 +185,6 @@ int main()
             char* build_log = corridormap::allocate<char>(&mem, build_log_size);
             clGetProgramBuildInfo(cl_runtime.programs[status.kernel], cl_runtime.device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log, 0);
             fprintf(stderr, "build log: %s\n", build_log);
-            render_iface.finalize();
             return 1;
         }
     }
@@ -210,7 +208,7 @@ int main()
 
         if (error_code != CL_SUCCESS)
         {
-            fprintf(stderr, "failed to run mark_poi.\n");
+            fprintf(stderr, "failed to run opencl kernels.\n");
             return 1;
         }
 
@@ -231,7 +229,6 @@ int main()
         glfwPollEvents();
     }
 
-    render_iface.finalize();
     corridormap::deallocate_distance_mesh(&mem, mesh);
 
     return 0;

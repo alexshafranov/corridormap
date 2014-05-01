@@ -60,8 +60,6 @@ public:
 
     // initialize renderer. returns false on failure.
     virtual bool initialize(parameters params, memory* scratch_memory) = 0;
-    // release resources.
-    virtual void finalize() = 0;
     // begin scene.
     virtual void begin() = 0;
     // draw mesh with uniform color. length of vertices array is tri_count*3.

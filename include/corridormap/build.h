@@ -41,6 +41,7 @@ int vertex_distance_mesh_tris(float max_dist, float max_error);
 // computes upper bound on number of vertices required for distance mesh.
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error);
 
+
 // allocates distanece mesh data arrays.
 distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error);
 
@@ -55,6 +56,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 
 // sets color of a segment to colors[segment_index % ncolors].
 void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
+
 
 // inits library opencl runtime from render interface shared context, creates opencl command queue.
 opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared);
