@@ -81,8 +81,8 @@ float max_distance(bbox2 scene_bbox)
 
 int vertex_distance_mesh_tris(float max_dist, float max_error)
 {
-    float cone_half_angle = acos((max_dist - max_error)/max_dist);
-    unsigned cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI / cone_half_angle));
+    float cone_half_angle = acos((max_dist-max_error)/max_dist);
+    unsigned cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI/cone_half_angle));
     return cone_triangle_count;
 }
 
@@ -90,7 +90,7 @@ int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error)
 {
     int point_tris = vertex_distance_mesh_tris(max_dist, max_error);
     // point_tris triangles per vertex plus 4 triangles per edge plus four border planes.
-    return point_tris * f.num_verts * 3 + f.num_verts * 4 * 3 + 6 * 4;
+    return point_tris*f.num_verts*3 + f.num_verts*4*3 + 6*4;
 }
 
 distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error)
@@ -101,8 +101,8 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
     int max_verts = max_distance_mesh_verts(f, max_dist, max_error);
     result.verts = allocate<vertex>(mem, max_verts * sizeof(vertex));
     // 4 segments for border and num_polys segments for obstacles.
-    result.num_segment_verts = allocate<int>(mem, (num_border_segments + f.num_polys)*sizeof(int));
-    result.segment_colors = allocate<unsigned int>(mem, (num_border_segments + f.num_polys)*sizeof(unsigned int));
+    result.num_segment_verts = allocate<int>(mem, (num_border_segments+f.num_polys) * sizeof(int));
+    result.segment_colors = allocate<unsigned int>(mem, (num_border_segments+f.num_polys) * sizeof(unsigned int));
     return result;
 }
 
@@ -130,12 +130,12 @@ namespace
             a->y = pos[1];
             a->z = 0.f;
 
-            b->x = pos[0] + radius * cos(start_angle + (i+0)*step_angle);
-            b->y = pos[1] + radius * sin(start_angle + (i+0)*step_angle);
+            b->x = pos[0] + radius*cos(start_angle + (i+0) * step_angle);
+            b->y = pos[1] + radius*sin(start_angle + (i+0) * step_angle);
             b->z = radius;
 
-            c->x = pos[0] + radius * cos(start_angle + (i+1)*step_angle);
-            c->y = pos[1] + radius * sin(start_angle + (i+1)*step_angle);
+            c->x = pos[0] + radius*cos(start_angle + (i+1) * step_angle);
+            c->y = pos[1] + radius*sin(start_angle + (i+1) * step_angle);
             c->z = radius;
         }
 
@@ -144,13 +144,13 @@ namespace
 
     inline int build_tent_side(vertex*& output, float a[2], float b[2], float len, float size)
     {
-        float nx = -(b[1] - a[1]) / len;
-        float ny = +(b[0] - a[0]) / len;
+        float nx = -(b[1]-a[1]) / len;
+        float ny = +(b[0]-a[0]) / len;
 
         vertex p0 = { a[0], a[1], 0.f };
         vertex p1 = { b[0], b[1], 0.f };
-        vertex p2 = { a[0] + size * nx, a[1] + size * ny, size };
-        vertex p3 = { b[0] + size * nx, b[1] + size * ny, size };
+        vertex p2 = { a[0] + size*nx, a[1] + size*ny, size };
+        vertex p3 = { b[0] + size*nx, b[1] + size*ny, size };
 
         *output++ = p0; *output++ = p1; *output++ = p2;
         *output++ = p2; *output++ = p1; *output++ = p3;
@@ -163,9 +163,9 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 {
     corridormap_assert(max_dist > max_error);
 
-    const float cone_half_angle = acos((max_dist - max_error)/max_dist);
-    const int cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI / cone_half_angle));
-    const float cone_angle = 2.f * CORRIDORMAP_PI / cone_triangle_count;
+    const float cone_half_angle = acos((max_dist-max_error) / max_dist);
+    const int cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI/cone_half_angle));
+    const float cone_angle = 2.f*CORRIDORMAP_PI/cone_triangle_count;
 
     // input
     const float* poly_x = in.x;
@@ -220,8 +220,8 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
             float angle_inner = acos(cos_inner);
             float angle_cone_sector = 2.f * CORRIDORMAP_PI - angle_inner;
 
-            int angle_cone_sector_steps = static_cast<unsigned>(ceil(angle_cone_sector / cone_angle));
-            float angle_cone_sector_step = angle_cone_sector / angle_cone_sector_steps;
+            int angle_cone_sector_steps = static_cast<unsigned>(ceil(angle_cone_sector/cone_angle));
+            float angle_cone_sector_step = angle_cone_sector/angle_cone_sector_steps;
             float angle_start = atan2(e0[1]/len_e0, e0[0]/len_e0);
 
             // 2. generate cone sector for the current vertex.
@@ -254,7 +254,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
         int num_verts = mesh.num_segment_verts[i];
         unsigned color = mesh.segment_colors[i];
         const vertex* vertices = mesh.verts + vertices_offset;
-        render_iface->draw(vertices, num_verts / 3, color);
+        render_iface->draw(vertices, num_verts/3, color);
         vertices_offset += num_verts;
     }
 
