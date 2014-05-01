@@ -107,9 +107,9 @@ struct opencl_runtime
     // temp buffer.
     cl_mem compaction_offsets_buf;
     // number of voronoi vertices.
-    size_t voronoi_vertex_marks_count;
+    size_t voronoi_vertex_mark_count;
     // number of points forming voronoi edges.
-    size_t voronoi_edge_marks_count;
+    size_t voronoi_edge_mark_count;
 };
 
 // represents the result of corridormap::build_kernels.

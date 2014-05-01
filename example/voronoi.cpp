@@ -216,8 +216,8 @@ int main()
 
         clFinish(cl_runtime.queue);
 
-        printf("voronoi vertices: %d\n", cl_runtime.voronoi_vertex_marks_count);
-        printf("voronoi edge marks: %d\n", cl_runtime.voronoi_edge_marks_count);
+        printf("voronoi vertices: %d\n", cl_runtime.voronoi_vertex_mark_count);
+        printf("voronoi edge marks: %d\n", cl_runtime.voronoi_edge_mark_count);
     }
 
     while (!glfwWindowShouldClose(window))

@@ -549,10 +549,10 @@ cl_int compact_voronoi_features(opencl_runtime& runtime)
     runtime.compaction_sums_buf = sums_buf;
     runtime.compaction_offsets_buf = offsets_buf;
 
-    error_code = compact_features(runtime, runtime.voronoi_vertices_img, sums_buf, offsets_buf, &runtime.voronoi_vertices_compacted_buf, &runtime.voronoi_vertex_marks_count);
+    error_code = compact_features(runtime, runtime.voronoi_vertices_img, sums_buf, offsets_buf, &runtime.voronoi_vertices_compacted_buf, &runtime.voronoi_vertex_mark_count);
     CORRIDORMAP_CHECK_OCL(error_code);
 
-    error_code = compact_features(runtime, runtime.voronoi_edges_img, sums_buf, offsets_buf, &runtime.voronoi_edges_compacted_buf, &runtime.voronoi_edge_marks_count);
+    error_code = compact_features(runtime, runtime.voronoi_edges_img, sums_buf, offsets_buf, &runtime.voronoi_edges_compacted_buf, &runtime.voronoi_edge_mark_count);
     CORRIDORMAP_CHECK_OCL(error_code);
 
     return error_code;
