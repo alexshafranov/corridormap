@@ -60,12 +60,14 @@ public:
 
     // initialize renderer. returns false on failure.
     virtual bool initialize(parameters params, memory* scratch_memory) = 0;
-    // begin scene.
+
+    // begin scene. must be called before any calls to draw.
     virtual void begin() = 0;
     // draw mesh with uniform color. length of vertices array is tri_count*3.
     virtual void draw(const vertex* vertices, unsigned tri_count, unsigned color) = 0;
-    // end scene.
+    // end scene. must be called after all calls to draw.
     virtual void end() = 0;
+
     // copy render target from video memory.
     virtual void read_pixels(unsigned char* destination) = 0;
 
