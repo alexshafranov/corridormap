@@ -294,6 +294,8 @@ void term_opencl_runtime(opencl_runtime& runtime)
     clReleaseMemObject(runtime.voronoi_edges_img);
     clReleaseMemObject(runtime.voronoi_vertices_compacted_buf);
     clReleaseMemObject(runtime.voronoi_edges_compacted_buf);
+    clReleaseMemObject(runtime.compaction_sums_buf);
+    clReleaseMemObject(runtime.compaction_offsets_buf);
 
     clReleaseCommandQueue(runtime.queue);
 
@@ -547,6 +549,9 @@ cl_int compact_voronoi_features(opencl_runtime& runtime, cl_event* result_event)
 
     cl_mem offsets_buf = clCreateBuffer(runtime.context, CL_MEM_READ_WRITE, (1 + 2*wg_size) * sizeof(cl_uint), 0, &error_code);
     CORRIDORMAP_CHECK_OCL(error_code);
+
+    runtime.compaction_sums_buf = sums_buf;
+    runtime.compaction_offsets_buf = offsets_buf;
 
     error_code = compact_features(runtime, runtime.voronoi_vertices_img, sums_buf, offsets_buf, &runtime.voronoi_vertices_compacted_buf, &runtime.voronoi_vertex_marks_count, &event);
     CORRIDORMAP_CHECK_OCL(error_code);
