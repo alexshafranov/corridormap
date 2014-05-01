@@ -68,9 +68,6 @@ const char* get_kernel_source(kernel_id id);
 // creates and compiles library's opencl kernels.
 compilation_status build_kernels(opencl_runtime& runtime);
 
-// allocates output data for mark features kernel.
-cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
-
 // marks voronoi vertices and egdes in runtime.voronoi_vertices_img and voronoi_edges_img from voronoi_image.
 cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
 
