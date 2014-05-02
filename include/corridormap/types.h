@@ -73,6 +73,25 @@ struct distance_mesh
     unsigned int* segment_colors;
 };
 
+// voronoi vertices and edges detected from the distance mesh render.
+struct voronoi_features
+{
+    // number of voronoi vertex points.
+    int num_vert_points;
+    // number of voronoi edge points.
+    int num_edge_points;
+    // grid indices (y*width + x) of vertex points. [0..num_vert_points].
+    unsigned int* verts;
+    // grid indices (y*width + x) of edge points. [0..num_edge_points].
+    unsigned int* edges;
+    // IDs (colors) of obstacles surrounding each vertex. [0..4*num_vert_points].
+    unsigned int* vert_obstacle_ids;
+    // IDs (colors) of obstacles from the left side of each edge point. [0..num_edge_points].
+    unsigned int* edge_obstacle_ids_left;
+    // IDs (colors) of obstacles from the right side of each edge point. [0..num_edge_points].
+    unsigned int* edge_obstacle_ids_right;
+};
+
 enum kernel_id
 {
     #define CORRIDORMAP_KERNEL_ID(NAME) kernel_id_##NAME,

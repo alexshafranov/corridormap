@@ -42,7 +42,7 @@ int vertex_distance_mesh_tris(float max_dist, float max_error);
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error);
 
 
-// allocates distanece mesh data arrays.
+// allocates distanece mesh data arrays using the given allocator.
 distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error);
 
 // deallocates distance mesh data arrays. 'mem' must be the same that was used for allocation.
@@ -81,6 +81,13 @@ cl_int compact_voronoi_features(opencl_runtime& runtime);
 
 // store obstacle ids (colors) for vertices and edge points in compact arrays.
 cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image);
+
+
+// allocates voronoi features data using the given allocator.
+voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int num_edge_points);
+
+// deallocates voronoi features data. 'mem' must be the same that was used for allocation.
+void deallocate_voronoi_features(memory* mem, voronoi_features& features);
 
 }
 

@@ -111,7 +111,7 @@ void deallocate_distance_mesh(memory* mem, distance_mesh& mesh)
     mem->deallocate(mesh.verts);
     mem->deallocate(mesh.num_segment_verts);
     mem->deallocate(mesh.segment_colors);
-    memset(&mesh, 0, sizeof(distance_mesh));
+    memset(&mesh, 0, sizeof(mesh));
 }
 
 namespace
@@ -584,6 +584,32 @@ cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image)
     CORRIDORMAP_CHECK_OCL(error_code);
 
     return error_code;
+}
+
+voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int num_edge_points)
+{
+    voronoi_features result;
+    memset(&result, 0, sizeof(result));
+
+    result.num_vert_points = num_vert_points;
+    result.num_edge_points = num_edge_points;
+    result.verts = allocate<unsigned int>(mem, num_vert_points*sizeof(unsigned int));
+    result.edges = allocate<unsigned int>(mem, num_edge_points*sizeof(unsigned int));
+    result.vert_obstacle_ids = allocate<unsigned int>(mem, 4*num_vert_points*sizeof(unsigned int));
+    result.edge_obstacle_ids_left = allocate<unsigned int>(mem, num_edge_points*sizeof(unsigned int));
+    result.edge_obstacle_ids_right = allocate<unsigned int>(mem, num_edge_points*sizeof(unsigned int));
+
+    return result;
+}
+
+void deallocate_voronoi_features(memory* mem, voronoi_features& features)
+{
+    mem->deallocate(features.verts);
+    mem->deallocate(features.edges);
+    mem->deallocate(features.vert_obstacle_ids);
+    mem->deallocate(features.edge_obstacle_ids_left);
+    mem->deallocate(features.edge_obstacle_ids_right);
+    memset(&features, 0, sizeof(features));
 }
 
 }
