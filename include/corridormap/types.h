@@ -94,24 +94,29 @@ struct opencl_runtime
     cl_kernel kernels[kernel_id_count];
     // array of kernel programs.
     cl_program programs[kernel_id_count];
+
     // 2d image with voronoi vertices marked.
     cl_mem voronoi_vertices_img;
     // 2d image with voronoi edges marked.
     cl_mem voronoi_edges_img;
+
     // compactly stores indices of non-zero elements in voronoi_vertices_img.
     cl_mem voronoi_vertices_compacted_buf;
     // compactly indices of non-zero elements in voronoi_edges_img.
     cl_mem voronoi_edges_compacted_buf;
+
+    // stores four obstacle ids per each vertex index in voronoi_vertices_compacted_buf.
+    cl_mem voronoi_vertex_ids;
     // stores left side obstacle id (color) for each edge point from voronoi_edges_compacted_buf.
     cl_mem voronoi_edge_ids_left;
     // stores right side obstacle id (color) for each edge point from voronoi_edges_compacted_buf.
     cl_mem voronoi_edge_ids_right;
-    // stores four obstacle ids per each vertex index in voronoi_vertices_compacted_buf.
-    cl_mem voronoi_vertex_ids;
+
     // temp buffer.
     cl_mem compaction_sums_buf;
     // temp buffer.
     cl_mem compaction_offsets_buf;
+
     // number of voronoi vertices.
     size_t voronoi_vertex_mark_count;
     // number of points forming voronoi edges.
