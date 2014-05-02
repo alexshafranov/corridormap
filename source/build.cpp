@@ -612,4 +612,9 @@ void deallocate_voronoi_features(memory* mem, voronoi_features& features)
     memset(&features, 0, sizeof(features));
 }
 
+cl_int transfer_voronoi_features(opencl_runtime& /*runtime*/, voronoi_features& /*features*/)
+{
+    return CL_SUCCESS;
+}
+
 }

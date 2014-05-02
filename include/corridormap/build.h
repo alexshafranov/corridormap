@@ -82,6 +82,9 @@ cl_int compact_voronoi_features(opencl_runtime& runtime);
 // store obstacle ids (colors) for vertices and edge points in compact arrays.
 cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image);
 
+// copy computed data from opencl device memory.
+cl_int transfer_voronoi_features(opencl_runtime& runtime, voronoi_features& features);
+
 
 // allocates voronoi features data using the given allocator.
 voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int num_edge_points);
