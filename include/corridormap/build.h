@@ -79,6 +79,9 @@ cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_
 // compact voronoi features on gpu, storing results in runtime.voronoi_vertices_compacted_buf and runtime.voronoi_edges_compacted_buf buffers.
 cl_int compact_voronoi_features(opencl_runtime& runtime);
 
+// store obstacle ids (colors) for vertices and edge points in compact arrays.
+cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image);
+
 }
 
 #endif

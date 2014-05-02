@@ -21,7 +21,7 @@
 
 namespace corridormap {
 
-const char* kernel_store_edge_obstacle_ids_source = \
+const char* kernel_store_vertex_obstacle_ids_source = \
 
 "const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE|CLK_ADDRESS_CLAMP_TO_EDGE|CLK_FILTER_NEAREST;    \n"
 "                                                                                                       \n"
@@ -52,7 +52,7 @@ const char* kernel_store_edge_obstacle_ids_source = \
 "    obstacle_ids[4*gid + 3] = d;                                                                       \n"
 "}                                                                                                      \n";
 
-const char* kernel_store_vertex_obstacle_ids_source = \
+const char* kernel_store_edge_obstacle_ids_source = \
 
 "const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE|CLK_ADDRESS_CLAMP_TO_EDGE|CLK_FILTER_NEAREST;                \n"
 "                                                                                                                   \n"
