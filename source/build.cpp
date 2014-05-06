@@ -454,7 +454,7 @@ namespace
 
 namespace
 {
-    cl_int compact_features(opencl_runtime& runtime, cl_mem image, cl_mem sums_buf, cl_mem offsets_buf, cl_mem* compacted_buf, size_t* count)
+    cl_int compact_features(opencl_runtime& runtime, cl_mem image, cl_mem sums_buf, cl_mem offsets_buf, cl_mem* compacted_buf, cl_uint* count)
     {
         cl_int error_code;
 
@@ -566,22 +566,27 @@ cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image)
     CORRIDORMAP_CHECK_OCL(error_code);
 
     cl_kernel kernel_edge = runtime.kernels[kernel_id_store_edge_obstacle_ids];
+    {
+        clSetKernelArg(kernel_edge, 0, sizeof(cl_mem), &voronoi_image);
+        clSetKernelArg(kernel_edge, 1, sizeof(cl_mem), &runtime.voronoi_edges_compacted_buf);
+        clSetKernelArg(kernel_edge, 2, sizeof(cl_mem), &runtime.voronoi_edge_ids_left);
+        clSetKernelArg(kernel_edge, 3, sizeof(cl_mem), &runtime.voronoi_edge_ids_right);
+
+        size_t global_work_size = runtime.voronoi_edge_mark_count;
+        error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_edge, 1, 0, &global_work_size, 0, 0, 0, 0);
+        CORRIDORMAP_CHECK_OCL(error_code);
+    }
+
     cl_kernel kernel_vertex = runtime.kernels[kernel_id_store_vertex_obstacle_ids];
+    {
+        clSetKernelArg(kernel_vertex, 0, sizeof(cl_mem), &voronoi_image);
+        clSetKernelArg(kernel_vertex, 1, sizeof(cl_mem), &runtime.voronoi_vertices_compacted_buf);
+        clSetKernelArg(kernel_vertex, 2, sizeof(cl_mem), &runtime.voronoi_vertex_ids);
 
-    clSetKernelArg(kernel_edge, 0, sizeof(cl_mem), &voronoi_image);
-    clSetKernelArg(kernel_edge, 1, sizeof(cl_mem), &runtime.voronoi_edges_compacted_buf);
-    clSetKernelArg(kernel_edge, 2, sizeof(cl_mem), &runtime.voronoi_edge_ids_left);
-    clSetKernelArg(kernel_edge, 3, sizeof(cl_mem), &runtime.voronoi_edge_ids_right);
-
-    error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_edge, 1, 0, &runtime.voronoi_edge_mark_count, 0, 0, 0, 0);
-    CORRIDORMAP_CHECK_OCL(error_code);
-
-    clSetKernelArg(kernel_vertex, 0, sizeof(cl_mem), &voronoi_image);
-    clSetKernelArg(kernel_vertex, 1, sizeof(cl_mem), &runtime.voronoi_vertices_compacted_buf);
-    clSetKernelArg(kernel_vertex, 2, sizeof(cl_mem), &runtime.voronoi_vertex_ids);
-
-    error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_vertex, 1, 0, &runtime.voronoi_vertex_mark_count, 0, 0, 0, 0);
-    CORRIDORMAP_CHECK_OCL(error_code);
+        size_t global_work_size = runtime.voronoi_vertex_mark_count;
+        error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_vertex, 1, 0, &global_work_size, 0, 0, 0, 0);
+        CORRIDORMAP_CHECK_OCL(error_code);
+    }
 
     return error_code;
 }
@@ -612,9 +617,26 @@ void deallocate_voronoi_features(memory* mem, voronoi_features& features)
     memset(&features, 0, sizeof(features));
 }
 
-cl_int transfer_voronoi_features(opencl_runtime& /*runtime*/, voronoi_features& /*features*/)
+cl_int transfer_voronoi_features(opencl_runtime& runtime, voronoi_features& features)
 {
-    return CL_SUCCESS;
+    cl_int error_code;
+
+    cl_event events[5];
+
+    error_code = clEnqueueReadBuffer(runtime.queue, runtime.voronoi_vertices_compacted_buf, CL_FALSE, 0, runtime.voronoi_vertex_mark_count*sizeof(cl_uint), features.verts, 0, 0, &events[0]);
+    CORRIDORMAP_CHECK_OCL(error_code);
+    error_code = clEnqueueReadBuffer(runtime.queue, runtime.voronoi_edges_compacted_buf, CL_FALSE, 0, runtime.voronoi_edge_mark_count*sizeof(cl_uint), features.edges, 0, 0, &events[1]);
+    CORRIDORMAP_CHECK_OCL(error_code);
+    error_code = clEnqueueReadBuffer(runtime.queue, runtime.voronoi_vertex_ids, CL_FALSE, 0, 4*runtime.voronoi_vertex_mark_count*sizeof(cl_uint), features.vert_obstacle_ids, 0, 0, &events[2]);
+    CORRIDORMAP_CHECK_OCL(error_code);
+    error_code = clEnqueueReadBuffer(runtime.queue, runtime.voronoi_edge_ids_left, CL_FALSE, 0, runtime.voronoi_edge_mark_count*sizeof(cl_uint), features.edge_obstacle_ids_left, 0, 0, &events[3]);
+    CORRIDORMAP_CHECK_OCL(error_code);
+    error_code = clEnqueueReadBuffer(runtime.queue, runtime.voronoi_edge_ids_right, CL_FALSE, 0, runtime.voronoi_edge_mark_count*sizeof(cl_uint), features.edge_obstacle_ids_right, 0, 0, &events[4]);
+    CORRIDORMAP_CHECK_OCL(error_code);
+
+    clWaitForEvents(sizeof(events)/sizeof(events[0]), events);
+
+    return error_code;
 }
 
 }
