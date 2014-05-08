@@ -22,7 +22,7 @@
 #ifndef CORRIDORMAP_BUILD_H_
 #define CORRIDORMAP_BUILD_H_
 
-#include "corridormap/types.h"
+#include "corridormap/build_types.h"
 #include "corridormap/render_interface.h"
 #include "corridormap/memory.h"
 

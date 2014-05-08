@@ -25,7 +25,7 @@
 #define CORRIDORMAP_RENDER_GL_H_
 
 #include <stdio.h>
-#include "corridormap/types.h"
+#include "corridormap/build_types.h"
 #include "corridormap/memory.h"
 #include "corridormap/render_interface.h"
 
