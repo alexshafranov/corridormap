@@ -23,4 +23,31 @@
 #define CORRIDORMAP_RUNTIME_TYPES_H_
 
 namespace corridormap {
+
+struct vertex
+{
+    float x;
+    float y;
+    int degree;
+    int* adjacent;
+};
+
+struct event
+{
+    float x;
+    float y;
+};
+
+struct edge
+{
+    int u;
+    int v;
+    event* events;
+};
+
+struct corridormap
+{
+    vertex* vertices;
+};
+
 }
