@@ -161,8 +161,13 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
     // input
     const float* poly_x = in.x;
     const float* poly_y = in.y;
+    const int* num_poly_verts = in.num_poly_verts;
+    const int num_polys = in.num_polys;
+
     // output
     vertex* verts = out.verts;
+    unsigned int* segment_colors = out.segment_colors;
+    int* num_segment_verts = out.num_segment_verts;
 
     // 1. generate borders.
     {
@@ -179,20 +184,20 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 
         for (int i = 0; i < num_border_segments; ++i)
         {
-            out.segment_colors[i] = i;
+            segment_colors[i] = i;
         }
     }
 
-    for (int i = 0; i < in.num_polys; ++i)
+    for (int i = 0; i < num_polys; ++i)
     {
-        int num_poly_verts = in.num_poly_verts[i];
-        int num_segment_verts = 0;
+        int npverts = num_poly_verts[i];
+        int nsegverts = 0;
 
-        int prev_idx = num_poly_verts - 2;
-        int curr_idx = num_poly_verts - 1;
+        int prev_idx = npverts - 2;
+        int curr_idx = npverts - 1;
         int next_idx = 0;
 
-        for (; next_idx < num_poly_verts; prev_idx = curr_idx, curr_idx = next_idx++)
+        for (; next_idx < npverts; prev_idx = curr_idx, curr_idx = next_idx++)
         {
             float prev[] = { poly_x[prev_idx], poly_y[prev_idx] };
             float curr[] = { poly_x[curr_idx], poly_y[curr_idx] };
@@ -216,18 +221,18 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
             float angle_start = atan2(e0[1]/len_e0, e0[0]/len_e0);
 
             // 2. generate cone sector for the current vertex.
-            num_segment_verts += build_cone_sector(verts, curr, angle_cone_sector_steps, angle_cone_sector_step, angle_start, max_dist);
+            nsegverts += build_cone_sector(verts, curr, angle_cone_sector_steps, angle_cone_sector_step, angle_start, max_dist);
 
             // 3. generate tent for (curr, next) edge.
-            num_segment_verts += build_tent_side(verts, curr, next, len_e1, max_dist);
-            num_segment_verts += build_tent_side(verts, next, curr, len_e1, max_dist);
+            nsegverts += build_tent_side(verts, curr, next, len_e1, max_dist);
+            nsegverts += build_tent_side(verts, next, curr, len_e1, max_dist);
         }
 
-        poly_x += num_poly_verts;
-        poly_y += num_poly_verts;
+        poly_x += npverts;
+        poly_y += npverts;
 
-        out.num_segment_verts[i + num_border_segments] = num_segment_verts;
-        out.segment_colors[i] = i + num_border_segments;
+        num_segment_verts[i + num_border_segments] = nsegverts;
+        segment_colors[i] = i + num_border_segments;
     }
 
     out.num_segments = num_border_segments + in.num_polys;
