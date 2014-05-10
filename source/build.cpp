@@ -301,6 +301,7 @@ footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int 
     result.x = allocate<float>(mem, num_normals*sizeof(float));
     result.y = allocate<float>(mem, num_normals*sizeof(float));
     result.num_poly_normals = allocate<int>(mem, num_polygons*sizeof(int));
+    result.poly_normal_offsets = allocate<int>(mem, num_polygons*sizeof(int));
 
     return result;
 }
@@ -311,6 +312,7 @@ void deallocate_foorprint_normals(memory* mem, footprint_normals& normals)
     mem->deallocate(normals.x);
     mem->deallocate(normals.y);
     mem->deallocate(normals.num_poly_normals);
+    mem->deallocate(normals.poly_normal_offsets);
     memset(&normals, 0, sizeof(normals));
 }
 
@@ -324,11 +326,14 @@ void build_footprint_normals(const footprint& in, footprint_normals& out)
     float* normal_x = out.x;
     float* normal_y = out.y;
     int* num_poly_normals = out.num_poly_normals;
+    int* poly_normal_offsets = out.poly_normal_offsets;
 
     int num_normals = 0;
 
     for (int i = 0; i < num_polys; ++i)
     {
+        poly_normal_offsets[i] = num_normals;
+
         int nverts = num_poly_verts[i];
 
         int curr_idx = nverts - 1;

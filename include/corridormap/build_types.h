@@ -84,6 +84,9 @@ struct footprint_normals
     float* y;
     // array of normal counts per poly, indexed in [0..num_polys] range.
     int* num_poly_normals;
+    // offsets in x, y arrays for each poly, indexed in [0..num_polys] range.
+    // normal indices for each poly_idx is poly_offset[poly_idx] .. poly_offset[poly_idx] + num_poly_normals[poly_idx].
+    int* poly_normal_offsets;
 };
 
 // voronoi vertices and edges detected from the distance mesh render.
