@@ -40,9 +40,9 @@ struct footprint
     int num_polys;
     // the total number of vertices.
     int num_verts;
-    // x coords indexed in [0..total_verts] range.
+    // x coords indexed in [0..num_verts] range.
     float* x;
-    // y coords indexed in [0..total_verts] range.
+    // y coords indexed in [0..num_verts] range.
     float* y;
     // array of vertex counts per poly, indexed in [0..num_polys] range.
     int* num_poly_verts;
@@ -71,6 +71,21 @@ struct distance_mesh
     int* num_segment_verts;
     // segment colors. indexed in [0..num_segments] range.
     unsigned int* segment_colors;
+};
+
+// footprint polygon normals.
+struct foorprint_normals
+{
+    // number of polys in footprint
+    int num_polys;
+    // total number of normals (one per each edge in footprint).
+    int num_normals;
+    // x coord indexed in [0..num_normals]
+    float* x;
+    // y coord indexed in [0..num_normals]
+    float* y;
+    // array of normal counts per poly, indexed in [0..num_polys] range.
+    int* num_poly_normals;
 };
 
 // voronoi vertices and edges detected from the distance mesh render.
