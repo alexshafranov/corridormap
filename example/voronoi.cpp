@@ -30,8 +30,9 @@
 
 #include <GLFW/glfw3.h>
 #include "corridormap/memory.h"
-#include "corridormap/build.h"
 #include "corridormap/render_gl.h"
+#include "corridormap/build.h"
+#include "corridormap/build_ocl.h"
 
 // force NVIDIA GPU when using Optimus.
 #ifdef _WIN32
