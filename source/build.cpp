@@ -286,9 +286,9 @@ void deallocate_voronoi_features(memory* mem, voronoi_features& features)
     memset(&features, 0, sizeof(features));
 }
 
-foorprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_normals)
+footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_normals)
 {
-    foorprint_normals result;
+    footprint_normals result;
     memset(&result, 0, sizeof(result));
 
     result.num_polys = num_polygons;
@@ -301,7 +301,7 @@ foorprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int 
 }
 
 // deallocates footprint normals. 'mem' must be the same that was used for allocation.
-void deallocate_foorprint_normals(memory* mem, foorprint_normals& normals)
+void deallocate_foorprint_normals(memory* mem, footprint_normals& normals)
 {
     mem->deallocate(normals.x);
     mem->deallocate(normals.y);
@@ -309,8 +309,40 @@ void deallocate_foorprint_normals(memory* mem, foorprint_normals& normals)
     memset(&normals, 0, sizeof(normals));
 }
 
-void build_footprint_normals(const footprint& /*in*/, foorprint_normals& /*out*/)
+void build_footprint_normals(const footprint& in, footprint_normals& out)
 {
+    const float* poly_x = in.x;
+    const float* poly_y = in.y;
+    const int* num_poly_verts = in.num_poly_verts;
+    const int num_polys = in.num_polys;
+
+    float* normal_x = out.x;
+    float* normal_y = out.y;
+    int* num_poly_normals = out.num_poly_normals;
+
+    int num_normals = 0;
+
+    for (int i = 0; i < num_polys; ++i)
+    {
+        int nverts = num_poly_verts[i];
+
+        int curr_idx = nverts - 1;
+        int next_idx = 0;
+
+        for (; next_idx < nverts; curr_idx = next_idx++)
+        {
+            float curr[] = { poly_x[curr_idx], poly_y[curr_idx] };
+            float next[] = { poly_x[next_idx], poly_y[next_idx] };
+            float edge[] = { next[0] - curr[0], next[1] - curr[1] };
+
+            normal_x[num_normals] = +edge[1];
+            normal_y[num_normals] = -edge[0];
+
+            ++num_normals;
+        }
+
+        num_poly_normals[i] = nverts;
+    }
 }
 
 }

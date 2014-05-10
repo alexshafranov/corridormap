@@ -72,7 +72,7 @@ struct distance_mesh
 };
 
 // footprint polygon normals.
-struct foorprint_normals
+struct footprint_normals
 {
     // number of polys in footprint
     int num_polys;
