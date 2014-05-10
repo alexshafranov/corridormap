@@ -64,6 +64,15 @@ voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int
 // deallocates voronoi features data. 'mem' must be the same that was used for allocation.
 void deallocate_voronoi_features(memory* mem, voronoi_features& features);
 
+// allocates footprint normals data using the given allocator.
+foorprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_normals);
+
+// deallocates footprint normals. 'mem' must be the same that was used for allocation.
+void deallocate_foorprint_normals(memory* mem, foorprint_normals& normals);
+
+// go over all edges in the input footprint and compute normals for each.
+void build_footprint_normals(const footprint& in, foorprint_normals& out);
+
 }
 
 #endif

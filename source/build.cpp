@@ -286,4 +286,31 @@ void deallocate_voronoi_features(memory* mem, voronoi_features& features)
     memset(&features, 0, sizeof(features));
 }
 
+foorprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_normals)
+{
+    foorprint_normals result;
+    memset(&result, 0, sizeof(result));
+
+    result.num_polys = num_polygons;
+    result.num_normals = num_normals;
+    result.x = allocate<float>(mem, num_normals*sizeof(float));
+    result.y = allocate<float>(mem, num_normals*sizeof(float));
+    result.num_poly_normals = allocate<int>(mem, num_polygons*sizeof(int));
+
+    return result;
+}
+
+// deallocates footprint normals. 'mem' must be the same that was used for allocation.
+void deallocate_foorprint_normals(memory* mem, foorprint_normals& normals)
+{
+    mem->deallocate(normals.x);
+    mem->deallocate(normals.y);
+    mem->deallocate(normals.num_poly_normals);
+    memset(&normals, 0, sizeof(normals));
+}
+
+void build_footprint_normals(const footprint& /*in*/, foorprint_normals& /*out*/)
+{
+}
+
 }
