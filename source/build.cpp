@@ -178,7 +178,7 @@ namespace
     inline int build_tent_side(vertex*& output, vec2 a, vec2 b, float len, float size)
     {
         vec2 e = sub(b, a);
-        vec2 n = scale(vec2(-e.y, e.x), len);
+        vec2 n = scale(vec2(-e.y, e.x), 1.f/len);
 
         vertex p0 = { a.x, a.y, 0.f };
         vertex p1 = { b.x, b.y, 0.f };
@@ -246,10 +246,10 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
             vec2 curr(poly_x[curr_idx], poly_y[curr_idx]);
             vec2 next(poly_x[next_idx], poly_y[next_idx]);
 
+            float len_e1 = len(sub(next, curr));
+
             vec2 e0 = normalized(sub(prev, curr));
             vec2 e1 = normalized(sub(next, curr));
-
-            float len_e1 = len(e1);
 
             float cos_inner = dot(e0, e1);
             float angle_inner = acos(cos_inner);
