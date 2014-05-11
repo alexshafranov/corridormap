@@ -90,10 +90,10 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
     result.num_segments = 0;
     result.num_verts = 0;
     int max_verts = max_distance_mesh_verts(f, max_dist, max_error);
-    result.verts = allocate<vertex>(mem, max_verts * sizeof(vertex));
+    result.verts = allocate<vertex>(mem, max_verts);
     // 4 segments for border and num_polys segments for obstacles.
-    result.num_segment_verts = allocate<int>(mem, (num_border_segments+f.num_polys) * sizeof(int));
-    result.segment_colors = allocate<unsigned int>(mem, (num_border_segments+f.num_polys) * sizeof(unsigned int));
+    result.num_segment_verts = allocate<int>(mem, num_border_segments + f.num_polys);
+    result.segment_colors = allocate<unsigned int>(mem, num_border_segments + f.num_polys);
     return result;
 }
 
@@ -121,12 +121,12 @@ namespace
             a->y = pos[1];
             a->z = 0.f;
 
-            b->x = pos[0] + radius*cos(start_angle + (i+0) * step_angle);
-            b->y = pos[1] + radius*sin(start_angle + (i+0) * step_angle);
+            b->x = pos[0] + radius*cos(start_angle + (i + 0)*step_angle);
+            b->y = pos[1] + radius*sin(start_angle + (i + 0)*step_angle);
             b->z = radius;
 
-            c->x = pos[0] + radius*cos(start_angle + (i+1) * step_angle);
-            c->y = pos[1] + radius*sin(start_angle + (i+1) * step_angle);
+            c->x = pos[0] + radius*cos(start_angle + (i + 1)*step_angle);
+            c->y = pos[1] + radius*sin(start_angle + (i + 1)*step_angle);
             c->z = radius;
         }
 
@@ -272,13 +272,13 @@ voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int
 
     result.num_vert_points = num_vert_points;
     result.num_edge_points = num_edge_points;
-    result.verts = allocate<unsigned int>(mem, num_vert_points*sizeof(unsigned int));
-    result.edges = allocate<unsigned int>(mem, num_edge_points*sizeof(unsigned int));
-    result.vert_obstacle_ids = allocate<unsigned int>(mem, 4*num_vert_points*sizeof(unsigned int));
-    result.edge_obstacle_ids_left = allocate<unsigned int>(mem, num_edge_points*sizeof(unsigned int));
-    result.edge_obstacle_ids_right = allocate<unsigned int>(mem, num_edge_points*sizeof(unsigned int));
-    result.edge_normal_indices_left = allocate<int>(mem, num_edge_points*sizeof(int));
-    result.edge_normal_indices_right = allocate<int>(mem, num_edge_points*sizeof(int));
+    result.verts = allocate<unsigned int>(mem, num_vert_points);
+    result.edges = allocate<unsigned int>(mem, num_edge_points);
+    result.vert_obstacle_ids = allocate<unsigned int>(mem, 4*num_vert_points);
+    result.edge_obstacle_ids_left = allocate<unsigned int>(mem, num_edge_points);
+    result.edge_obstacle_ids_right = allocate<unsigned int>(mem, num_edge_points);
+    result.edge_normal_indices_left = allocate<int>(mem, num_edge_points);
+    result.edge_normal_indices_right = allocate<int>(mem, num_edge_points);
 
     return result;
 }
@@ -300,10 +300,10 @@ footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int 
 
     result.num_polys = num_polygons;
     result.num_normals = num_normals;
-    result.x = allocate<float>(mem, num_normals*sizeof(float));
-    result.y = allocate<float>(mem, num_normals*sizeof(float));
-    result.num_poly_normals = allocate<int>(mem, num_polygons*sizeof(int));
-    result.poly_normal_offsets = allocate<int>(mem, num_polygons*sizeof(int));
+    result.x = allocate<float>(mem, num_normals);
+    result.y = allocate<float>(mem, num_normals);
+    result.num_poly_normals = allocate<int>(mem, num_polygons);
+    result.poly_normal_offsets = allocate<int>(mem, num_polygons);
 
     return result;
 }

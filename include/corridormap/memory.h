@@ -42,9 +42,9 @@ public:
 };
 
 template <typename T>
-T* allocate(memory* mem, size_t size, size_t align=sizeof(void*))
+T* allocate(memory* mem, size_t count, size_t align=sizeof(void*))
 {
-    return static_cast<T*>(mem->allocate(size, align));
+    return static_cast<T*>(mem->allocate(sizeof(T)*count, align));
 }
 
 }

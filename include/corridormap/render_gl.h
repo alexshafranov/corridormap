@@ -402,7 +402,7 @@ public:
         cl_uint num_platforms;
         clGetPlatformIDs(0, 0, &num_platforms);
 
-        cl_platform_id* platforms = allocate<cl_platform_id>(_scratch_memory, num_platforms * sizeof(cl_platform_id));
+        cl_platform_id* platforms = allocate<cl_platform_id>(_scratch_memory, num_platforms);
         clGetPlatformIDs(num_platforms, platforms, 0);
 
         for (cl_uint i = 0; i < num_platforms; ++i)
