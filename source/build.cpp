@@ -64,7 +64,7 @@ namespace
 
     inline vec2 normalized(vec2 a)
     {
-        return scale(a, 1.f / sqrt(a.x*a.x + a.y*a.y));
+        return scale(a, 1.f/sqrt(a.x*a.x + a.y*a.y));
     }
 
     inline float dot(vec2 a, vec2 b)
