@@ -379,12 +379,13 @@ void build_footprint_normals(const footprint& in, footprint_normals& out)
 
         for (; next_idx < nverts; curr_idx = next_idx++)
         {
-            float curr[] = { poly_x[curr_idx], poly_y[curr_idx] };
-            float next[] = { poly_x[next_idx], poly_y[next_idx] };
-            float edge[] = { next[0] - curr[0], next[1] - curr[1] };
+            vec2 curr(poly_x[curr_idx], poly_y[curr_idx]);
+            vec2 next(poly_x[next_idx], poly_y[next_idx]);
 
-            normal_x[num_normals] = +edge[1];
-            normal_y[num_normals] = -edge[0];
+            vec2 dir = normalized(sub(next, curr));
+
+            normal_x[num_normals] = +dir.y;
+            normal_y[num_normals] = -dir.x;
 
             ++num_normals;
         }
