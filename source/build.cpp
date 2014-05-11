@@ -47,29 +47,34 @@ namespace
         vec2(float val[]) : x(val[0]), y(val[1]) {}
     };
 
-    inline vec2 add(const vec2& a, const vec2& b)
+    inline vec2 add(vec2 a, vec2 b)
     {
         return vec2(a.x + b.x, a.y + b.y);
     }
 
-    inline vec2 sub(const vec2& a, const vec2& b)
+    inline vec2 sub(vec2 a, vec2 b)
     {
         return vec2(a.x - b.x, a.y - b.y);
     }
 
-    inline vec2 scale(const vec2& a, float val)
+    inline vec2 scale(vec2 a, float val)
     {
         return vec2(a.x*val, a.y*val);
     }
 
-    inline vec2 normalized(const vec2& a)
+    inline vec2 normalized(vec2 a)
     {
         return scale(a, 1.f / sqrt(a.x*a.x + a.y*a.y));
     }
 
-    inline float dot(const vec2& a, const vec2& b)
+    inline float dot(vec2 a, vec2 b)
     {
         return a.x*b.x + a.y*b.y;
+    }
+
+    inline float len(vec2 a)
+    {
+        return sqrt(dot(a, a));
     }
 }
 
@@ -144,7 +149,7 @@ void deallocate_distance_mesh(memory* mem, distance_mesh& mesh)
 
 namespace
 {
-    inline int build_cone_sector(vertex*& output, float pos[2], int steps, float step_angle, float start_angle, float radius)
+    inline int build_cone_sector(vertex*& output, vec2 pos, int steps, float step_angle, float start_angle, float radius)
     {
         int nverts = 0;
 
@@ -154,31 +159,31 @@ namespace
             vertex* b = output++;
             vertex* c = output++;
 
-            a->x = pos[0];
-            a->y = pos[1];
+            a->x = pos.x;
+            a->y = pos.y;
             a->z = 0.f;
 
-            b->x = pos[0] + radius*cos(start_angle + (i + 0)*step_angle);
-            b->y = pos[1] + radius*sin(start_angle + (i + 0)*step_angle);
+            b->x = pos.x + radius*cos(start_angle + (i + 0)*step_angle);
+            b->y = pos.y + radius*sin(start_angle + (i + 0)*step_angle);
             b->z = radius;
 
-            c->x = pos[0] + radius*cos(start_angle + (i + 1)*step_angle);
-            c->y = pos[1] + radius*sin(start_angle + (i + 1)*step_angle);
+            c->x = pos.x + radius*cos(start_angle + (i + 1)*step_angle);
+            c->y = pos.y + radius*sin(start_angle + (i + 1)*step_angle);
             c->z = radius;
         }
 
         return nverts;
     }
 
-    inline int build_tent_side(vertex*& output, float a[2], float b[2], float len, float size)
+    inline int build_tent_side(vertex*& output, vec2 a, vec2 b, float len, float size)
     {
-        float nx = -(b[1]-a[1]) / len;
-        float ny = +(b[0]-a[0]) / len;
+        vec2 e = sub(b, a);
+        vec2 n = scale(vec2(-e.y, e.x), len);
 
-        vertex p0 = { a[0], a[1], 0.f };
-        vertex p1 = { b[0], b[1], 0.f };
-        vertex p2 = { a[0] + size*nx, a[1] + size*ny, size };
-        vertex p3 = { b[0] + size*nx, b[1] + size*ny, size };
+        vertex p0 = { a.x, a.y, 0.f };
+        vertex p1 = { b.x, b.y, 0.f };
+        vertex p2 = { a.x + size*n.x, a.y + size*n.y, size };
+        vertex p3 = { b.x + size*n.x, b.y + size*n.y, size };
 
         *output++ = p0; *output++ = p1; *output++ = p2;
         *output++ = p2; *output++ = p1; *output++ = p3;
@@ -208,16 +213,17 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 
     // 1. generate borders.
     {
-        float corner_lt[] = { bbox.min[0], bbox.max[1] };
-        float corner_rb[] = { bbox.max[0], bbox.min[1] };
+        vec2 lt(bbox.min[0], bbox.max[1]);
+        vec2 lb(bbox.min[0], bbox.min[1]);
+        vec2 rt(bbox.max[0], bbox.max[1]);
+        vec2 rb(bbox.max[0], bbox.min[1]);
 
-        float len_x = bbox.max[0] - bbox.min[0];
-        float len_y = bbox.max[1] - bbox.min[1];
+        vec2 len = sub(rt, lb);
 
-        out.num_segment_verts[0] = build_tent_side(verts, bbox.min, corner_rb, len_x, max_dist);
-        out.num_segment_verts[1] = build_tent_side(verts, corner_rb, bbox.max, len_y, max_dist);
-        out.num_segment_verts[2] = build_tent_side(verts, bbox.max, corner_lt, len_x, max_dist);
-        out.num_segment_verts[3] = build_tent_side(verts, corner_lt, bbox.min, len_y, max_dist);
+        out.num_segment_verts[0] = build_tent_side(verts, lb, rb, len.x, max_dist);
+        out.num_segment_verts[1] = build_tent_side(verts, rb, rt, len.y, max_dist);
+        out.num_segment_verts[2] = build_tent_side(verts, rt, lt, len.x, max_dist);
+        out.num_segment_verts[3] = build_tent_side(verts, lt, lb, len.y, max_dist);
 
         for (int i = 0; i < num_border_segments; ++i)
         {
@@ -236,26 +242,22 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 
         for (; next_idx < npverts; prev_idx = curr_idx, curr_idx = next_idx++)
         {
-            float prev[] = { poly_x[prev_idx], poly_y[prev_idx] };
-            float curr[] = { poly_x[curr_idx], poly_y[curr_idx] };
-            float next[] = { poly_x[next_idx], poly_y[next_idx] };
+            vec2 prev(poly_x[prev_idx], poly_y[prev_idx]);
+            vec2 curr(poly_x[curr_idx], poly_y[curr_idx]);
+            vec2 next(poly_x[next_idx], poly_y[next_idx]);
 
-            float e0[] = { prev[0] - curr[0], prev[1] - curr[1] };
-            float e1[] = { next[0] - curr[0], next[1] - curr[1] };
+            vec2 e0 = normalized(sub(prev, curr));
+            vec2 e1 = normalized(sub(next, curr));
 
-            float len_e0 = sqrt(e0[0]*e0[0] + e0[1]*e0[1]);
-            corridormap_assert(len_e0 > 0.f);
+            float len_e1 = len(e1);
 
-            float len_e1 = sqrt(e1[0]*e1[0] + e1[1]*e1[1]);
-            corridormap_assert(len_e1 > 0.f);
-
-            float cos_inner = (e0[0]*e1[0] + e0[1]*e1[1]) / (len_e0*len_e1);
+            float cos_inner = dot(e0, e1);
             float angle_inner = acos(cos_inner);
             float angle_cone_sector = 2.f * CORRIDORMAP_PI - angle_inner;
 
             int angle_cone_sector_steps = static_cast<unsigned>(ceil(angle_cone_sector/cone_angle));
             float angle_cone_sector_step = angle_cone_sector/angle_cone_sector_steps;
-            float angle_start = atan2(e0[1]/len_e0, e0[0]/len_e0);
+            float angle_start = atan2(e0.y, e0.x);
 
             // 2. generate cone sector for the current vertex.
             nsegverts += build_cone_sector(verts, curr, angle_cone_sector_steps, angle_cone_sector_step, angle_start, max_dist);
