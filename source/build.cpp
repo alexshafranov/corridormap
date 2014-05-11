@@ -456,7 +456,7 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
             float dot_n = dot(normal_curr, mid);
             float dot_d = dot(dir, mid);
 
-            normal_indices_left[i] = (dot_d >= dot_n) ? next_idx + 1 : 0;
+            normal_indices_left[i] = (dot_d >= dot_n) ? (next_idx + 1) : 0;
         }
     }
 }
