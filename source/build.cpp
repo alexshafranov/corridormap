@@ -412,13 +412,54 @@ void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& result)
     memset(&result, 0, sizeof(result));
 }
 
+namespace
+{
+    int find_normal_index(
+        const float* vertex_x,
+        const float* vertex_y,
+        const float* normal_x,
+        const float* normal_y,
+        const int* num_poly_normals,
+        const int* poly_normal_offsets,
+        const int obstacle_id,
+        const vec2 edge_point)
+    {
+        int num_normals = num_poly_normals[obstacle_id];
+        int first_normal_idx = poly_normal_offsets[obstacle_id];
+        int last_normal_idx = first_normal_idx + num_normals - 1;
+
+        int curr_idx = last_normal_idx;
+        int next_idx = first_normal_idx;
+
+        for (; next_idx <= last_normal_idx; curr_idx = next_idx++)
+        {
+            vec2 vertex(vertex_x[curr_idx], vertex_y[curr_idx]);
+            vec2 normal_curr(normal_x[curr_idx], normal_y[curr_idx]);
+            vec2 normal_next(normal_x[next_idx], normal_y[next_idx]);
+
+            vec2 mid = normalized(scale(add(normal_curr, normal_next), 0.5f));
+            vec2 dir = normalized(sub(edge_point, vertex));
+
+            float dot_n = dot(normal_curr, mid);
+            float dot_d = dot(dir, mid);
+
+            if (dot_d >= dot_n)
+            {
+                return curr_idx + 1;
+            }
+        }
+
+        return 0;
+    }
+}
+
 void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles, const footprint_normals& normals, voronoi_edge_normals& out)
 {
     const int grid_width = features.grid_width;
     const int num_edge_points = features.num_edge_points;
     const unsigned int* edges = features.edges;
     const unsigned int* obstacle_ids_left = features.edge_obstacle_ids_left;
-    // const unsigned int* obstacle_ids_right = features.edge_obstacle_ids_right;
+    const unsigned int* obstacle_ids_right = features.edge_obstacle_ids_right;
 
     const float* vertex_x = obstacles.x;
     const float* vertex_y = obstacles.y;
@@ -429,37 +470,21 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
     const int* poly_normal_offsets = normals.poly_normal_offsets;
 
     int* normal_indices_left = out.edge_normal_indices_left;
-    // int* normal_indices_right = out.edge_normal_indices_right;
+    int* normal_indices_right = out.edge_normal_indices_right;
 
     for (int i = 0; i < num_edge_points; ++i)
     {
         unsigned int edge_point_idx = edges[i];
         unsigned int obstacle_left = obstacle_ids_left[i];
-        // unsigned int obstacle_right = obstacle_ids_right[i];
+        unsigned int obstacle_right = obstacle_ids_right[i];
 
         vec2 edge_point(float(edge_point_idx%grid_width), float(edge_point_idx/grid_width));
 
-        int num_normals = num_poly_normals[obstacle_left];
-        int first_normal_idx = poly_normal_offsets[obstacle_left];
-        int last_normal_idx = first_normal_idx + num_normals - 1;
+        int left_idx  = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_poly_normals, poly_normal_offsets, obstacle_left, edge_point);
+        int right_idx = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_poly_normals, poly_normal_offsets, obstacle_right, edge_point);
 
-        int curr_idx = last_normal_idx;
-        int next_idx = first_normal_idx;
-
-        for (; next_idx <= last_normal_idx; curr_idx = next_idx++)
-        {
-            vec2 normal_curr(normal_x[curr_idx], normal_y[curr_idx]);
-            vec2 normal_next(normal_x[next_idx], normal_y[next_idx]);
-            vec2 vertex(vertex_x[next_idx], vertex_y[next_idx]);
-
-            vec2 mid = normalized(scale(add(normal_curr, normal_next), 0.5f));
-            vec2 dir = normalized(sub(edge_point, vertex));
-
-            float dot_n = dot(normal_curr, mid);
-            float dot_d = dot(dir, mid);
-
-            normal_indices_left[i] = (dot_d >= dot_n) ? (next_idx + 1) : 0;
-        }
+        normal_indices_left[i]  = left_idx;
+        normal_indices_right[i] = right_idx;
     }
 }
 
