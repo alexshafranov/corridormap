@@ -211,7 +211,7 @@ int main()
         error_code = corridormap::compact_voronoi_features(cl_runtime);
         error_code = corridormap::store_obstacle_ids(cl_runtime, voronoi_image);
 
-        corridormap::voronoi_features features = corridormap::allocate_voronoi_features(&mem, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
+        corridormap::voronoi_features features = corridormap::allocate_voronoi_features(&mem, render_target_width, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
         error_code = corridormap::transfer_voronoi_features(cl_runtime, features);
 
         render_iface.release_shared(cl_runtime.queue, voronoi_image);

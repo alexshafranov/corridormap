@@ -36,6 +36,41 @@ namespace
 
     // border gets a distance mesh segment (half tent) per side.
     enum { num_border_segments = 4 };
+
+    struct vec2
+    {
+        float x;
+        float y;
+
+        vec2() {}
+        vec2(float x, float y) : x(x), y(y) {}
+        vec2(float val[]) : x(val[0]), y(val[1]) {}
+    };
+
+    inline vec2 add(const vec2& a, const vec2& b)
+    {
+        return vec2(a.x + b.x, a.y + b.y);
+    }
+
+    inline vec2 sub(const vec2& a, const vec2& b)
+    {
+        return vec2(a.x - b.x, a.y - b.y);
+    }
+
+    inline vec2 scale(const vec2& a, float val)
+    {
+        return vec2(a.x*val, a.y*val);
+    }
+
+    inline vec2 normalized(const vec2& a)
+    {
+        return scale(a, 1.f / sqrt(a.x*a.x + a.y*a.y));
+    }
+
+    inline float dot(const vec2& a, const vec2& b)
+    {
+        return a.x*b.x + a.y*b.y;
+    }
 }
 
 bbox2 bounds(const footprint& f, float border)
@@ -267,11 +302,12 @@ void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors)
     }
 }
 
-voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int num_edge_points)
+voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_vert_points, int num_edge_points)
 {
     voronoi_features result;
     memset(&result, 0, sizeof(result));
 
+    result.grid_width = grid_width;
     result.num_vert_points = num_vert_points;
     result.num_edge_points = num_edge_points;
     result.verts = allocate<unsigned int>(mem, num_vert_points);
@@ -373,8 +409,55 @@ void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& result)
     memset(&result, 0, sizeof(result));
 }
 
-void build_edge_point_normal_indices(const footprint_normals& /*normals*/, const voronoi_features& /*features*/, voronoi_edge_normals& /*out*/)
+void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles, const footprint_normals& normals, voronoi_edge_normals& out)
 {
+    const int grid_width = features.grid_width;
+    const int num_edge_points = features.num_edge_points;
+    const unsigned int* edges = features.edges;
+    const unsigned int* obstacle_ids_left = features.edge_obstacle_ids_left;
+    // const unsigned int* obstacle_ids_right = features.edge_obstacle_ids_right;
+
+    const float* vertex_x = obstacles.x;
+    const float* vertex_y = obstacles.y;
+
+    const float* normal_x = normals.x;
+    const float* normal_y = normals.y;
+    const int* num_poly_normals = normals.num_poly_normals;
+    const int* poly_normal_offsets = normals.poly_normal_offsets;
+
+    int* normal_indices_left = out.edge_normal_indices_left;
+    // int* normal_indices_right = out.edge_normal_indices_right;
+
+    for (int i = 0; i < num_edge_points; ++i)
+    {
+        unsigned int edge_point_idx = edges[i];
+        unsigned int obstacle_left = obstacle_ids_left[i];
+        // unsigned int obstacle_right = obstacle_ids_right[i];
+
+        vec2 edge_point(float(edge_point_idx%grid_width), float(edge_point_idx/grid_width));
+
+        int num_normals = num_poly_normals[obstacle_left];
+        int first_normal_idx = poly_normal_offsets[obstacle_left];
+        int last_normal_idx = first_normal_idx + num_normals - 1;
+
+        int curr_idx = last_normal_idx;
+        int next_idx = first_normal_idx;
+
+        for (; next_idx <= last_normal_idx; curr_idx = next_idx++)
+        {
+            vec2 normal_curr(normal_x[curr_idx], normal_y[curr_idx]);
+            vec2 normal_next(normal_x[next_idx], normal_y[next_idx]);
+            vec2 vertex(vertex_x[next_idx], vertex_y[next_idx]);
+
+            vec2 mid = normalized(scale(add(normal_curr, normal_next), 0.5f));
+            vec2 dir = normalized(sub(edge_point, vertex));
+
+            float dot_n = dot(normal_curr, mid);
+            float dot_d = dot(dir, mid);
+
+            normal_indices_left[i] = (dot_d >= dot_n) ? next_idx + 1 : 0;
+        }
+    }
 }
 
 }

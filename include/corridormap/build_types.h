@@ -92,13 +92,15 @@ struct footprint_normals
 // voronoi vertices and edges detected from the distance mesh render.
 struct voronoi_features
 {
+    // rasterization grid width.
+    int grid_width;
     // number of voronoi vertex points.
     int num_vert_points;
     // number of voronoi edge points.
     int num_edge_points;
-    // grid indices (y*width + x) of vertex points. [0..num_vert_points].
+    // grid indices (y*grid_width + x) of vertex points. [0..num_vert_points].
     unsigned int* verts;
-    // grid indices (y*width + x) of edge points. [0..num_edge_points].
+    // grid indices (y*grid_width + x) of edge points. [0..num_edge_points].
     unsigned int* edges;
     // IDs (colors) of obstacles surrounding each vertex. [0..4*num_vert_points].
     unsigned int* vert_obstacle_ids;

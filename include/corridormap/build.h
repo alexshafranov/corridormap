@@ -59,7 +59,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
 
 // allocates voronoi features data using the given allocator.
-voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int num_edge_points);
+voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_vert_points, int num_edge_points);
 
 // deallocates voronoi features data. 'mem' must be the same that was used for allocation.
 void deallocate_voronoi_features(memory* mem, voronoi_features& features);
@@ -80,7 +80,7 @@ voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_poi
 void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& normals);
 
 // if edge point lies in vector space spanned by two consecutive normals assign first normal's index. otherwise keep zero.
-void build_edge_point_normal_indices(const footprint_normals& normals, const voronoi_features& features, voronoi_edge_normals& out);
+void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles, const footprint_normals& normals, voronoi_edge_normals& out);
 
 }
 
