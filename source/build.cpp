@@ -277,6 +277,8 @@ voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int
     result.vert_obstacle_ids = allocate<unsigned int>(mem, 4*num_vert_points*sizeof(unsigned int));
     result.edge_obstacle_ids_left = allocate<unsigned int>(mem, num_edge_points*sizeof(unsigned int));
     result.edge_obstacle_ids_right = allocate<unsigned int>(mem, num_edge_points*sizeof(unsigned int));
+    result.edge_normal_indices_left = allocate<int>(mem, num_edge_points*sizeof(int));
+    result.edge_normal_indices_right = allocate<int>(mem, num_edge_points*sizeof(int));
 
     return result;
 }
