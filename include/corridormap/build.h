@@ -73,6 +73,15 @@ void deallocate_foorprint_normals(memory* mem, footprint_normals& normals);
 // go over all edges in the input footprint and compute normals for each.
 void build_footprint_normals(const footprint& in, footprint_normals& out);
 
+// allocate edge point normals data.
+voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
+
+// deallocate edge points normals data. 'mem' must be the same that was used for allocation.
+void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& normals);
+
+// if edge point lies in vector space spanned by two consecutive normals assign first normal's index. otherwise keep zero.
+void build_edge_point_normal_indices(const footprint_normals& normals, const voronoi_features& features, voronoi_edge_normals& out);
+
 }
 
 #endif

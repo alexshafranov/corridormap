@@ -106,11 +106,18 @@ struct voronoi_features
     unsigned int* edge_obstacle_ids_left;
     // IDs (colors) of obstacles from the right side of each edge point. [0..num_edge_points].
     unsigned int* edge_obstacle_ids_right;
+};
+
+// indices of obstacle normals associated with voronoi edge points.
+struct voronoi_edge_normals
+{
     // normal index on the left side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
+    // [0..num_edge_points]
     int* edge_normal_indices_left;
     // normal index on the right side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
+    // [0..num_edge_points]
     int* edge_normal_indices_right;
 };
 

@@ -87,6 +87,8 @@ int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error)
 distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error)
 {
     distance_mesh result;
+    memset(&result, 0, sizeof(result));
+
     result.num_segments = 0;
     result.num_verts = 0;
     int max_verts = max_distance_mesh_verts(f, max_dist, max_error);
@@ -277,8 +279,6 @@ voronoi_features allocate_voronoi_features(memory* mem, int num_vert_points, int
     result.vert_obstacle_ids = allocate<unsigned int>(mem, 4*num_vert_points);
     result.edge_obstacle_ids_left = allocate<unsigned int>(mem, num_edge_points);
     result.edge_obstacle_ids_right = allocate<unsigned int>(mem, num_edge_points);
-    result.edge_normal_indices_left = allocate<int>(mem, num_edge_points);
-    result.edge_normal_indices_right = allocate<int>(mem, num_edge_points);
 
     return result;
 }
@@ -355,6 +355,26 @@ void build_footprint_normals(const footprint& in, footprint_normals& out)
 
         num_poly_normals[i] = nverts;
     }
+}
+
+voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points)
+{
+    voronoi_edge_normals result;
+    memset(&result, 0, sizeof(result));
+    result.edge_normal_indices_left = allocate<int>(mem, num_edge_points);
+    result.edge_normal_indices_right = allocate<int>(mem, num_edge_points);
+    return result;
+}
+
+void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& result)
+{
+    mem->deallocate(result.edge_normal_indices_left);
+    mem->deallocate(result.edge_normal_indices_right);
+    memset(&result, 0, sizeof(result));
+}
+
+void build_edge_point_normal_indices(const footprint_normals& /*normals*/, const voronoi_features& /*features*/, voronoi_edge_normals& /*out*/)
+{
 }
 
 }
