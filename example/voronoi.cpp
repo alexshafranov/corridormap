@@ -214,6 +214,9 @@ int main()
         corridormap::voronoi_features features = corridormap::allocate_voronoi_features(&mem, render_target_width, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
         error_code = corridormap::transfer_voronoi_features(cl_runtime, features);
 
+        corridormap::voronoi_edge_normals edge_normal_indices = corridormap::allocate_voronoi_edge_normals(&mem, features.num_edge_points);
+        corridormap::build_edge_point_normal_indices(features, obstacles, normals, edge_normal_indices);
+
         render_iface.release_shared(cl_runtime.queue, voronoi_image);
 
         if (error_code != CL_SUCCESS)
