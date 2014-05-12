@@ -308,7 +308,7 @@ public:
         glDepthMask(GL_TRUE);
     }
 
-    virtual void draw(const vertex* vertices, unsigned tri_count, unsigned color)
+    virtual void draw(const render_vertex* vertices, unsigned tri_count, unsigned color)
     {
         // set color for fragment shader.
         glUniform4f(
@@ -321,15 +321,15 @@ public:
         draw_array(vertices, tri_count);
     }
 
-    void draw_array(const vertex* vertices, unsigned tri_count)
+    void draw_array(const render_vertex* vertices, unsigned tri_count)
     {
         // upload vertices.
         glBindVertexArray(_vertex_array);
         glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-        glBufferData(GL_ARRAY_BUFFER, tri_count*3*sizeof(vertex), vertices, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, tri_count*3*sizeof(render_vertex), vertices, GL_STREAM_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(render_vertex), 0);
 
         // render.
         glDrawArrays(GL_TRIANGLES, 0, tri_count * 3);
@@ -371,7 +371,7 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        vertex quad[] =
+        render_vertex quad[] =
         {
             {-1.f, -1.f,  0.f},
             { 1.f, -1.f,  0.f},

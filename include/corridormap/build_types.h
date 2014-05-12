@@ -47,7 +47,7 @@ struct footprint
 };
 
 // 3d vertex used for distance_mesh.
-struct vertex
+struct render_vertex
 {
     float x;
     float y;
@@ -64,7 +64,7 @@ struct distance_mesh
     // the total number of vertices.
     int num_verts;
     // vertex array indexed in [0..num_verts] range.
-    vertex* verts;
+    render_vertex* verts;
     // the number of vertices per segment. indexed in [0..num_segments] range.
     int* num_segment_verts;
     // segment colors. indexed in [0..num_segments] range.

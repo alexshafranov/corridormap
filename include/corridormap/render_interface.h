@@ -24,7 +24,7 @@
 
 #include <CL/opencl.h>
 
-namespace corridormap { struct vertex; }
+namespace corridormap { struct render_vertex; }
 namespace corridormap { class memory; }
 
 namespace corridormap {
@@ -64,7 +64,7 @@ public:
     // begin scene. must be called before any calls to draw.
     virtual void begin() = 0;
     // draw mesh with uniform color. length of vertices array is tri_count*3.
-    virtual void draw(const vertex* vertices, unsigned tri_count, unsigned color) = 0;
+    virtual void draw(const render_vertex* vertices, unsigned tri_count, unsigned color) = 0;
     // end scene. must be called after all calls to draw.
     virtual void end() = 0;
 

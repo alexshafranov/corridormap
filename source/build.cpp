@@ -138,7 +138,7 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
     result.num_segments = 0;
     result.num_verts = 0;
     int max_verts = max_distance_mesh_verts(f, max_dist, max_error);
-    result.verts = allocate<vertex>(mem, max_verts);
+    result.verts = allocate<render_vertex>(mem, max_verts);
     // 4 segments for border and num_polys segments for obstacles.
     result.num_segment_verts = allocate<int>(mem, num_border_segments + f.num_polys);
     result.segment_colors = allocate<unsigned int>(mem, num_border_segments + f.num_polys);
@@ -155,15 +155,15 @@ void deallocate_distance_mesh(memory* mem, distance_mesh& mesh)
 
 namespace
 {
-    inline int build_cone_sector(vertex*& output, vec2 pos, int steps, float step_angle, float start_angle, float radius)
+    inline int build_cone_sector(render_vertex*& output, vec2 pos, int steps, float step_angle, float start_angle, float radius)
     {
         int nverts = 0;
 
         for (int i = 0; i < steps; ++i, nverts += 3)
         {
-            vertex* a = output++;
-            vertex* b = output++;
-            vertex* c = output++;
+            render_vertex* a = output++;
+            render_vertex* b = output++;
+            render_vertex* c = output++;
 
             a->x = pos.x;
             a->y = pos.y;
@@ -181,15 +181,15 @@ namespace
         return nverts;
     }
 
-    inline int build_tent_side(vertex*& output, vec2 a, vec2 b, float len, float size)
+    inline int build_tent_side(render_vertex*& output, vec2 a, vec2 b, float len, float size)
     {
         vec2 e = sub(b, a);
         vec2 n = scale(vec2(-e.y, e.x), 1.f/len);
 
-        vertex p0 = { a.x, a.y, 0.f };
-        vertex p1 = { b.x, b.y, 0.f };
-        vertex p2 = { a.x + size*n.x, a.y + size*n.y, size };
-        vertex p3 = { b.x + size*n.x, b.y + size*n.y, size };
+        render_vertex p0 = { a.x, a.y, 0.f };
+        render_vertex p1 = { b.x, b.y, 0.f };
+        render_vertex p2 = { a.x + size*n.x, a.y + size*n.y, size };
+        render_vertex p3 = { b.x + size*n.x, b.y + size*n.y, size };
 
         *output++ = p0; *output++ = p1; *output++ = p2;
         *output++ = p2; *output++ = p1; *output++ = p3;
@@ -213,7 +213,7 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
     const int num_polys = in.num_polys;
 
     // output
-    vertex* verts = out.verts;
+    render_vertex* verts = out.verts;
     unsigned int* segment_colors = out.segment_colors;
     int* num_segment_verts = out.num_segment_verts;
 
@@ -294,7 +294,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
     {
         int num_verts = mesh.num_segment_verts[i];
         unsigned color = mesh.segment_colors[i];
-        const vertex* vertices = mesh.verts + vertices_offset;
+        const render_vertex* vertices = mesh.verts + vertices_offset;
         render_iface->draw(vertices, num_verts/3, color);
         vertices_offset += num_verts;
     }
