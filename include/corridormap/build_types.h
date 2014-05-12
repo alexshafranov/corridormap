@@ -22,14 +22,11 @@
 #ifndef CORRIDORMAP_BUILD_TYPES_H_
 #define CORRIDORMAP_BUILD_TYPES_H_
 
-namespace corridormap {
+// 
+// This file defines types used during construction of the corridor map.
+//
 
-// 2d bounding box.
-struct bbox2
-{
-    float min[2];
-    float max[2];
-};
+namespace corridormap {
 
 // obstacles represented as a set of 2d convex polygons. polys are stored in CCW order.
 struct footprint
@@ -46,6 +43,13 @@ struct footprint
     int* num_poly_verts;
 };
 
+// 2d bounding box.
+struct bbox2
+{
+    float min[2];
+    float max[2];
+};
+
 // 3d vertex used for distance_mesh.
 struct render_vertex
 {
@@ -56,7 +60,7 @@ struct render_vertex
 
 // segmented distance mesh suitable for rendering.
 // each segment represents one footprint polygon.
-// triangles are stored as list in ccw order.
+// triangles are stored as a list of vertices in CCW order.
 struct distance_mesh
 {
     // the number of segments.
@@ -69,24 +73,6 @@ struct distance_mesh
     int* num_segment_verts;
     // segment colors. indexed in [0..num_segments] range.
     unsigned int* segment_colors;
-};
-
-// footprint polygon normals.
-struct footprint_normals
-{
-    // number of polys in footprint
-    int num_polys;
-    // total number of normals (one per each edge in footprint).
-    int num_normals;
-    // x coord indexed in [0..num_normals]
-    float* x;
-    // y coord indexed in [0..num_normals]
-    float* y;
-    // array of normal counts per poly, indexed in [0..num_polys] range.
-    int* num_poly_normals;
-    // offsets in x, y arrays for each poly, indexed in [0..num_polys] range.
-    // normal indices for each poly_idx is poly_offset[poly_idx] .. poly_offset[poly_idx] + num_poly_normals[poly_idx].
-    int* poly_normal_offsets;
 };
 
 // voronoi vertices and edges detected from the distance mesh render.
@@ -108,6 +94,24 @@ struct voronoi_features
     unsigned int* edge_obstacle_ids_left;
     // IDs (colors) of obstacles from the right side of each edge point. [0..num_edge_points].
     unsigned int* edge_obstacle_ids_right;
+};
+
+// obstacle polygon edge normals.
+struct footprint_normals
+{
+    // number of polys in footprint
+    int num_polys;
+    // total number of normals (one per each edge in footprint).
+    int num_normals;
+    // x coord indexed in [0..num_normals]
+    float* x;
+    // y coord indexed in [0..num_normals]
+    float* y;
+    // array of normal counts per poly, indexed in [0..num_polys] range.
+    int* num_poly_normals;
+    // offsets in x, y arrays for each poly, indexed in [0..num_polys] range.
+    // normal indices for each poly_idx is poly_offset[poly_idx] .. poly_offset[poly_idx] + num_poly_normals[poly_idx].
+    int* poly_normal_offsets;
 };
 
 // indices of obstacle normals associated with voronoi edge points.
