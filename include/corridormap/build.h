@@ -82,6 +82,9 @@ void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& normals)
 // if edge point lies in vector space spanned by two consecutive normals assign first normal's index. otherwise keep zero.
 void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles, const footprint_normals& normals, voronoi_edge_normals& out);
 
+//
+void compute_closest_points(const footprint& obstacles, const float* pos_x, const float* pos_y, const unsigned int* obstacle_ids, const int num_points, float* out_x, float* out_y);
+
 }
 
 #endif

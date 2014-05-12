@@ -488,4 +488,12 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
     }
 }
 
+void compute_closest_points(const footprint& /*obstacles*/, const float* /*pos_x*/, const float* /*pos_y*/, const unsigned int* /*obstacle_ids*/, const int /*num_points*/, float* /*out_x*/, float* /*out_y*/)
+{
+    // for (int i = 0; i < num_points; ++i)
+    // {
+    //     unsigned int obstacle_id = obstacle_ids[i];
+    // }
+}
+
 }
