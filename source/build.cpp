@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <algorithm>
 #include <math.h>
 #include <float.h>
 #include <string.h>
@@ -75,6 +76,11 @@ namespace
     inline float len(vec2 a)
     {
         return sqrt(dot(a, a));
+    }
+
+    inline float clamp(float val, float a, float b)
+    {
+        return std::min(std::max(val, a), b);
     }
 }
 
@@ -488,12 +494,53 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
     }
 }
 
-void compute_closest_points(const footprint& /*obstacles*/, const float* /*pos_x*/, const float* /*pos_y*/, const unsigned int* /*obstacle_ids*/, const int /*num_points*/, float* /*out_x*/, float* /*out_y*/)
+void compute_closest_points(const footprint& obstacles, const int* obstacle_offsets, const float* pos_x, const float* pos_y,
+                            const unsigned int* obstacle_ids, const int num_points, float* out_x, float* out_y)
 {
-    // for (int i = 0; i < num_points; ++i)
-    // {
-    //     unsigned int obstacle_id = obstacle_ids[i];
-    // }
+    const float* obst_x = obstacles.x;
+    const float* obst_y = obstacles.y;
+    const int* num_obst_verts = obstacles.num_poly_verts;
+
+    for (int i = 0; i < num_points; ++i)
+    {
+        vec2 point(pos_x[i], pos_y[i]);
+        vec2 closest;
+
+        float min_dist = FLT_MAX;
+
+        unsigned int obstacle_id = obstacle_ids[i];
+        int first_vertex_idx = obstacle_offsets[obstacle_id];
+        int last_vertex_idx = first_vertex_idx + num_obst_verts[obstacle_id] - 1;
+
+        int curr_idx = last_vertex_idx;
+        int next_idx = first_vertex_idx;
+
+        for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
+        {
+            vec2 p0(obst_x[curr_idx], obst_y[curr_idx]);
+            vec2 p1(obst_x[next_idx], obst_y[next_idx]);
+
+            vec2 seg = sub(p1, p0);
+            vec2 dir = normalized(seg);
+            float seg_len = len(seg);
+
+            float proj = dot(sub(point, p0), dir);
+
+            vec2 seg_closest = add(p0, scale(dir, clamp(proj, 0.f, seg_len)));
+
+            vec2 seg_closest_dir = sub(seg_closest, point);
+            float seg_closest_dist = dot(seg_closest_dir, seg_closest_dir);
+
+            if (seg_closest_dist < min_dist)
+            {
+                min_dist = seg_closest_dist;
+                closest = seg_closest;
+            }
+        }
+
+        out_x[i] = closest.x;
+        out_y[i] = closest.y;
+    }
 }
 
 }
