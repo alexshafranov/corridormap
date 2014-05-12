@@ -26,6 +26,7 @@
 #include "corridormap/assert.h"
 #include "corridormap/memory.h"
 #include "corridormap/render_interface.h"
+#include "corridormap/runtime_types.h"
 #include "corridormap/build.h"
 
 namespace corridormap {
@@ -38,29 +39,25 @@ namespace
     // border gets a distance mesh segment (half tent) per side.
     enum { num_border_segments = 4 };
 
-    struct vec2
+    inline vec2 make_vec2(float x, float y)
     {
-        float x;
-        float y;
-
-        vec2() {}
-        vec2(float x, float y) : x(x), y(y) {}
-        vec2(float val[]) : x(val[0]), y(val[1]) {}
-    };
+        vec2 result = { x, y };
+        return result;
+    }
 
     inline vec2 add(vec2 a, vec2 b)
     {
-        return vec2(a.x + b.x, a.y + b.y);
+        return make_vec2(a.x + b.x, a.y + b.y);
     }
 
     inline vec2 sub(vec2 a, vec2 b)
     {
-        return vec2(a.x - b.x, a.y - b.y);
+        return make_vec2(a.x - b.x, a.y - b.y);
     }
 
     inline vec2 scale(vec2 a, float val)
     {
-        return vec2(a.x*val, a.y*val);
+        return make_vec2(a.x*val, a.y*val);
     }
 
     inline vec2 normalized(vec2 a)
@@ -184,7 +181,7 @@ namespace
     inline int build_tent_side(render_vertex*& output, vec2 a, vec2 b, float len, float size)
     {
         vec2 e = sub(b, a);
-        vec2 n = scale(vec2(-e.y, e.x), 1.f/len);
+        vec2 n = scale(make_vec2(-e.y, e.x), 1.f/len);
 
         render_vertex p0 = { a.x, a.y, 0.f };
         render_vertex p1 = { b.x, b.y, 0.f };
@@ -219,10 +216,10 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 
     // 1. generate borders.
     {
-        vec2 lt(bbox.min[0], bbox.max[1]);
-        vec2 lb(bbox.min[0], bbox.min[1]);
-        vec2 rt(bbox.max[0], bbox.max[1]);
-        vec2 rb(bbox.max[0], bbox.min[1]);
+        vec2 lt = { bbox.min[0], bbox.max[1] };
+        vec2 lb = { bbox.min[0], bbox.min[1] };
+        vec2 rt = { bbox.max[0], bbox.max[1] };
+        vec2 rb = { bbox.max[0], bbox.min[1] };
 
         vec2 len = sub(rt, lb);
 
@@ -248,9 +245,9 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 
         for (; next_idx < npverts; prev_idx = curr_idx, curr_idx = next_idx++)
         {
-            vec2 prev(poly_x[prev_idx], poly_y[prev_idx]);
-            vec2 curr(poly_x[curr_idx], poly_y[curr_idx]);
-            vec2 next(poly_x[next_idx], poly_y[next_idx]);
+            vec2 prev = { poly_x[prev_idx], poly_y[prev_idx] };
+            vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
+            vec2 next = { poly_x[next_idx], poly_y[next_idx] };
 
             float len_e1 = len(sub(next, curr));
 
@@ -387,8 +384,8 @@ void build_footprint_normals(const footprint& in, footprint_normals& out)
 
         for (; next_idx < nverts; curr_idx = next_idx++)
         {
-            vec2 curr(poly_x[curr_idx], poly_y[curr_idx]);
-            vec2 next(poly_x[next_idx], poly_y[next_idx]);
+            vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
+            vec2 next = { poly_x[next_idx], poly_y[next_idx] };
 
             vec2 dir = normalized(sub(next, curr));
 
@@ -439,9 +436,9 @@ namespace
 
         for (; next_idx <= last_normal_idx; curr_idx = next_idx++)
         {
-            vec2 vertex(vertex_x[curr_idx], vertex_y[curr_idx]);
-            vec2 normal_curr(normal_x[curr_idx], normal_y[curr_idx]);
-            vec2 normal_next(normal_x[next_idx], normal_y[next_idx]);
+            vec2 vertex = { vertex_x[curr_idx], vertex_y[curr_idx] };
+            vec2 normal_curr = { normal_x[curr_idx], normal_y[curr_idx] };
+            vec2 normal_next = { normal_x[next_idx], normal_y[next_idx] };
 
             vec2 mid = normalized(scale(add(normal_curr, normal_next), 0.5f));
             vec2 dir = normalized(sub(edge_point, vertex));
@@ -484,7 +481,7 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
         unsigned int obstacle_left = obstacle_ids_left[i];
         unsigned int obstacle_right = obstacle_ids_right[i];
 
-        vec2 edge_point(float(edge_point_idx%grid_width), float(edge_point_idx/grid_width));
+        vec2 edge_point = { float(edge_point_idx%grid_width), float(edge_point_idx/grid_width) };
 
         int left_idx  = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_poly_normals, poly_normal_offsets, obstacle_left, edge_point);
         int right_idx = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_poly_normals, poly_normal_offsets, obstacle_right, edge_point);
@@ -503,8 +500,8 @@ void compute_closest_points(const footprint& obstacles, const int* obstacle_offs
 
     for (int i = 0; i < num_points; ++i)
     {
-        vec2 point(pos_x[i], pos_y[i]);
-        vec2 closest;
+        vec2 point = { pos_x[i], pos_y[i] };
+        vec2 closest = { FLT_MAX, FLT_MAX };
 
         float min_dist = FLT_MAX;
 
@@ -517,8 +514,8 @@ void compute_closest_points(const footprint& obstacles, const int* obstacle_offs
 
         for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
         {
-            vec2 p0(obst_x[curr_idx], obst_y[curr_idx]);
-            vec2 p1(obst_x[next_idx], obst_y[next_idx]);
+            vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
+            vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
 
             vec2 seg = sub(p1, p0);
             vec2 dir = normalized(seg);

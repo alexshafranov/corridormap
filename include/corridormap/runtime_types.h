@@ -24,30 +24,46 @@
 
 namespace corridormap {
 
-struct vertex
+struct vec2
 {
     float x;
     float y;
-    int degree;
-    int* adjacent;
+};
+
+enum { max_vertex_neis = 4 };
+
+struct vertex
+{
+    vec2 position;
+    int  incident[max_vertex_neis];
+    vec2 closest[max_vertex_neis];
 };
 
 struct event
 {
-    float x;
-    float y;
+    int  next;
+    vec2 position;
+    vec2 closest_left;
+    vec2 closest_right;
 };
 
 struct edge
 {
     int u;
     int v;
-    event* events;
+    int num_events;
+    int first_event;
 };
 
-struct corridormap
+struct graph
 {
+    int num_verts;
+    int num_edges;
+    int num_events;
     vertex* vertices;
+    event*  events;
 };
 
 }
+
+#endif
