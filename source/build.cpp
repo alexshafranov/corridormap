@@ -223,16 +223,19 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 
         vec2 len = sub(rt, lb);
 
-        out.num_segment_verts[0] = build_tent_side(verts, lb, rb, len.x, max_dist);
-        out.num_segment_verts[1] = build_tent_side(verts, rb, rt, len.y, max_dist);
-        out.num_segment_verts[2] = build_tent_side(verts, rt, lt, len.x, max_dist);
-        out.num_segment_verts[3] = build_tent_side(verts, lt, lb, len.y, max_dist);
+        num_segment_verts[0] = build_tent_side(verts, lb, rb, len.x, max_dist);
+        num_segment_verts[1] = build_tent_side(verts, rb, rt, len.y, max_dist);
+        num_segment_verts[2] = build_tent_side(verts, rt, lt, len.x, max_dist);
+        num_segment_verts[3] = build_tent_side(verts, lt, lb, len.y, max_dist);
 
         for (int i = 0; i < num_border_segments; ++i)
         {
             segment_colors[i] = i;
         }
     }
+
+    segment_colors += num_border_segments;
+    num_segment_verts += num_border_segments;
 
     for (int i = 0; i < num_polys; ++i)
     {
@@ -273,8 +276,8 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
         poly_x += npverts;
         poly_y += npverts;
 
-        num_segment_verts[i + num_border_segments] = nsegverts;
-        segment_colors[i] = i + num_border_segments;
+        segment_colors[i]    = i + num_border_segments;
+        num_segment_verts[i] = nsegverts;
     }
 
     out.num_segments = num_border_segments + in.num_polys;
