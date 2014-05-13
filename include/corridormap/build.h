@@ -39,15 +39,8 @@ float max_distance(bbox2 scene_bbox);
 // computes required number of triangles to represent a distance mesh for vertex (cone).
 int vertex_distance_mesh_tris(float max_dist, float max_error);
 
-// computes upper bound on number of vertices required for distance mesh.
+// computes an upper bound on number of vertices required for distance mesh.
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error);
-
-
-// allocates distanece mesh data arrays using the given allocator.
-distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error);
-
-// deallocates distance mesh data arrays. 'mem' must be the same that was used for allocation.
-void deallocate_distance_mesh(memory* mem, distance_mesh& mesh);
 
 // build distance mesh for the input footprint. polygon vertex becomes a cone sector, edge - a "tent".
 void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float max_error, distance_mesh& out);
@@ -55,29 +48,11 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 // renders distance mesh using the specified render interface.
 void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 
-// sets color of a segment to colors[segment_index % ncolors].
+// debug: sets color of a segment to colors[segment_index % ncolors].
 void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
-
-// allocates voronoi features data using the given allocator.
-voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_vert_points, int num_edge_points);
-
-// deallocates voronoi features data. 'mem' must be the same that was used for allocation.
-void deallocate_voronoi_features(memory* mem, voronoi_features& features);
-
-// allocates footprint normals data using the given allocator.
-footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_normals);
-
-// deallocates footprint normals. 'mem' must be the same that was used for allocation.
-void deallocate_foorprint_normals(memory* mem, footprint_normals& normals);
 
 // go over all edges in the input footprint and compute normals for each.
 void build_footprint_normals(const footprint& in, footprint_normals& out);
-
-// allocate edge point normals data.
-voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
-
-// deallocate edge points normals data. 'mem' must be the same that was used for allocation.
-void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& normals);
 
 // if edge point lies in vector space spanned by two consecutive normals assign first normal's index. otherwise keep zero.
 void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles,
@@ -86,6 +61,21 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
 //
 void compute_closest_points(const footprint& obstacles, const int* obstacle_offsets, const float* pos_x, const float* pos_y,
                             const unsigned int* obstacle_ids, const int num_points, float* out_x, float* out_y);
+
+
+/// data allocation functions.
+
+distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error);
+void deallocate_distance_mesh(memory* mem, distance_mesh& mesh);
+
+voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_vert_points, int num_edge_points);
+void deallocate_voronoi_features(memory* mem, voronoi_features& features);
+
+footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_normals);
+void deallocate_foorprint_normals(memory* mem, footprint_normals& normals);
+
+voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
+void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& normals);
 
 }
 
