@@ -375,7 +375,8 @@ cl_int transfer_voronoi_features(opencl_runtime& runtime, voronoi_features& feat
     error_code = clEnqueueReadBuffer(runtime.queue, runtime.voronoi_edge_ids_right, CL_FALSE, 0, runtime.voronoi_edge_mark_count*sizeof(cl_uint), features.edge_obstacle_ids_right, 0, 0, &events[4]);
     CORRIDORMAP_CHECK_OCL(error_code);
 
-    clWaitForEvents(sizeof(events)/sizeof(events[0]), events);
+    error_code = clWaitForEvents(sizeof(events)/sizeof(events[0]), events);
+    CORRIDORMAP_CHECK_OCL(error_code);
 
     return error_code;
 }
