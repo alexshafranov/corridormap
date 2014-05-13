@@ -77,3 +77,15 @@ solution "corridormap"
 
         configuration { "windows" }
             links { "opengl32" }
+
+    project "example-corridor"
+        kind "ConsoleApp"
+        flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
+        warnings "Extra"
+        includedirs { "include", "deps/OpenCL", "deps/clew", "example/glfw/include", "example/glew/include" }
+        files { "example/corridor.cpp" }
+        defines { "GLEW_STATIC" }
+        links { "corridormap-library", "glew", "glfw", "clew" }
+
+        configuration { "windows" }
+            links { "opengl32" }
