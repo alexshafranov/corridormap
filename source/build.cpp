@@ -214,29 +214,6 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
     unsigned int* segment_colors = out.segment_colors;
     int* num_segment_verts = out.num_segment_verts;
 
-    // 1. generate borders.
-    {
-        vec2 lt = { bbox.min[0], bbox.max[1] };
-        vec2 lb = { bbox.min[0], bbox.min[1] };
-        vec2 rt = { bbox.max[0], bbox.max[1] };
-        vec2 rb = { bbox.max[0], bbox.min[1] };
-
-        vec2 len = sub(rt, lb);
-
-        num_segment_verts[0] = build_tent_side(verts, lb, rb, len.x, max_dist);
-        num_segment_verts[1] = build_tent_side(verts, rb, rt, len.y, max_dist);
-        num_segment_verts[2] = build_tent_side(verts, rt, lt, len.x, max_dist);
-        num_segment_verts[3] = build_tent_side(verts, lt, lb, len.y, max_dist);
-
-        for (int i = 0; i < num_border_segments; ++i)
-        {
-            segment_colors[i] = i;
-        }
-    }
-
-    segment_colors += num_border_segments;
-    num_segment_verts += num_border_segments;
-
     for (int i = 0; i < num_polys; ++i)
     {
         int npverts = num_poly_verts[i];
@@ -265,10 +242,10 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
             float angle_cone_sector_step = angle_cone_sector/angle_cone_sector_steps;
             float angle_start = atan2(e0.y, e0.x);
 
-            // 2. generate cone sector for the current vertex.
+            // 1. generate cone sector for the current vertex.
             nsegverts += build_cone_sector(verts, curr, angle_cone_sector_steps, angle_cone_sector_step, angle_start, max_dist);
 
-            // 3. generate tent for (curr, next) edge.
+            // 2. generate tent for (curr, next) edge.
             nsegverts += build_tent_side(verts, curr, next, len_e1, max_dist);
             nsegverts += build_tent_side(verts, next, curr, len_e1, max_dist);
         }
@@ -276,8 +253,28 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
         poly_x += npverts;
         poly_y += npverts;
 
-        segment_colors[i]    = i + num_border_segments;
-        num_segment_verts[i] = nsegverts;
+        *(segment_colors++)    = i + num_border_segments;
+        *(num_segment_verts++) = nsegverts;
+    }
+
+    // 3. generate borders.
+    {
+        vec2 lt = { bbox.min[0], bbox.max[1] };
+        vec2 lb = { bbox.min[0], bbox.min[1] };
+        vec2 rt = { bbox.max[0], bbox.max[1] };
+        vec2 rb = { bbox.max[0], bbox.min[1] };
+
+        vec2 len = sub(rt, lb);
+
+        *(num_segment_verts++) = build_tent_side(verts, lb, rb, len.x, max_dist);
+        *(num_segment_verts++) = build_tent_side(verts, rb, rt, len.y, max_dist);
+        *(num_segment_verts++) = build_tent_side(verts, rt, lt, len.x, max_dist);
+        *(num_segment_verts++) = build_tent_side(verts, lt, lb, len.y, max_dist);
+
+        for (int i = 0; i < num_border_segments; ++i)
+        {
+            *(segment_colors++) = i;
+        }
     }
 
     out.num_segments = num_border_segments + in.num_polys;
