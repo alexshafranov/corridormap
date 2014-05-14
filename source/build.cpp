@@ -253,7 +253,7 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
         poly_x += npverts;
         poly_y += npverts;
 
-        *(segment_colors++)    = i + num_border_segments;
+        *(segment_colors++)    = i;
         *(num_segment_verts++) = nsegverts;
     }
 
@@ -273,7 +273,7 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 
         for (int i = 0; i < num_border_segments; ++i)
         {
-            *(segment_colors++) = i;
+            *(segment_colors++) = num_polys + i;
         }
     }
 
