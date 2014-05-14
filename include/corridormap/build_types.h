@@ -99,19 +99,18 @@ struct voronoi_features
 // obstacle polygon edge normals.
 struct footprint_normals
 {
-    // number of polys in footprint
-    int num_polys;
+    // number of obstacles in footprint (number of polys + 4 border segments).
+    int num_obstacles;
     // total number of normals (one per each edge in footprint).
     int num_normals;
     // x coord indexed in [0..num_normals]
     float* x;
     // y coord indexed in [0..num_normals]
     float* y;
-    // array of normal counts per poly, indexed in [0..num_polys] range.
-    int* num_poly_normals;
-    // offsets in x, y arrays for each poly, indexed in [0..num_polys] range.
-    // normal indices for each poly_idx is poly_offset[poly_idx] .. poly_offset[poly_idx] + num_poly_normals[poly_idx].
-    int* poly_normal_offsets;
+    // array of normal counts per obstacle, indexed in [0..num_obstacles] range.
+    int* num_obstacle_normals;
+    // offsets in x, y arrays for each poly, indexed in [0..num_obstacles] range.
+    int* obstacle_normal_offsets;
 };
 
 // indices of obstacle normals associated with voronoi edge points.

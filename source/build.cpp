@@ -334,17 +334,17 @@ void deallocate_voronoi_features(memory* mem, voronoi_features& features)
     memset(&features, 0, sizeof(features));
 }
 
-footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_normals)
+footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_poly_verts)
 {
     footprint_normals result;
     memset(&result, 0, sizeof(result));
 
-    result.num_polys = num_polygons;
-    result.num_normals = num_normals;
-    result.x = allocate<float>(mem, num_normals);
-    result.y = allocate<float>(mem, num_normals);
-    result.num_poly_normals = allocate<int>(mem, num_polygons);
-    result.poly_normal_offsets = allocate<int>(mem, num_polygons);
+    result.num_obstacles = num_polygons + num_border_segments;
+    result.num_normals = num_poly_verts + num_border_segments;
+    result.x = allocate<float>(mem, result.num_normals);
+    result.y = allocate<float>(mem, result.num_normals);
+    result.num_obstacle_normals = allocate<int>(mem, result.num_obstacles);
+    result.obstacle_normal_offsets = allocate<int>(mem, result.num_obstacles);
 
     return result;
 }
@@ -354,12 +354,22 @@ void deallocate_foorprint_normals(memory* mem, footprint_normals& normals)
 {
     mem->deallocate(normals.x);
     mem->deallocate(normals.y);
-    mem->deallocate(normals.num_poly_normals);
-    mem->deallocate(normals.poly_normal_offsets);
+    mem->deallocate(normals.num_obstacle_normals);
+    mem->deallocate(normals.obstacle_normal_offsets);
     memset(&normals, 0, sizeof(normals));
 }
 
-void build_footprint_normals(const footprint& in, footprint_normals& out)
+namespace
+{
+    inline void store_edge_normal(vec2 edge_from, vec2 edge_to, float* out_x, float* out_y)
+    {
+        vec2 dir = normalized(sub(edge_from, edge_to));
+        *(out_x++) = +dir.y;
+        *(out_y++) = -dir.x;
+    }
+}
+
+void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals& out)
 {
     const float* poly_x = in.x;
     const float* poly_y = in.y;
@@ -368,34 +378,46 @@ void build_footprint_normals(const footprint& in, footprint_normals& out)
 
     float* normal_x = out.x;
     float* normal_y = out.y;
-    int* num_poly_normals = out.num_poly_normals;
-    int* poly_normal_offsets = out.poly_normal_offsets;
+    int* num_obstacle_normals = out.num_obstacle_normals;
+    int* obstacle_normal_offsets = out.obstacle_normal_offsets;
 
     int num_normals = 0;
 
     for (int i = 0; i < num_polys; ++i)
     {
-        poly_normal_offsets[i] = num_normals;
+        *(obstacle_normal_offsets++) = num_normals;
 
         int nverts = num_poly_verts[i];
 
         int curr_idx = nverts - 1;
         int next_idx = 0;
 
-        for (; next_idx < nverts; curr_idx = next_idx++)
+        for (; next_idx < nverts; curr_idx = next_idx++, ++num_normals)
         {
             vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
             vec2 next = { poly_x[next_idx], poly_y[next_idx] };
-
-            vec2 dir = normalized(sub(next, curr));
-
-            normal_x[num_normals] = +dir.y;
-            normal_y[num_normals] = -dir.x;
-
-            ++num_normals;
+            store_edge_normal(curr, next, normal_x, normal_y);
         }
 
-        num_poly_normals[i] = nverts;
+        *(num_obstacle_normals++) = nverts;
+    }
+
+    {
+        vec2 lt = { bbox.min[0], bbox.max[1] };
+        vec2 lb = { bbox.min[0], bbox.min[1] };
+        vec2 rt = { bbox.max[0], bbox.max[1] };
+        vec2 rb = { bbox.max[0], bbox.min[1] };
+
+        store_edge_normal(lb, rb, normal_x, normal_y);
+        store_edge_normal(rb, rt, normal_x, normal_y);
+        store_edge_normal(rt, lt, normal_x, normal_y);
+        store_edge_normal(lt, lb, normal_x, normal_y);
+
+        for (int i = 0; i < num_border_segments; ++i)
+        {
+            *(obstacle_normal_offsets++) = num_normals + i;
+            *(num_obstacle_normals++) = 1;
+        }
     }
 }
 
@@ -422,13 +444,13 @@ namespace
         const float* vertex_y,
         const float* normal_x,
         const float* normal_y,
-        const int* num_poly_normals,
-        const int* poly_normal_offsets,
+        const int* num_obstacle_normals,
+        const int* obstacle_normal_offsets,
         const int obstacle_id,
         const vec2 edge_point)
     {
-        int num_normals = num_poly_normals[obstacle_id];
-        int first_normal_idx = poly_normal_offsets[obstacle_id];
+        int num_normals = num_obstacle_normals[obstacle_id];
+        int first_normal_idx = obstacle_normal_offsets[obstacle_id];
         int last_normal_idx = first_normal_idx + num_normals - 1;
 
         int curr_idx = last_normal_idx;
@@ -469,8 +491,8 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
 
     const float* normal_x = normals.x;
     const float* normal_y = normals.y;
-    const int* num_poly_normals = normals.num_poly_normals;
-    const int* poly_normal_offsets = normals.poly_normal_offsets;
+    const int* num_obstacle_normals = normals.num_obstacle_normals;
+    const int* obstacle_normal_offsets = normals.obstacle_normal_offsets;
 
     int* normal_indices_left = out.edge_normal_indices_left;
     int* normal_indices_right = out.edge_normal_indices_right;
@@ -483,8 +505,8 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
 
         vec2 edge_point = { float(edge_point_idx%grid_width), float(edge_point_idx/grid_width) };
 
-        int left_idx  = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_poly_normals, poly_normal_offsets, obstacle_left, edge_point);
-        int right_idx = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_poly_normals, poly_normal_offsets, obstacle_right, edge_point);
+        int left_idx  = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_left, edge_point);
+        int right_idx = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_right, edge_point);
 
         normal_indices_left[i]  = left_idx;
         normal_indices_right[i] = right_idx;

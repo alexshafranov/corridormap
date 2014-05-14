@@ -52,7 +52,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
 
 // go over all edges in the input footprint and compute normals for each.
-void build_footprint_normals(const footprint& in, footprint_normals& out);
+void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals& out);
 
 // if edge point lies in vector space spanned by two consecutive normals assign first normal's index. otherwise keep zero.
 void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles,
@@ -71,7 +71,7 @@ void deallocate_distance_mesh(memory* mem, distance_mesh& mesh);
 voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_vert_points, int num_edge_points);
 void deallocate_voronoi_features(memory* mem, voronoi_features& features);
 
-footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_normals);
+footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_poly_verts);
 void deallocate_foorprint_normals(memory* mem, footprint_normals& normals);
 
 voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
