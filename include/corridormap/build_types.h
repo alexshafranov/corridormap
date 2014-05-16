@@ -23,7 +23,7 @@
 #define CORRIDORMAP_BUILD_TYPES_H_
 
 // 
-// This file defines types used during construction of the corridor map.
+// types used during construction of the corridor map.
 //
 
 namespace corridormap {
@@ -35,11 +35,11 @@ struct footprint
     int num_polys;
     // the total number of vertices.
     int num_verts;
-    // x coords indexed in [0..num_verts] range.
+    // x coords indexed in [0..num_verts) range.
     float* x;
-    // y coords indexed in [0..num_verts] range.
+    // y coords indexed in [0..num_verts) range.
     float* y;
-    // array of vertex counts per poly, indexed in [0..num_polys] range.
+    // array of vertex counts per poly, indexed in [0..num_polys) range.
     int* num_poly_verts;
 };
 
@@ -67,11 +67,11 @@ struct distance_mesh
     int num_segments;
     // the total number of vertices.
     int num_verts;
-    // vertex array indexed in [0..num_verts] range.
+    // vertex array indexed in [0..num_verts) range.
     render_vertex* verts;
-    // the number of vertices per segment. indexed in [0..num_segments] range.
+    // the number of vertices per segment. indexed in [0..num_segments) range.
     int* num_segment_verts;
-    // segment colors. indexed in [0..num_segments] range.
+    // segment colors. indexed in [0..num_segments) range.
     unsigned int* segment_colors;
 };
 
@@ -84,15 +84,15 @@ struct voronoi_features
     int num_vert_points;
     // number of voronoi edge points.
     int num_edge_points;
-    // grid indices (y*grid_width + x) of vertex points. [0..num_vert_points].
+    // grid indices (y*grid_width + x) of vertex points. [0..num_vert_points).
     unsigned int* verts;
-    // grid indices (y*grid_width + x) of edge points. [0..num_edge_points].
+    // grid indices (y*grid_width + x) of edge points. [0..num_edge_points).
     unsigned int* edges;
-    // IDs (colors) of obstacles surrounding each vertex. [0..4*num_vert_points].
+    // IDs (colors) of obstacles surrounding each vertex. [0..4*num_vert_points).
     unsigned int* vert_obstacle_ids;
-    // IDs (colors) of obstacles from the left side of each edge point. [0..num_edge_points].
+    // IDs (colors) of obstacles from the left side of each edge point. [0..num_edge_points).
     unsigned int* edge_obstacle_ids_left;
-    // IDs (colors) of obstacles from the right side of each edge point. [0..num_edge_points].
+    // IDs (colors) of obstacles from the right side of each edge point. [0..num_edge_points).
     unsigned int* edge_obstacle_ids_right;
 };
 
@@ -103,13 +103,13 @@ struct footprint_normals
     int num_obstacles;
     // total number of normals (one per each edge in footprint).
     int num_normals;
-    // x coord indexed in [0..num_normals]
+    // x coord indexed in [0..num_normals)
     float* x;
-    // y coord indexed in [0..num_normals]
+    // y coord indexed in [0..num_normals)
     float* y;
-    // array of normal counts per obstacle, indexed in [0..num_obstacles] range.
+    // array of normal counts per obstacle, indexed in [0..num_obstacles) range.
     int* num_obstacle_normals;
-    // offsets in x, y arrays for each poly, indexed in [0..num_obstacles] range.
+    // offsets in x, y arrays for each poly, indexed in [0..num_obstacles) range.
     int* obstacle_normal_offsets;
 };
 
@@ -124,6 +124,24 @@ struct voronoi_edge_normals
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
     // [0..num_edge_points]
     int* edge_normal_indices_right;
+};
+
+// Compressed-Sparse-Row format for boolean grid,
+// used as a fast lookup of voronoi features during tracing.
+struct csr_grid
+{
+    // number of rows in the grid.
+    int num_rows;
+    // number of columns in the grid.
+    int num_cols;
+    // number of non-empty cells in the grid.
+    int num_nz;
+    // stores column index for each non-empty element. indexed in [0 .. num_nz).
+    int* column;
+    // columns of the row R: row_offset[R] .. row_offset[R+1]. indexed in [0 .. num_rows + 1).
+    int* row_offset;
+    // 4 neighbour indices per non-empty element (index + 1, or 0 if no non-empty neis). indexed in [0 .. num_nz)
+    int* neis;
 };
 
 }

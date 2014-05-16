@@ -77,6 +77,9 @@ void deallocate_foorprint_normals(memory* mem, footprint_normals& normals);
 voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
 void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& normals);
 
+csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_empty);
+void deallocate_csr_grid(memory* mem, csr_grid& grid);
+
 }
 
 #endif
