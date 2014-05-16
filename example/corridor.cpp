@@ -226,7 +226,7 @@ int main()
         glfwPollEvents();
     }
 
-    corridormap::deallocate_distance_mesh(&mem, mesh);
+    corridormap::deallocate(&mem, mesh);
 
     return 0;
 }

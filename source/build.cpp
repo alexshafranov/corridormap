@@ -142,7 +142,7 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
     return result;
 }
 
-void deallocate_distance_mesh(memory* mem, distance_mesh& mesh)
+void deallocate(memory* mem, distance_mesh& mesh)
 {
     mem->deallocate(mesh.verts);
     mem->deallocate(mesh.num_segment_verts);
@@ -324,7 +324,7 @@ voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_
     return result;
 }
 
-void deallocate_voronoi_features(memory* mem, voronoi_features& features)
+void deallocate(memory* mem, voronoi_features& features)
 {
     mem->deallocate(features.verts);
     mem->deallocate(features.edges);
@@ -350,7 +350,7 @@ footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int 
 }
 
 // deallocates footprint normals. 'mem' must be the same that was used for allocation.
-void deallocate_foorprint_normals(memory* mem, footprint_normals& normals)
+void deallocate(memory* mem, footprint_normals& normals)
 {
     mem->deallocate(normals.x);
     mem->deallocate(normals.y);
@@ -430,7 +430,7 @@ voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_poi
     return result;
 }
 
-void deallocate_voronoi_edge_normals(memory* mem, voronoi_edge_normals& result)
+void deallocate(memory* mem, voronoi_edge_normals& result)
 {
     mem->deallocate(result.edge_normal_indices_left);
     mem->deallocate(result.edge_normal_indices_right);
@@ -577,7 +577,7 @@ csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_
     return result;
 }
 
-void deallocate_csr_grid(memory* mem, csr_grid& grid)
+void deallocate(memory* mem, csr_grid& grid)
 {
     mem->deallocate(grid.column);
     mem->deallocate(grid.row_offset);
