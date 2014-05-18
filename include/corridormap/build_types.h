@@ -145,6 +145,20 @@ struct csr_grid
     int* row_offset;
 };
 
+// rendered distance mesh is a 4-connected grid.
+enum { max_grid_neis = 4 };
+
+// pack of up to max_grid_neis cells.
+struct csr_grid_neis
+{
+    // number of neighbours [0..max_grid_neis].
+    int num;
+    // neighbouring cell row.
+    int row[max_grid_neis];
+    // neighbouring cell column.
+    int col[max_grid_neis];
+};
+
 }
 
 #endif

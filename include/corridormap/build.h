@@ -65,6 +65,12 @@ void compute_closest_points(const footprint& obstacles, const int* obstacle_offs
 // build CSR (Compressed Sparse Row) grid representation from row-major list of non-zero element coordinates.
 void build_csr(const unsigned int* nz_coords, csr_grid& out);
 
+// checks if the cell is non-zero.
+bool is_nz(const csr_grid& grid, int row, int col);
+
+// finds all neighbours of 4-connected CSR grid cell.
+csr_grid_neis cell_neis(const csr_grid& grid, int row, int col);
+
 }
 
 #endif

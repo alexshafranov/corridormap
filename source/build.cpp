@@ -501,4 +501,61 @@ void build_csr(const unsigned int* nz_coords, csr_grid& out)
     }
 }
 
+bool is_nz_cell(const csr_grid& grid, int row, int col)
+{
+    const int* column = grid.column;
+    int row_b = grid.row_offset[row + 0];
+    int row_e = grid.row_offset[row + 1];
+
+    for (int i = row_b; i < row_e; ++i)
+    {
+        if (column[i] == col)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+namespace
+{
+    int nei_offset_row[] = { +0, -1, +1, +0 };
+    int nei_offset_col[] = { -1, +0, +0, +1 };
+}
+
+csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
+{
+    int num_rows = grid.num_rows;
+    int num_cols = grid.num_cols;
+
+    csr_grid_neis neis;
+    neis.num = 0;
+
+    for (int i = 0; i < sizeof(nei_offset_row)/sizeof(nei_offset_row[0]); ++i)
+    {
+        int n_r = row + nei_offset_row[i];
+        int n_c = col + nei_offset_col[i];
+
+        if (n_r < 0 || n_r >= num_rows)
+        {
+            continue;
+        }
+
+        if (n_c < 0 || n_c >= num_cols)
+        {
+            continue;
+        }
+
+        if (is_nz_cell(grid, n_r, n_c))
+        {
+            neis.row[neis.num] = n_r;
+            neis.col[neis.num] = n_c;
+            neis.num++;
+        }
+    }
+
+    return neis;
+}
+
 }
