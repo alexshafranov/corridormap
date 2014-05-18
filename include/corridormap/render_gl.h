@@ -52,15 +52,15 @@ static const char* fragment_shader =
 "}                                                  \n";
 
 static const char* debug_quad_vertex_shader =
-"#version 330                                   \n"
-"in vec3 position;                              \n"
-"out vec2 uv;                                   \n"
-"                                               \n"
-"void main()                                    \n"
-"{                                              \n"
-"   uv = position.xy * 0.5 + 0.5;               \n"
-"   gl_Position = vec4(position.xyz, 1.0);      \n"
-"}                                              \n";
+"#version 330                                       \n"
+"in vec3 position;                                  \n"
+"out vec2 uv;                                       \n"
+"                                                   \n"
+"void main()                                        \n"
+"{                                                  \n"
+"   uv = vec2(position.x, -position.y) * 0.5 + 0.5; \n"
+"   gl_Position = vec4(position.xyz, 1.0);          \n"
+"}                                                  \n";
 
 static const char* debug_quad_fragment_shader =
 "#version 330                                   \n"
