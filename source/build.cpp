@@ -466,4 +466,8 @@ void compute_closest_points(const footprint& obstacles, const int* obstacle_offs
     }
 }
 
+void build_csr(int /*num_rows*/, int /*num_cols*/, int /*num_nz*/, const unsigned int* /*nz_coords*/, csr_grid& /*out*/)
+{
+}
+
 }

@@ -62,6 +62,9 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
 void compute_closest_points(const footprint& obstacles, const int* obstacle_offsets, const float* pos_x, const float* pos_y,
                             const unsigned int* obstacle_ids, const int num_points, float* out_x, float* out_y);
 
+// build CSR (Compressed Sparse Row) grid representation from row-major list of non-zero element coordinates.
+void build_csr(int num_rows, int num_cols, int num_nz, const unsigned int* nz_coords, csr_grid& out);
+
 }
 
 #endif
