@@ -469,8 +469,36 @@ void compute_closest_points(const footprint& obstacles, const int* obstacle_offs
     }
 }
 
-void build_csr(int /*num_rows*/, int /*num_cols*/, int /*num_nz*/, const unsigned int* /*nz_coords*/, csr_grid& /*out*/)
+void build_csr(const unsigned int* nz_coords, csr_grid& out)
 {
+    int* column = out.column;
+    int* row_offset = out.row_offset;
+
+    const int num_cols = out.num_cols;
+    const int num_rows = out.num_rows;
+    const int num_nz = out.num_nz;
+
+    int next_row = 0;
+
+    for (int i = 0; i < num_nz; ++i)
+    {
+        unsigned int coord = nz_coords[i];
+
+        column[i] = coord % num_cols;
+        int curr_row = coord / num_cols;
+
+        for (int j = next_row; j <= curr_row; ++j)
+        {
+            row_offset[j] = i;
+        }
+
+        next_row = curr_row + 1;
+    }
+
+    for (int j = next_row; j < num_rows + 1; ++j)
+    {
+        row_offset[j] = num_nz;
+    }
 }
 
 }

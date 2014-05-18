@@ -63,7 +63,7 @@ void compute_closest_points(const footprint& obstacles, const int* obstacle_offs
                             const unsigned int* obstacle_ids, const int num_points, float* out_x, float* out_y);
 
 // build CSR (Compressed Sparse Row) grid representation from row-major list of non-zero element coordinates.
-void build_csr(int num_rows, int num_cols, int num_nz, const unsigned int* nz_coords, csr_grid& out);
+void build_csr(const unsigned int* nz_coords, csr_grid& out);
 
 }
 
