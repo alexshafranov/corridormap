@@ -143,9 +143,6 @@ struct csr_grid
     int* column;
     // columns of the row R: row_offset[R] .. row_offset[R+1]. indexed in [0 .. num_rows + 1).
     int* row_offset;
-    // 4 neighbour indices per non-zero element,
-    // each in range [1..num_nz] (index + 1, or 0 if no non-zero neis). indexed in [0 .. 4 * num_nz)
-    int* neis;
 };
 
 }

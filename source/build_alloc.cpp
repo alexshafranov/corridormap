@@ -125,7 +125,6 @@ csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_
     result.num_nz = num_non_zero;
     result.column = allocate<int>(mem, num_non_zero);
     result.row_offset = allocate<int>(mem, num_rows + 1);
-    result.neis = allocate<int>(mem, 4*num_non_zero);
 
     return result;
 }
@@ -134,7 +133,6 @@ void deallocate(memory* mem, csr_grid& grid)
 {
     mem->deallocate(grid.column);
     mem->deallocate(grid.row_offset);
-    mem->deallocate(grid.neis);
     memset(&grid, 0, sizeof(grid));
 }
 
