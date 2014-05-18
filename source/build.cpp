@@ -501,7 +501,7 @@ void build_csr(const unsigned int* nz_coords, csr_grid& out)
     }
 }
 
-bool is_nz_cell(const csr_grid& grid, int row, int col)
+bool is_nz(const csr_grid& grid, int row, int col)
 {
     const int* column = grid.column;
     int row_b = grid.row_offset[row + 0];
@@ -547,7 +547,7 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
             continue;
         }
 
-        if (is_nz_cell(grid, n_r, n_c))
+        if (is_nz(grid, n_r, n_c))
         {
             neis.row[neis.num] = n_r;
             neis.col[neis.num] = n_c;
