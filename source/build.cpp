@@ -78,18 +78,22 @@ namespace
 
 bbox2 bounds(const footprint& f, float border)
 {
+    const float* x = f.x;
+    const float* y = f.y;
+    const int num_verts = f.num_verts;
+
     bbox2 result;
     result.min[0] = +FLT_MAX;
     result.min[1] = +FLT_MAX;
     result.max[0] = -FLT_MAX;
     result.max[1] = -FLT_MAX;
 
-    for (int i = 0; i < f.num_verts; ++i)
+    for (int i = 0; i < num_verts; ++i)
     {
-        result.min[0] = f.x[i] < result.min[0] ? f.x[i] : result.min[0];
-        result.min[1] = f.y[i] < result.min[1] ? f.y[i] : result.min[1];
-        result.max[0] = f.x[i] > result.max[0] ? f.x[i] : result.max[0];
-        result.max[1] = f.y[i] > result.max[1] ? f.y[i] : result.max[1];
+        result.min[0] = std::min(x[i], result.min[0]);
+        result.min[1] = std::min(y[i], result.min[1]);
+        result.max[0] = std::max(x[i], result.max[0]);
+        result.max[1] = std::max(y[i], result.max[1]);
     }
 
     result.min[0] -= border;
@@ -104,8 +108,7 @@ float max_distance(bbox2 scene_bbox)
 {
     float w = scene_bbox.max[0] - scene_bbox.min[0];
     float h = scene_bbox.max[1] - scene_bbox.min[1];
-    float s = (w > h) ? w : h;
-    return s * CORRIDORMAP_SQRT_2;
+    return std::max(w, h) * CORRIDORMAP_SQRT_2;
 }
 
 int vertex_distance_mesh_tris(float max_dist, float max_error)
