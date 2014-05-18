@@ -562,17 +562,17 @@ void compute_closest_points(const footprint& obstacles, const int* obstacle_offs
     }
 }
 
-csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_empty)
+csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_zero)
 {
     csr_grid result;
     memset(&result, 0, sizeof(result));
 
     result.num_rows = num_rows;
     result.num_cols = num_cols;
-    result.num_nz = num_non_empty;
-    result.column = allocate<int>(mem, num_non_empty);
+    result.num_nz = num_non_zero;
+    result.column = allocate<int>(mem, num_non_zero);
     result.row_offset = allocate<int>(mem, num_rows + 1);
-    result.neis = allocate<int>(mem, 4*num_non_empty);
+    result.neis = allocate<int>(mem, 4*num_non_zero);
 
     return result;
 }

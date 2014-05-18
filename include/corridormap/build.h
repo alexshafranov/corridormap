@@ -69,7 +69,7 @@ distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_
 voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_vert_points, int num_edge_points);
 footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_poly_verts);
 voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
-csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_empty);
+csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_zero);
 
 void deallocate(memory* mem, distance_mesh& mesh);
 void deallocate(memory* mem, voronoi_features& features);

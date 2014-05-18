@@ -134,13 +134,14 @@ struct csr_grid
     int num_rows;
     // number of columns in the grid.
     int num_cols;
-    // number of non-empty (non-zero) cells in the grid.
+    // number of non-zero (non-empty) cells in the grid.
     int num_nz;
-    // stores column index for each non-empty element. indexed in [0 .. num_nz).
+    // stores column index for each non-zero element. indexed in [0 .. num_nz).
     int* column;
     // columns of the row R: row_offset[R] .. row_offset[R+1]. indexed in [0 .. num_rows + 1).
     int* row_offset;
-    // 4 neighbour indices per non-empty element (index + 1, or 0 if no non-empty neis). indexed in [0 .. num_nz)
+    // 4 neighbour indices per non-zero element,
+    // each in range [1..num_nz] (index + 1, or 0 if no non-zero neis). indexed in [0 .. 4 * num_nz)
     int* neis;
 };
 
