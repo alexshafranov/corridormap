@@ -134,7 +134,7 @@ struct csr_grid
     int num_rows;
     // number of columns in the grid.
     int num_cols;
-    // number of non-empty cells in the grid.
+    // number of non-empty (non-zero) cells in the grid.
     int num_nz;
     // stores column index for each non-empty element. indexed in [0 .. num_nz).
     int* column;
