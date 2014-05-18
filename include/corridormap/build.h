@@ -57,7 +57,8 @@ void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals&
 void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles,
                                      const footprint_normals& normals, voronoi_edge_normals& out);
 
-//
+// for each position (pos_x, pos_y), obstacle index in obstacle_offsets and footprint (obstacle_ids)
+// compute closest point on that obstacle and output it to out_x, out_y.
 void compute_closest_points(const footprint& obstacles, const int* obstacle_offsets, const float* pos_x, const float* pos_y,
                             const unsigned int* obstacle_ids, const int num_points, float* out_x, float* out_y);
 
