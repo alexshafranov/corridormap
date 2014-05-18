@@ -32,6 +32,7 @@
 #include "corridormap/memory.h"
 #include "corridormap/render_gl.h"
 #include "corridormap/build.h"
+#include "corridormap/build_alloc.h"
 #include "corridormap/build_ocl.h"
 
 // force NVIDIA GPU when using Optimus.
@@ -139,7 +140,7 @@ int main()
     corridormap::footprint_normals normals = corridormap::allocate_foorprint_normals(&mem, obstacles.num_polys, obstacles.num_verts);
     corridormap::build_footprint_normals(obstacles, obstacle_bounds, normals);
 
-    corridormap::distance_mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles, max_dist, max_error);
+    corridormap::distance_mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles.num_polys, max_distance_mesh_verts(obstacles, max_dist, max_error));
     corridormap::build_distance_mesh(obstacles, obstacle_bounds, max_dist, max_error, mesh);
 
     corridormap::renderer_gl render_iface;

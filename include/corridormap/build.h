@@ -24,7 +24,6 @@
 
 #include "corridormap/build_types.h"
 
-namespace corridormap { class memory; }
 namespace corridormap { class renderer; }
 
 namespace corridormap {
@@ -61,21 +60,6 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
 //
 void compute_closest_points(const footprint& obstacles, const int* obstacle_offsets, const float* pos_x, const float* pos_y,
                             const unsigned int* obstacle_ids, const int num_points, float* out_x, float* out_y);
-
-
-/// data allocation functions.
-
-distance_mesh allocate_distance_mesh(memory* mem, const footprint& f, float max_dist, float max_error);
-voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_vert_points, int num_edge_points);
-footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_poly_verts);
-voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
-csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_zero);
-
-void deallocate(memory* mem, distance_mesh& mesh);
-void deallocate(memory* mem, voronoi_features& features);
-void deallocate(memory* mem, footprint_normals& normals);
-void deallocate(memory* mem, voronoi_edge_normals& normals);
-void deallocate(memory* mem, csr_grid& grid);
 
 }
 

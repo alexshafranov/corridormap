@@ -58,6 +58,9 @@ struct render_vertex
     float z;
 };
 
+// border gets a distance mesh segment (half tent) per side.
+enum { num_border_segments = 4 };
+
 // segmented distance mesh suitable for rendering.
 // each segment represents one footprint polygon.
 // triangles are stored as a list of vertices in CCW order.
