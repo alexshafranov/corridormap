@@ -22,7 +22,9 @@
 #include <algorithm>
 #include <math.h>
 #include <float.h>
+#include <string.h>
 #include "corridormap/assert.h"
+#include "corridormap/memory.h"
 #include "corridormap/render_interface.h"
 #include "corridormap/runtime_types.h"
 #include "corridormap/build.h"
@@ -557,5 +559,21 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
 
     return neis;
 }
+
+// void trace_edges(memory* scratch_mem, const csr_grid& vertices, const csr_grid& edges, int num_verts, int start_vert_row, int start_vert_col)
+// {
+//     alloc_scope<unsigned> stack(scratch_mem, num_verts);
+//     stack[0] = start_vert_row*vertices.num_cols + start_vert_col;
+//     int stack_depth = 1;
+
+//     alloc_scope<char> visited(scratch_mem, num_verts);
+//     memset(visited, 0, num_verts*sizeof(char));
+
+//     while (stack_depth > 0)
+//     {
+//         unsigned u = stack[stack_depth - 1];
+//         csr_grid_neis neis = cell_neis(edges);
+//     }
+// }
 
 }

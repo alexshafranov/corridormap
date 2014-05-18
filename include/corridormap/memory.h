@@ -47,6 +47,27 @@ T* allocate(memory* mem, size_t count, size_t align=sizeof(void*))
     return static_cast<T*>(mem->allocate(sizeof(T)*count, align));
 }
 
+template <typename T>
+class alloc_scope
+{
+public:
+    alloc_scope(memory* mem, size_t count, size_t align=sizeof(void*))
+        : mem(mem)
+    {
+        data = allocate<T>(mem, count, align);
+    }
+
+    ~alloc_scope()
+    {
+        mem->deallocate(data);
+    }
+
+    operator T*() { return data; }
+
+    memory* mem;
+    T* data;
+};
+
 }
 
 #endif

@@ -24,6 +24,7 @@
 
 #include "corridormap/build_types.h"
 
+namespace corridormap { class memory; }
 namespace corridormap { class renderer; }
 
 namespace corridormap {
@@ -70,6 +71,9 @@ bool is_nz(const csr_grid& grid, int row, int col);
 
 // finds all neighbours of 4-connected CSR grid cell.
 csr_grid_neis cell_neis(const csr_grid& grid, int row, int col);
+
+//
+void trace_edges(memory* scratch_mem, const csr_grid& vertices, const csr_grid& edges, int num_verts, int start_vert_row, int start_vert_col);
 
 }
 
