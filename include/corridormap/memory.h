@@ -22,6 +22,7 @@
 #ifndef CORRIDORMAP_MEMORY_H_
 #define CORRIDORMAP_MEMORY_H_
 
+#include <string.h> // memset
 #include <stddef.h> // size_t
 
 namespace corridormap {
@@ -53,6 +54,7 @@ class alloc_scope
 public:
     alloc_scope(memory* mem, size_t count, size_t align=sizeof(void*))
         : mem(mem)
+        , count(count)
     {
         data = allocate<T>(mem, count, align);
     }
@@ -64,9 +66,16 @@ public:
 
     operator T*() { return data; }
 
+    size_t count;
     memory* mem;
     T* data;
 };
+
+template <typename T>
+void zero_mem(alloc_scope<T>& s)
+{
+    memset(s.data, 0, s.count*sizeof(T));
+}
 
 }
 

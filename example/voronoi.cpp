@@ -77,11 +77,11 @@ struct glfw_window_context
 
 namespace
 {
-    const int screen_width = 720;
-    const int screen_height = 720;
+    const int screen_width = 1024;
+    const int screen_height = 1024;
 
-    const int render_target_width = 4096;
-    const int render_target_height = 4096;
+    const int render_target_width = 1024;
+    const int render_target_height = 1024;
 
     // colors to use for diagram instead of indices.
     unsigned colors[] =
@@ -206,8 +206,8 @@ int main()
 
         render_iface.acquire_shared(cl_runtime.queue, voronoi_image);
         error_code = corridormap::mark_voronoi_features(cl_runtime, voronoi_image);
-        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_edges_img, 0xff000000, 8);
-        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_vertices_img, 0xffffffff, 16);
+        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_edges_img, 0xff000000, 0);
+        error_code = corridormap::debug_voronoi_features(cl_runtime, voronoi_image, cl_runtime.voronoi_vertices_img, 0xffffffff, 0);
         error_code = corridormap::compact_voronoi_features(cl_runtime);
         error_code = corridormap::store_obstacle_ids(cl_runtime, voronoi_image);
         render_iface.release_shared(cl_runtime.queue, voronoi_image);

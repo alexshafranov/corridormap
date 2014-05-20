@@ -214,6 +214,14 @@ int main()
 
         corridormap::voronoi_edge_normals edge_normal_indices = corridormap::allocate_voronoi_edge_normals(&mem, features.num_edge_points);
         corridormap::build_edge_point_normal_indices(features, obstacles, normals, edge_normal_indices);
+
+        corridormap::csr_grid vert_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_vert_points);
+        corridormap::build_csr(features.verts, vert_csr);
+
+        corridormap::csr_grid edge_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_edge_points);
+        corridormap::build_csr(features.edges, edge_csr);
+
+        corridormap::trace_edges(&mem, vert_csr, edge_csr, features.verts[0]);
     }
 
     while (!glfwWindowShouldClose(window))

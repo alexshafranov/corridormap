@@ -19,6 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <stdio.h> // temp
+
 #include <algorithm>
 #include <math.h>
 #include <float.h>
@@ -503,7 +505,7 @@ void build_csr(const unsigned int* nz_coords, csr_grid& out)
     }
 }
 
-bool is_nz(const csr_grid& grid, int row, int col)
+int nz(const csr_grid& grid, int row, int col)
 {
     const int* column = grid.column;
     int row_b = grid.row_offset[row + 0];
@@ -513,11 +515,11 @@ bool is_nz(const csr_grid& grid, int row, int col)
     {
         if (column[i] == col)
         {
-            return true;
+            return i;
         }
     }
 
-    return false;
+    return grid.num_nz;
 }
 
 namespace
@@ -549,10 +551,13 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
             continue;
         }
 
-        if (is_nz(grid, n_r, n_c))
+        int nz_idx = nz(grid, n_r, n_c);
+
+        if (nz_idx < grid.num_nz)
         {
             neis.row[neis.num] = n_r;
             neis.col[neis.num] = n_c;
+            neis.nz_idx[neis.num] = nz_idx;
             neis.num++;
         }
     }
@@ -560,20 +565,137 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
     return neis;
 }
 
-// void trace_edges(memory* scratch_mem, const csr_grid& vertices, const csr_grid& edges, int num_verts, int start_vert_row, int start_vert_col)
-// {
-//     alloc_scope<unsigned> stack(scratch_mem, num_verts);
-//     stack[0] = start_vert_row*vertices.num_cols + start_vert_col;
-//     int stack_depth = 1;
+namespace
+{
+    template <typename T>
+    struct stack
+    {
+        stack(memory* mem, int max_size)
+            : top(-1)
+            , mem(mem)
+        {
+            data = allocate<T>(mem, max_size);
+        }
 
-//     alloc_scope<char> visited(scratch_mem, num_verts);
-//     memset(visited, 0, num_verts*sizeof(char));
+        int top;
+        memory* mem;
+        T* data;
+    };
 
-//     while (stack_depth > 0)
-//     {
-//         unsigned u = stack[stack_depth - 1];
-//         csr_grid_neis neis = cell_neis(edges);
-//     }
-// }
+    template <typename T>
+    int size(const stack<T>& s)
+    {
+        return s.top + 1;
+    }
+
+    template <typename T>
+    T top(const stack<T>& s)
+    {
+        return s.data[s.top];
+    }
+
+    template <typename T>
+    void push(stack<T>& s, const T v)
+    {
+        s.data[++s.top] = v;
+    }
+
+    template <typename T>
+    T pop(stack<T>& s)
+    {
+        return s.data[s.top--];
+    }
+
+    template <typename T>
+    void clear(stack<T>& s)
+    {
+        s.top = -1;
+    }
+
+    void trace_edge(const csr_grid& vertices, const csr_grid& edges, stack<int>& stack_edge,
+                    stack<int>& stack_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert)
+    {
+        int start_vert_row = start_vert/edges.num_cols;
+        int start_vert_col = start_vert%edges.num_cols;
+
+        csr_grid_neis neis = cell_neis(edges, start_vert/edges.num_cols, start_vert%edges.num_cols);
+
+        clear(stack_edge);
+
+        for (int i = 0; i < neis.num; ++i)
+        {
+            push(stack_edge, neis.row[i]*edges.num_cols + neis.col[i]);
+        }
+
+        while (size(stack_edge) > 0)
+        {
+            int edge_pt = pop(stack_edge);
+
+            visited_edge[nz(edges, edge_pt/edges.num_cols, edge_pt%edges.num_cols)] = 1;
+
+            csr_grid_neis vert_neis = cell_neis(vertices, edge_pt/edges.num_cols, edge_pt%edges.num_cols);
+
+            bool pushed_verts = false;
+
+            for (int i = 0; i < vert_neis.num; ++i)
+            {
+                int row = vert_neis.row[i];
+                int col = vert_neis.col[i];
+                int idx = row*vertices.num_cols + col;
+                int vert_nz_idx = vert_neis.nz_idx[i];
+
+                if (visited_vert[vert_nz_idx] != 1)
+                {
+                    pushed_verts = true;
+                    push(stack_vert, idx);
+                }
+
+                printf("[%d, %d] -> [%d, %d]\n", start_vert_col, start_vert_row, col, row);
+            }
+
+            if (pushed_verts)
+            {
+                continue;
+            }
+
+            csr_grid_neis neis = cell_neis(edges, edge_pt/edges.num_cols, edge_pt%edges.num_cols);
+
+            for (int i = 0; i < neis.num; ++i)
+            {
+                int nz_idx = neis.nz_idx[i];
+                int row = neis.row[i];
+                int col = neis.col[i];
+                int idx = row*vertices.num_cols + col;
+
+                if (visited_edge[nz_idx] != 0)
+                {
+                    continue;
+                }
+
+                push(stack_edge, idx);
+            }
+        }
+    }
+}
+
+void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, int start_vert)
+{
+    alloc_scope<char> visited_edge(scratch, edges.num_nz);
+    alloc_scope<char> visited_vert(scratch, vertices.num_nz);
+    zero_mem(visited_edge);
+    zero_mem(visited_vert);
+
+    stack<int> stack_edge(scratch, edges.num_nz);
+    stack<int> stack_vert(scratch, vertices.num_nz);
+
+    push(stack_vert, start_vert);
+
+    while (size(stack_vert) > 0)
+    {
+        int vert = pop(stack_vert);
+        visited_vert[nz(vertices, vert/edges.num_cols, vert%edges.num_cols)] = 1;
+        trace_edge(vertices, edges, stack_edge, stack_vert, visited_edge, visited_vert, vert);
+    }
+}
 
 }

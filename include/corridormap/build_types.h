@@ -153,6 +153,8 @@ struct csr_grid_neis
 {
     // number of neighbours [0..max_grid_neis].
     int num;
+    // index among non-zero cells of grid.
+    int nz_idx[max_grid_neis];
     // neighbouring cell row.
     int row[max_grid_neis];
     // neighbouring cell column.
