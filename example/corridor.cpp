@@ -221,6 +221,11 @@ int main()
         corridormap::csr_grid edge_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_edge_points);
         corridormap::build_csr(features.edges, edge_csr);
 
+        for (int i = 0; i < features.num_vert_points; ++i)
+        {
+            printf("<%d, %d>\n", features.verts[i]%features.grid_width, features.verts[i]/features.grid_width);
+        }
+
         corridormap::trace_edges(&mem, vert_csr, edge_csr, features.verts[0]);
     }
 
