@@ -522,6 +522,11 @@ int nz(const csr_grid& grid, int row, int col)
     return grid.num_nz;
 }
 
+int nz(const csr_grid& grid, int linear_index)
+{
+    return nz(grid, linear_index / grid.num_cols, linear_index % grid.num_cols);
+}
+
 namespace
 {
     int nei_offset_row[] = { +0, -1, +1, +0 };
@@ -563,6 +568,11 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
     }
 
     return neis;
+}
+
+csr_grid_neis cell_neis(const csr_grid& grid, int linear_index)
+{
+    return cell_neis(grid, linear_index / grid.num_cols, linear_index % grid.num_cols);
 }
 
 namespace
@@ -615,10 +625,10 @@ namespace
     void trace_edge(const csr_grid& vertices, const csr_grid& edges, stack<int>& stack_edge,
                     stack<int>& stack_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert)
     {
-        int start_vert_row = start_vert/edges.num_cols;
-        int start_vert_col = start_vert%edges.num_cols;
+        int start_vert_row = start_vert / edges.num_cols;
+        int start_vert_col = start_vert % edges.num_cols;
 
-        csr_grid_neis neis = cell_neis(edges, start_vert/edges.num_cols, start_vert%edges.num_cols);
+        csr_grid_neis neis = cell_neis(edges, start_vert);
 
         clear(stack_edge);
 
@@ -631,9 +641,9 @@ namespace
         {
             int edge_pt = pop(stack_edge);
 
-            visited_edge[nz(edges, edge_pt/edges.num_cols, edge_pt%edges.num_cols)] = 1;
+            visited_edge[nz(edges, edge_pt)] = 1;
 
-            csr_grid_neis vert_neis = cell_neis(vertices, edge_pt/edges.num_cols, edge_pt%edges.num_cols);
+            csr_grid_neis vert_neis = cell_neis(vertices, edge_pt);
 
             bool pushed_verts = false;
 
@@ -657,7 +667,7 @@ namespace
                 continue;
             }
 
-            csr_grid_neis neis = cell_neis(edges, edge_pt/edges.num_cols, edge_pt%edges.num_cols);
+            csr_grid_neis neis = cell_neis(edges, edge_pt);
 
             for (int i = 0; i < neis.num; ++i)
             {
@@ -692,8 +702,7 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     while (size(stack_vert) > 0)
     {
         int vert = pop(stack_vert);
-        int vert_nz = nz(vertices, vert/edges.num_cols, vert%edges.num_cols);
-        visited_vert[vert_nz] = 1;
+        visited_vert[nz(vertices, vert)] = 1;
         trace_edge(vertices, edges, stack_edge, stack_vert, visited_edge, visited_vert, vert);
     }
 }
