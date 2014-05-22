@@ -706,7 +706,6 @@ namespace
 
                 if (visited_vert[vert_nz_idx] != 1)
                 {
-                    visited_vert[vert_nz_idx] = 1;
                     pushed_verts = true;
                     push(stack_vert, idx);
                 }
@@ -758,7 +757,11 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     while (size(stack_vert) > 0)
     {
         count++;
-        trace_edges(vertices, edges, queue_edge, stack_vert, visited_edge, visited_vert, pop(stack_vert));
+
+        int vert = pop(stack_vert);
+        visited_vert[nz(vertices, vert)] = 1;
+
+        trace_edges(vertices, edges, queue_edge, stack_vert, visited_edge, visited_vert, vert);
     }
 
     printf("verts=%d\n", count);
