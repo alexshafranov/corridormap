@@ -622,24 +622,74 @@ namespace
         s.top = -1;
     }
 
-    void trace_edge(const csr_grid& vertices, const csr_grid& edges, stack<int>& stack_edge,
-                    stack<int>& stack_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert)
+    template <typename T>
+    struct queue
+    {
+        queue(memory* mem, int max_size)
+            : front(0)
+            , size(0)
+            , max_size(max_size)
+            , mem(mem)
+        {
+            data = allocate<T>(mem, max_size);
+        }
+
+        int front;
+        int size;
+        int max_size;
+        memory* mem;
+        T* data;
+    };
+
+    template <typename T>
+    int size(const queue<T>& q)
+    {
+        return q.size;
+    }
+
+    template <typename T>
+    void add(queue<T>& q, const T val)
+    {
+        int idx = (q.front + q.size) % q.max_size;
+        q.data[idx] = val;
+        q.size += 1;
+    }
+
+    template <typename T>
+    T remove(queue<T>& q)
+    {
+        T val = q.data[q.front % q.max_size];
+        q.front++;
+        q.size--;
+        return val;
+    }
+
+    template <typename T>
+    void clear(queue<T>& q)
+    {
+        q.front = 0;
+        q.size = 0;
+    }
+
+    void trace_edges(const csr_grid& vertices, const csr_grid& edges, queue<int>& queue_edge,
+                     stack<int>& stack_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert)
     {
         int start_vert_row = start_vert / edges.num_cols;
         int start_vert_col = start_vert % edges.num_cols;
 
         csr_grid_neis neis = cell_neis(edges, start_vert);
 
-        clear(stack_edge);
+        clear(queue_edge);
 
         for (int i = 0; i < neis.num; ++i)
         {
-            push(stack_edge, neis.row[i]*edges.num_cols + neis.col[i]);
+            add(queue_edge, neis.row[i]*edges.num_cols + neis.col[i]);
+            visited_edge[neis.nz_idx[i]] = 1;
         }
 
-        while (size(stack_edge) > 0)
+        while (size(queue_edge) > 0)
         {
-            int edge_pt = pop(stack_edge);
+            int edge_pt = remove(queue_edge);
 
             visited_edge[nz(edges, edge_pt)] = 1;
 
@@ -656,8 +706,13 @@ namespace
 
                 if (visited_vert[vert_nz_idx] != 1)
                 {
+                    visited_vert[vert_nz_idx] = 1;
                     pushed_verts = true;
                     push(stack_vert, idx);
+                }
+
+                if (start_vert != idx)
+                {
                     printf("[%d, %d] -> [%d, %d]\n", start_vert_col, start_vert_row, col, row);
                 }
             }
@@ -676,12 +731,10 @@ namespace
                 int col = neis.col[i];
                 int idx = row*vertices.num_cols + col;
 
-                if (visited_edge[nz_idx] != 0)
+                if (visited_edge[nz_idx] != 1)
                 {
-                    continue;
+                    add(queue_edge, idx);
                 }
-
-                push(stack_edge, idx);
             }
         }
     }
@@ -694,17 +747,33 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     zero_mem(visited_edge);
     zero_mem(visited_vert);
 
-    stack<int> stack_edge(scratch, edges.num_nz);
+    queue<int> queue_edge(scratch, edges.num_nz);
     stack<int> stack_vert(scratch, vertices.num_nz);
 
     push(stack_vert, start_vert);
+    visited_vert[nz(vertices, start_vert)] = 1;
+
+    int count = 0;
 
     while (size(stack_vert) > 0)
     {
-        int vert = pop(stack_vert);
-        visited_vert[nz(vertices, vert)] = 1;
-        trace_edge(vertices, edges, stack_edge, stack_vert, visited_edge, visited_vert, vert);
+        count++;
+        trace_edges(vertices, edges, queue_edge, stack_vert, visited_edge, visited_vert, pop(stack_vert));
     }
+
+    printf("verts=%d\n", count);
+
+    int visited_edge_count = 0;
+
+    for (int i = 0; i < edges.num_nz; ++i)
+    {
+        if (visited_edge[i] != 0)
+        {
+            visited_edge_count++;
+        }
+    }
+
+    printf("visited_edge_count=%d\n", visited_edge_count);
 }
 
 }
