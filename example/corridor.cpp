@@ -29,6 +29,11 @@
 #endif
 
 #include <GLFW/glfw3.h>
+
+#include "nanovg.h"
+#define NANOVG_GL3_IMPLEMENTATION
+#include "nanovg_gl.h"
+
 #include "corridormap/memory.h"
 #include "corridormap/render_gl.h"
 #include "corridormap/build.h"
@@ -117,6 +122,14 @@ int main()
     const unsigned char* version = glGetString(GL_VERSION);
 
     printf("opengl vendor=%s version=%s\n", vendor, version);
+
+    NVGcontext* vg = nvgCreateGL3(512, 512, NVG_ANTIALIAS);
+
+    if (!vg)
+    {
+        printf("failed to init nanovg.\n");
+        return 1;
+    }
 
     corridormap::memory_malloc mem;
 
@@ -231,16 +244,36 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
+        int windowWidth;
+        int windowHeight;
+        int frameBufferWidth;
+        int frameBufferHeight;
 
-        render_iface.blit_frame_buffer(width, height);
+        glfwGetWindowSize(window, &windowWidth, &windowHeight);
+        glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
+        float pxRatio = (float)frameBufferWidth/(float)windowWidth;
+
+        glViewport(0, 0, frameBufferWidth, frameBufferHeight);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+
+        nvgBeginFrame(vg, windowWidth, windowHeight, pxRatio, NVG_PREMULTIPLIED_ALPHA);
+
+        nvgBeginPath(vg);
+        nvgStrokeWidth(vg, 10.f);
+        nvgStrokeColor(vg, nvgRGB(255, 0, 0));
+        nvgMoveTo(vg, 0.f, 0.f);
+        nvgLineTo(vg, (float)windowWidth, (float)windowHeight);
+        nvgStroke(vg);
+
+        nvgEndFrame(vg);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     corridormap::deallocate(&mem, mesh);
+    nvgDeleteGL3(vg);
 
     return 0;
 }
