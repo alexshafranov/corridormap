@@ -85,8 +85,8 @@ namespace
     const int screen_width = 720;
     const int screen_height = 720;
 
-    const int render_target_width = 4096;
-    const int render_target_height = 4096;
+    const int render_target_width = 720;
+    const int render_target_height = 720;
 }
 
 int main()
@@ -193,6 +193,13 @@ int main()
         }
     }
 
+    corridormap::voronoi_features features;
+    float* u_x = corridormap::allocate<float>(&mem, 100);
+    float* u_y = corridormap::allocate<float>(&mem, 100);
+    float* v_x = corridormap::allocate<float>(&mem, 100);
+    float* v_y = corridormap::allocate<float>(&mem, 100);
+    int edge_count = 0;
+
     {
         cl_int error_code;
         cl_mem voronoi_image = render_iface.share_pixels(cl_runtime.context, CL_MEM_READ_WRITE, &error_code);
@@ -211,7 +218,7 @@ int main()
 
         clFinish(cl_runtime.queue);
 
-        corridormap::voronoi_features features = corridormap::allocate_voronoi_features(&mem, render_target_width, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
+        features = corridormap::allocate_voronoi_features(&mem, render_target_width, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
         error_code = corridormap::transfer_voronoi_features(cl_runtime, features);
 
         clFinish(cl_runtime.queue);
@@ -239,32 +246,59 @@ int main()
             printf("<%d, %d>\n", features.verts[i]%features.grid_width, features.verts[i]/features.grid_width);
         }
 
-        corridormap::trace_edges(&mem, vert_csr, edge_csr, features.verts[0]);
+        corridormap::trace_edges(&mem, vert_csr, edge_csr, features.verts[0], u_x, u_y, v_x, v_y, edge_count);
+        printf("edge_count=%d\n", edge_count);
     }
 
     while (!glfwWindowShouldClose(window))
     {
-        int windowWidth;
-        int windowHeight;
-        int frameBufferWidth;
-        int frameBufferHeight;
+        int window_width;
+        int window_height;
+        int framebuffer_width;
+        int framebuffer_height;
 
-        glfwGetWindowSize(window, &windowWidth, &windowHeight);
-        glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
-        float pxRatio = (float)frameBufferWidth/(float)windowWidth;
+        glfwGetWindowSize(window, &window_width, &window_height);
+        glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+        float pxRatio = (float)framebuffer_width/(float)window_width;
 
-        glViewport(0, 0, frameBufferWidth, frameBufferHeight);
+        glViewport(0, 0, framebuffer_width, framebuffer_height);
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-        nvgBeginFrame(vg, windowWidth, windowHeight, pxRatio, NVG_PREMULTIPLIED_ALPHA);
+        nvgBeginFrame(vg, window_width, window_height, pxRatio, NVG_PREMULTIPLIED_ALPHA);
+
+        float sx = (float)window_width/render_target_width;
+        float sy = (float)window_height/render_target_height;
+        float s = sx > sy ? sx : sy;
+        nvgScale(vg, s, s);
 
         nvgBeginPath(vg);
-        nvgStrokeWidth(vg, 10.f);
-        nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-        nvgMoveTo(vg, 0.f, 0.f);
-        nvgLineTo(vg, (float)windowWidth, (float)windowHeight);
-        nvgStroke(vg);
+        nvgFillColor(vg, nvgRGB(200, 200, 200));
+        nvgRect(vg, 0, 0, (float)screen_width, (float)screen_height);
+        nvgFill(vg);
+
+        nvgStrokeColor(vg, nvgRGB(255, 255, 255));
+        nvgStrokeWidth(vg, 4.f);
+
+        for (int i = 0; i < edge_count; ++i)
+        {
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, u_x[i], u_y[i]);
+            nvgLineTo(vg, v_x[i], v_y[i]);
+            nvgStroke(vg);
+        }
+
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGB(255, 0, 0));
+
+        for (int i = 0; i < features.num_vert_points; ++i)
+        {
+            float x = static_cast<float>(features.verts[i] % features.grid_width);
+            float y = static_cast<float>(features.verts[i] / features.grid_width);
+            nvgCircle(vg, x, y, 10.f);
+        }
+
+        nvgFill(vg);
 
         nvgEndFrame(vg);
 

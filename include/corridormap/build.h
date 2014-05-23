@@ -79,7 +79,8 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col);
 csr_grid_neis cell_neis(const csr_grid& grid, int linear_index);
 
 //
-void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, int start_vert);
+void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, int start_vert,
+                 float* u_x, float* u_y, float* v_x, float* v_y, int& count);
 
 }
 

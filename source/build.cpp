@@ -672,7 +672,8 @@ namespace
     }
 
     void trace_edges(const csr_grid& vertices, const csr_grid& edges, queue<int>& queue_edge,
-                     stack<int>& stack_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert)
+                     stack<int>& stack_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert,
+                     float* u_x, float* u_y, float* v_x, float* v_y, int& count)
     {
         int start_vert_row = start_vert / edges.num_cols;
         int start_vert_col = start_vert % edges.num_cols;
@@ -713,6 +714,11 @@ namespace
                 if (start_vert != idx)
                 {
                     printf("[%d, %d] -> [%d, %d]\n", start_vert_col, start_vert_row, col, row);
+                    u_x[count] = static_cast<float>(start_vert_col);
+                    u_y[count] = static_cast<float>(start_vert_row);
+                    v_x[count] = static_cast<float>(col);
+                    v_y[count] = static_cast<float>(row);
+                    count++;
                 }
             }
 
@@ -739,7 +745,8 @@ namespace
     }
 }
 
-void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, int start_vert)
+void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, int start_vert,
+                 float* u_x, float* u_y, float* v_x, float* v_y, int& count)
 {
     alloc_scope<char> visited_edge(scratch, edges.num_nz);
     alloc_scope<char> visited_vert(scratch, vertices.num_nz);
@@ -752,19 +759,19 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     push(stack_vert, start_vert);
     visited_vert[nz(vertices, start_vert)] = 1;
 
-    int count = 0;
+    int vert_count = 0;
 
     while (size(stack_vert) > 0)
     {
-        count++;
+        vert_count++;
 
         int vert = pop(stack_vert);
         visited_vert[nz(vertices, vert)] = 1;
 
-        trace_edges(vertices, edges, queue_edge, stack_vert, visited_edge, visited_vert, vert);
+        trace_edges(vertices, edges, queue_edge, stack_vert, visited_edge, visited_vert, vert, u_x, u_y, v_x, v_y, count);
     }
 
-    printf("verts=%d\n", count);
+    printf("verts=%d\n", vert_count);
 
     int visited_edge_count = 0;
 
