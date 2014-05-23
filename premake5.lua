@@ -63,8 +63,24 @@ solution "corridormap"
         kind "StaticLib"
         language "C"
         files { "example/glew/src/glew.c" }
-        defines { "_CRT_SECURE_NO_WARNINGS", "GLEW_STATIC" }
+        defines { "GLEW_STATIC" }
         includedirs { "example/glew/include" }
+
+        configuration { "windows" }
+            defines { "_CRT_SECURE_NO_WARNINGS" }
+
+    project "nanovg"
+        kind "StaticLib"
+        language "C"
+        files { "example/nanovg/src/*.c" }
+        includedirs { "example/nanovg/src" }
+
+        configuration "vs*"
+            -- x64 build stb_image.c: conversion from '__int64' to 'int', possible loss of data
+            buildoptions { "/wd4244" }
+
+        configuration { "windows" }
+            defines { "_CRT_SECURE_NO_WARNINGS" }
 
     project "example-voronoi"
         kind "ConsoleApp"
@@ -85,7 +101,7 @@ solution "corridormap"
         includedirs { "include", "deps/OpenCL", "deps/clew", "example/glfw/include", "example/glew/include" }
         files { "example/corridor.cpp" }
         defines { "GLEW_STATIC" }
-        links { "corridormap-library", "glew", "glfw", "clew" }
+        links { "corridormap-library", "glew", "glfw", "clew", "nanovg" }
 
         configuration { "windows" }
             links { "opengl32" }
