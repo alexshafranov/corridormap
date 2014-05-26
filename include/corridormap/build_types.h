@@ -83,6 +83,8 @@ struct voronoi_features
 {
     // rasterization grid width.
     int grid_width;
+    // rasterization grid height.
+    int grid_height;
     // number of voronoi vertex points.
     int num_vert_points;
     // number of voronoi edge points.

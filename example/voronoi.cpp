@@ -214,7 +214,7 @@ int main()
 
         clFinish(cl_runtime.queue);
 
-        corridormap::voronoi_features features = corridormap::allocate_voronoi_features(&mem, render_target_width, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
+        corridormap::voronoi_features features = corridormap::allocate_voronoi_features(&mem, render_target_width, render_target_height, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
         error_code = corridormap::transfer_voronoi_features(cl_runtime, features);
 
         clFinish(cl_runtime.queue);

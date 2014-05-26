@@ -47,12 +47,13 @@ void deallocate(memory* mem, distance_mesh& mesh)
     memset(&mesh, 0, sizeof(mesh));
 }
 
-voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int num_vert_points, int num_edge_points)
+voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int grid_height, int num_vert_points, int num_edge_points)
 {
     voronoi_features result;
     memset(&result, 0, sizeof(result));
 
     result.grid_width = grid_width;
+    result.grid_height = grid_height;
     result.num_vert_points = num_vert_points;
     result.num_edge_points = num_edge_points;
     result.verts = allocate<unsigned int>(mem, num_vert_points);
