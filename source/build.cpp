@@ -688,7 +688,10 @@ namespace
             visited_edge[neis.nz_idx[i]] = 1;
         }
 
-        while (size(queue_edge) > 0)
+        int seen_verts[max_grid_neis];
+        int seen_vert_count = 0;
+
+        while (size(queue_edge) > 0 && seen_vert_count < max_grid_neis)
         {
             int edge_pt = remove(queue_edge);
 
@@ -711,7 +714,18 @@ namespace
                     push(stack_vert, idx);
                 }
 
-                if (start_vert != idx)
+                bool seen_vert = false;
+
+                for (int k = 0; k < seen_vert_count; ++k)
+                {
+                    if (seen_verts[k] == idx)
+                    {
+                        seen_vert = true;
+                        break;
+                    }
+                }
+
+                if (start_vert != idx && !seen_vert)
                 {
                     printf("[%d, %d] -> [%d, %d]\n", start_vert_col, start_vert_row, col, row);
                     u_x[count] = static_cast<float>(start_vert_col);
@@ -719,6 +733,8 @@ namespace
                     v_x[count] = static_cast<float>(col);
                     v_y[count] = static_cast<float>(row);
                     count++;
+
+                    seen_verts[seen_vert_count++] = idx;
                 }
             }
 
@@ -759,31 +775,13 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     push(stack_vert, start_vert);
     visited_vert[nz(vertices, start_vert)] = 1;
 
-    int vert_count = 0;
-
     while (size(stack_vert) > 0)
     {
-        vert_count++;
-
         int vert = pop(stack_vert);
         visited_vert[nz(vertices, vert)] = 1;
 
         trace_edges(vertices, edges, queue_edge, stack_vert, visited_edge, visited_vert, vert, u_x, u_y, v_x, v_y, count);
     }
-
-    printf("verts=%d\n", vert_count);
-
-    int visited_edge_count = 0;
-
-    for (int i = 0; i < edges.num_nz; ++i)
-    {
-        if (visited_edge[i] != 0)
-        {
-            visited_edge_count++;
-        }
-    }
-
-    printf("visited_edge_count=%d\n", visited_edge_count);
 }
 
 }
