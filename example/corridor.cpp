@@ -308,16 +308,16 @@ int main()
 
             float x = obstacle_verts_x[offset];
             float y = obstacle_verts_y[offset];
-            x = x / ::abs(obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
-            y = y / ::abs(obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+            x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
+            y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
             nvgMoveTo(vg, x, y);
 
             for (int v = 1; v < num_poly_verts[i]; ++v)
             {
                 float x = obstacle_verts_x[offset + v];
                 float y = obstacle_verts_y[offset + v];
-                x = x / ::abs(obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
-                y = y / ::abs(obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
+                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
                 nvgLineTo(vg, x, y);
             }
 
