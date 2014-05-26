@@ -300,6 +300,33 @@ int main()
 
         nvgFill(vg);
 
+        int offset = 0;
+
+        for (int i = 0; i < sizeof(num_poly_verts)/sizeof(num_poly_verts[0]); ++i)
+        {
+            nvgBeginPath(vg);
+
+            float x = obstacle_verts_x[offset];
+            float y = obstacle_verts_y[offset];
+            x = x / ::abs(obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
+            y = y / ::abs(obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+            nvgMoveTo(vg, x, y);
+
+            for (int v = 1; v < num_poly_verts[i]; ++v)
+            {
+                float x = obstacle_verts_x[offset + v];
+                float y = obstacle_verts_y[offset + v];
+                x = x / ::abs(obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
+                y = y / ::abs(obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+                nvgLineTo(vg, x, y);
+            }
+
+            nvgClosePath(vg);
+            nvgFill(vg);
+
+            offset += num_poly_verts[i];
+        }
+
         nvgEndFrame(vg);
 
         glfwSwapBuffers(window);
