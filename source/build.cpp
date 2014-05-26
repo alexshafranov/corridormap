@@ -578,51 +578,6 @@ csr_grid_neis cell_neis(const csr_grid& grid, int linear_index)
 namespace
 {
     template <typename T>
-    struct stack
-    {
-        stack(memory* mem, int max_size)
-            : top(-1)
-            , mem(mem)
-        {
-            data = allocate<T>(mem, max_size);
-        }
-
-        int top;
-        memory* mem;
-        T* data;
-    };
-
-    template <typename T>
-    int size(const stack<T>& s)
-    {
-        return s.top + 1;
-    }
-
-    template <typename T>
-    T top(const stack<T>& s)
-    {
-        return s.data[s.top];
-    }
-
-    template <typename T>
-    void push(stack<T>& s, const T v)
-    {
-        s.data[++s.top] = v;
-    }
-
-    template <typename T>
-    T pop(stack<T>& s)
-    {
-        return s.data[s.top--];
-    }
-
-    template <typename T>
-    void clear(stack<T>& s)
-    {
-        s.top = -1;
-    }
-
-    template <typename T>
     struct queue
     {
         queue(memory* mem, int max_size)
@@ -648,7 +603,7 @@ namespace
     }
 
     template <typename T>
-    void add(queue<T>& q, const T val)
+    void enqueue(queue<T>& q, const T val)
     {
         int idx = (q.front + q.size) % q.max_size;
         q.data[idx] = val;
@@ -656,7 +611,7 @@ namespace
     }
 
     template <typename T>
-    T remove(queue<T>& q)
+    T dequeue(queue<T>& q)
     {
         T val = q.data[q.front % q.max_size];
         q.front++;
@@ -672,7 +627,7 @@ namespace
     }
 
     void trace_edges(const csr_grid& vertices, const csr_grid& edges, queue<int>& queue_edge,
-                     stack<int>& stack_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert,
+                     queue<int>& queue_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert,
                      float* u_x, float* u_y, float* v_x, float* v_y, int& count)
     {
         int start_vert_row = start_vert / edges.num_cols;
@@ -684,7 +639,7 @@ namespace
 
         for (int i = 0; i < neis.num; ++i)
         {
-            add(queue_edge, neis.row[i]*edges.num_cols + neis.col[i]);
+            enqueue(queue_edge, neis.row[i]*edges.num_cols + neis.col[i]);
             visited_edge[neis.nz_idx[i]] = 1;
         }
 
@@ -693,7 +648,7 @@ namespace
 
         while (size(queue_edge) > 0 && seen_vert_count < max_grid_neis)
         {
-            int edge_pt = remove(queue_edge);
+            int edge_pt = dequeue(queue_edge);
 
             visited_edge[nz(edges, edge_pt)] = 1;
 
@@ -711,7 +666,7 @@ namespace
                 if (visited_vert[vert_nz_idx] != 1)
                 {
                     pushed_verts = true;
-                    push(stack_vert, idx);
+                    enqueue(queue_vert, idx);
                 }
 
                 bool seen_vert = false;
@@ -754,7 +709,7 @@ namespace
 
                 if (visited_edge[nz_idx] != 1)
                 {
-                    add(queue_edge, idx);
+                    enqueue(queue_edge, idx);
                 }
             }
         }
@@ -770,17 +725,17 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     zero_mem(visited_vert);
 
     queue<int> queue_edge(scratch, edges.num_nz);
-    stack<int> stack_vert(scratch, vertices.num_nz);
+    queue<int> queue_vert(scratch, vertices.num_nz);
 
-    push(stack_vert, start_vert);
+    enqueue(queue_vert, start_vert);
     visited_vert[nz(vertices, start_vert)] = 1;
 
-    while (size(stack_vert) > 0)
+    while (size(queue_vert) > 0)
     {
-        int vert = pop(stack_vert);
+        int vert = dequeue(queue_vert);
         visited_vert[nz(vertices, vert)] = 1;
 
-        trace_edges(vertices, edges, queue_edge, stack_vert, visited_edge, visited_vert, vert, u_x, u_y, v_x, v_y, count);
+        trace_edges(vertices, edges, queue_edge, queue_vert, visited_edge, visited_vert, vert, u_x, u_y, v_x, v_y, count);
     }
 }
 
