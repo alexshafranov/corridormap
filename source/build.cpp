@@ -115,7 +115,7 @@ float max_distance(bbox2 scene_bbox)
     return std::max(w, h) * CORRIDORMAP_SQRT_2;
 }
 
-int vertex_distance_mesh_tris(float max_dist, float max_error)
+int distance_mesh_tris_per_vertex(float max_dist, float max_error)
 {
     float cone_half_angle = acos((max_dist-max_error)/max_dist);
     unsigned cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI/cone_half_angle));
@@ -124,7 +124,7 @@ int vertex_distance_mesh_tris(float max_dist, float max_error)
 
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error)
 {
-    int point_tris = vertex_distance_mesh_tris(max_dist, max_error);
+    int point_tris = distance_mesh_tris_per_vertex(max_dist, max_error);
     // point_tris triangles per vertex plus 4 triangles per edge plus four border planes.
     return point_tris*f.num_verts*3 + f.num_verts*4*3 + 6*4;
 }
@@ -682,7 +682,6 @@ namespace
 
                 if (start_vert != idx && !seen_vert)
                 {
-                    printf("[%d, %d] -> [%d, %d]\n", start_vert_col, start_vert_row, col, row);
                     u_x[count] = static_cast<float>(start_vert_col);
                     u_y[count] = static_cast<float>(start_vert_row);
                     v_x[count] = static_cast<float>(col);
