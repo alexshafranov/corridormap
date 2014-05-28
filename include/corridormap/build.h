@@ -36,8 +36,8 @@ bbox2 bounds(const footprint& f, float border);
 // computed such that distance mesh "covers" the full render target in ortho projection.
 float max_distance(bbox2 scene_bbox);
 
-// computes required number of triangles to represent a distance mesh for vertex (cone).
-int distance_mesh_tris_per_vertex(float max_dist, float max_error);
+// computes required number of triangles to represent a distance mesh for point (cone).
+int distance_mesh_tris_for_point(float max_dist, float max_error);
 
 // computes an upper bound on number of vertices required for distance mesh.
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error);
