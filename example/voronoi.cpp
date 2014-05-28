@@ -150,9 +150,6 @@ int main()
     const float max_dist = corridormap::max_distance(obstacle_bounds);
     const float max_error = 0.1f;
 
-    corridormap::footprint_normals normals = corridormap::allocate_foorprint_normals(&mem, obstacles.num_polys, obstacles.num_verts);
-    corridormap::build_footprint_normals(obstacles, obstacle_bounds, normals);
-
     corridormap::distance_mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles.num_polys, max_distance_mesh_verts(obstacles, max_dist, max_error));
     corridormap::build_distance_mesh(obstacles, obstacle_bounds, max_dist, max_error, mesh);
     corridormap::set_segment_colors(mesh, colors, sizeof(colors)/sizeof(colors[0]));
@@ -227,9 +224,6 @@ int main()
 
         printf("voronoi vertices: %d\n", cl_runtime.voronoi_vertex_mark_count);
         printf("voronoi edge marks: %d\n", cl_runtime.voronoi_edge_mark_count);
-
-        // corridormap::voronoi_edge_normals edge_normal_indices = corridormap::allocate_voronoi_edge_normals(&mem, features.num_edge_points);
-        // corridormap::build_edge_point_normal_indices(features, obstacles, normals, edge_normal_indices);
     }
 
     while (!glfwWindowShouldClose(window))

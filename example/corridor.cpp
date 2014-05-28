@@ -82,11 +82,11 @@ struct glfw_window_context
 
 namespace
 {
-    const int screen_width = 720;
-    const int screen_height = 720;
+    const int screen_width = 1024;
+    const int screen_height = 1024;
 
-    const int render_target_width = 720;
-    const int render_target_height = 720;
+    const int render_target_width = 1024;
+    const int render_target_height = 1024;
 }
 
 int main()
