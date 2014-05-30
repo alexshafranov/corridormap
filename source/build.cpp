@@ -645,7 +645,7 @@ namespace
 
         int seen_verts[max_grid_neis];
         int seen_vert_count = 0;
-        int num_edges = out.num;
+        int num_edges = out.num_edges;
 
         while (size(queue_edge) > 0 && seen_vert_count < max_grid_neis)
         {
@@ -712,7 +712,7 @@ namespace
             }
         }
 
-        out.num = num_edges;
+        out.num_edges = num_edges;
     }
 }
 

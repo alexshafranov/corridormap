@@ -35,7 +35,7 @@ voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int grid
 footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_poly_verts);
 voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
 csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_zero);
-voronoi_traced_edges allocate_voronoi_traced_edges(memory* mem, int max_edges);
+voronoi_traced_edges allocate_voronoi_traced_edges(memory* mem, int num_voronoi_verts, int num_footprint_verts);
 
 void deallocate(memory* mem, distance_mesh& mesh);
 void deallocate(memory* mem, voronoi_features& features);

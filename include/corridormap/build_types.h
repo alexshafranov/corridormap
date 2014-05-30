@@ -167,13 +167,23 @@ struct csr_grid_neis
 struct voronoi_traced_edges
 {
     // number of edges found.
-    int num;
+    int num_edges;
     // max edges allocated.
     int max_edges;
-    // u linear index (y*num_rows + x). range [0, max_edges).
+    // number of event points found.
+    int num_events;
+    // max events allocated.
+    int max_events;
+    // u linear index (y*num_rows + x). range [0 .. num_edges).
     int* u;
-    // u linear index (y*num_rows + x). range [0, max_edges).
+    // u linear index (y*num_rows + x). range [0 .. num_edges).
     int* v;
+    // for each edge [0 .. num) stores the offset to events array. 
+    int* edge_event_offset;
+    // number of event points for each edge [0 .. num).
+    int* edge_num_events;
+    // linear indices of event points. [0 .. num_events) 
+    int* events;
 };
 
 }
