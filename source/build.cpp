@@ -561,6 +561,7 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
             neis.row[neis.num] = n_r;
             neis.col[neis.num] = n_c;
             neis.nz_idx[neis.num] = nz_idx;
+            neis.lin_idx[neis.num] = n_r*num_cols + n_c;
             neis.num++;
         }
     }
@@ -638,7 +639,7 @@ namespace
 
         for (int i = 0; i < neis.num; ++i)
         {
-            enqueue(queue_edge, neis.row[i]*edges.num_cols + neis.col[i]);
+            enqueue(queue_edge, neis.lin_idx[i]);
             visited_edge[neis.nz_idx[i]] = 1;
         }
 
@@ -658,9 +659,7 @@ namespace
 
             for (int i = 0; i < vert_neis.num; ++i)
             {
-                int row = vert_neis.row[i];
-                int col = vert_neis.col[i];
-                int vert = row*vertices.num_cols + col;
+                int vert = vert_neis.lin_idx[i];
                 int vert_nz = vert_neis.nz_idx[i];
 
                 if (visited_vert[vert_nz] != 1)
@@ -699,14 +698,9 @@ namespace
 
             for (int i = 0; i < neis.num; ++i)
             {
-                int nz_idx = neis.nz_idx[i];
-                int row = neis.row[i];
-                int col = neis.col[i];
-                int idx = row*vertices.num_cols + col;
-
-                if (visited_edge[nz_idx] != 1)
+                if (visited_edge[neis.nz_idx[i]] != 1)
                 {
-                    enqueue(queue_edge, idx);
+                    enqueue(queue_edge, neis.lin_idx[i]);
                 }
             }
         }

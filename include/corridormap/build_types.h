@@ -161,6 +161,8 @@ struct csr_grid_neis
     int row[max_grid_neis];
     // neighbouring cell column.
     int col[max_grid_neis];
+    // linear index y*num_cols + x.
+    int lin_idx[max_grid_neis];
 };
 
 // result of trace_edges
