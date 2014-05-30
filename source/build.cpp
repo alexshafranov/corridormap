@@ -639,8 +639,9 @@ namespace
 
         for (int i = 0; i < neis.num; ++i)
         {
-            enqueue(queue_edge, neis.lin_idx[i]);
+            parent[neis.nz_idx[i]] = neis.lin_idx[i];
             visited_edge[neis.nz_idx[i]] = 1;
+            enqueue(queue_edge, neis.lin_idx[i]);
         }
 
         int seen_verts[max_grid_neis];
@@ -700,6 +701,7 @@ namespace
             {
                 if (visited_edge[neis.nz_idx[i]] != 1)
                 {
+                    parent[neis.nz_idx[i]] = edge_pt;
                     enqueue(queue_edge, neis.lin_idx[i]);
                 }
             }
