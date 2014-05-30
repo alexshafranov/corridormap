@@ -709,8 +709,8 @@ namespace
     }
 }
 
-void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, const voronoi_edge_normals& /*edge_normal_indices*/,
-                 int start_vert, voronoi_traced_edges& out)
+void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
+                 const voronoi_edge_normals& /*edge_normal_indices*/, int start_vert, voronoi_traced_edges& out)
 {
     alloc_scope<char> visited_edge(scratch, edges.num_nz);
     alloc_scope<char> visited_vert(scratch, vertices.num_nz);
