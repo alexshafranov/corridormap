@@ -78,8 +78,9 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col);
 // finds all neighbours of 4-connected CSR grid cell. linear_index = row * num_cols + col.
 csr_grid_neis cell_neis(const csr_grid& grid, int linear_index);
 
-//
-void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, int start_vert, voronoi_traced_edges& out);
+// go over pixels to find connections between voronoi vertices and event points - the points where closest obstacles change.
+void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, const voronoi_edge_normals& edge_normal_indices,
+                 int start_vert, voronoi_traced_edges& out);
 
 }
 
