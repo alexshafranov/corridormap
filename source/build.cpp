@@ -624,9 +624,9 @@ namespace
         q.size = 0;
     }
 
-    void trace_edges(const csr_grid& vertices, const csr_grid& edges, queue<int>& queue_edge,
-                     queue<int>& queue_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert,
-                     voronoi_traced_edges& out)
+    void trace_edges(const csr_grid& vertices, const csr_grid& edges, queue<int>& queue_edge, queue<int>& queue_vert,
+                     alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, alloc_scope<int>& parent,
+                     int start_vert, voronoi_traced_edges& out)
     {
         int* out_u = out.u;
         int* out_v = out.v;
@@ -634,6 +634,7 @@ namespace
         csr_grid_neis neis = cell_neis(edges, start_vert);
 
         clear(queue_edge);
+        zero_mem(parent);
 
         for (int i = 0; i < neis.num; ++i)
         {
@@ -719,8 +720,10 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
 {
     alloc_scope<char> visited_edge(scratch, edges.num_nz);
     alloc_scope<char> visited_vert(scratch, vertices.num_nz);
+    alloc_scope<int>  parent(scratch, edges.num_nz);
     zero_mem(visited_edge);
     zero_mem(visited_vert);
+    zero_mem(parent);
 
     queue<int> queue_edge(scratch, edges.num_nz);
     queue<int> queue_vert(scratch, vertices.num_nz);
@@ -732,7 +735,7 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     {
         int vert = dequeue(queue_vert);
         visited_vert[nz(vertices, vert)] = 1;
-        trace_edges(vertices, edges, queue_edge, queue_vert, visited_edge, visited_vert, vert, out);
+        trace_edges(vertices, edges, queue_edge, queue_vert, visited_edge, visited_vert, parent, vert, out);
     }
 }
 
