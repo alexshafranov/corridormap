@@ -137,4 +137,23 @@ void deallocate(memory* mem, csr_grid& grid)
     memset(&grid, 0, sizeof(grid));
 }
 
+voronoi_traced_edges allocate_voronoi_traced_edges(memory* mem, int num_verts)
+{
+    voronoi_traced_edges result;
+    memset(&result, 0, sizeof(result));
+
+    result.max_edges = num_verts*max_grid_neis/2;
+    result.u = allocate<int>(mem, result.max_edges);
+    result.v = allocate<int>(mem, result.max_edges);
+
+    return result;
+}
+
+void deallocate(memory* mem, voronoi_traced_edges& edges)
+{
+    mem->deallocate(edges.u);
+    mem->deallocate(edges.v);
+    memset(&edges, 0, sizeof(edges));
+}
+
 }

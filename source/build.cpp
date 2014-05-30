@@ -628,10 +628,10 @@ namespace
 
     void trace_edges(const csr_grid& vertices, const csr_grid& edges, queue<int>& queue_edge,
                      queue<int>& queue_vert, alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, int start_vert,
-                     float* u_x, float* u_y, float* v_x, float* v_y, int& count)
+                     voronoi_traced_edges& out)
     {
-        int start_vert_row = start_vert / edges.num_cols;
-        int start_vert_col = start_vert % edges.num_cols;
+        int* out_u = out.u;
+        int* out_v = out.v;
 
         csr_grid_neis neis = cell_neis(edges, start_vert);
 
@@ -645,6 +645,7 @@ namespace
 
         int seen_verts[max_grid_neis];
         int seen_vert_count = 0;
+        int num_edges = out.num;
 
         while (size(queue_edge) > 0 && seen_vert_count < max_grid_neis)
         {
@@ -660,35 +661,33 @@ namespace
             {
                 int row = vert_neis.row[i];
                 int col = vert_neis.col[i];
-                int idx = row*vertices.num_cols + col;
-                int vert_nz_idx = vert_neis.nz_idx[i];
+                int vert = row*vertices.num_cols + col;
+                int vert_nz = vert_neis.nz_idx[i];
 
-                if (visited_vert[vert_nz_idx] != 1)
+                if (visited_vert[vert_nz] != 1)
                 {
                     pushed_verts = true;
-                    enqueue(queue_vert, idx);
+                    enqueue(queue_vert, vert);
                 }
 
                 bool seen_vert = false;
 
                 for (int k = 0; k < seen_vert_count; ++k)
                 {
-                    if (seen_verts[k] == idx)
+                    if (seen_verts[k] == vert)
                     {
                         seen_vert = true;
                         break;
                     }
                 }
 
-                if (start_vert != idx && !seen_vert)
+                if (start_vert != vert && !seen_vert)
                 {
-                    u_x[count] = static_cast<float>(start_vert_col);
-                    u_y[count] = static_cast<float>(start_vert_row);
-                    v_x[count] = static_cast<float>(col);
-                    v_y[count] = static_cast<float>(row);
-                    count++;
+                    out_u[num_edges] = start_vert;
+                    out_v[num_edges] = vert;
+                    num_edges++;
 
-                    seen_verts[seen_vert_count++] = idx;
+                    seen_verts[seen_vert_count++] = vert;
                 }
             }
 
@@ -712,11 +711,12 @@ namespace
                 }
             }
         }
+
+        out.num = num_edges;
     }
 }
 
-void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, int start_vert,
-                 float* u_x, float* u_y, float* v_x, float* v_y, int& count)
+void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges, int start_vert, voronoi_traced_edges& out)
 {
     alloc_scope<char> visited_edge(scratch, edges.num_nz);
     alloc_scope<char> visited_vert(scratch, vertices.num_nz);
@@ -733,8 +733,7 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     {
         int vert = dequeue(queue_vert);
         visited_vert[nz(vertices, vert)] = 1;
-
-        trace_edges(vertices, edges, queue_edge, queue_vert, visited_edge, visited_vert, vert, u_x, u_y, v_x, v_y, count);
+        trace_edges(vertices, edges, queue_edge, queue_vert, visited_edge, visited_vert, vert, out);
     }
 }
 

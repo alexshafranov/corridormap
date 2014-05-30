@@ -163,6 +163,19 @@ struct csr_grid_neis
     int col[max_grid_neis];
 };
 
+// result of trace_edges
+struct voronoi_traced_edges
+{
+    // number of edges found.
+    int num;
+    // max edges allocated.
+    int max_edges;
+    // u linear index (y*num_rows + x). range [0, max_edges).
+    int* u;
+    // u linear index (y*num_rows + x). range [0, max_edges).
+    int* v;
+};
+
 }
 
 #endif

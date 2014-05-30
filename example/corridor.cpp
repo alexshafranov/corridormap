@@ -194,11 +194,7 @@ int main()
     }
 
     corridormap::voronoi_features features;
-    float* u_x = corridormap::allocate<float>(&mem, 100);
-    float* u_y = corridormap::allocate<float>(&mem, 100);
-    float* v_x = corridormap::allocate<float>(&mem, 100);
-    float* v_y = corridormap::allocate<float>(&mem, 100);
-    int edge_count = 0;
+    corridormap::voronoi_traced_edges traced_edges;
 
     {
         cl_int error_code;
@@ -246,8 +242,10 @@ int main()
             printf("<%d, %d>\n", features.verts[i]%features.grid_width, features.verts[i]/features.grid_width);
         }
 
-        corridormap::trace_edges(&mem, vert_csr, edge_csr, features.verts[0], u_x, u_y, v_x, v_y, edge_count);
-        printf("edge_count=%d\n", edge_count);
+        traced_edges = corridormap::allocate_voronoi_traced_edges(&mem, features.num_vert_points);
+
+        corridormap::trace_edges(&mem, vert_csr, edge_csr, features.verts[0], traced_edges);
+        printf("edge_count=%d\n", traced_edges.num);
     }
 
     while (!glfwWindowShouldClose(window))
@@ -280,11 +278,18 @@ int main()
         nvgStrokeColor(vg, nvgRGB(255, 255, 255));
         nvgStrokeWidth(vg, 4.f);
 
-        for (int i = 0; i < edge_count; ++i)
+        for (int i = 0; i < traced_edges.num; ++i)
         {
+            int u = traced_edges.u[i];
+            int v = traced_edges.v[i];
+            int u_x = u % features.grid_width;
+            int u_y = u / features.grid_width;
+            int v_x = v % features.grid_width;
+            int v_y = v / features.grid_width;
+
             nvgBeginPath(vg);
-            nvgMoveTo(vg, u_x[i], u_y[i]);
-            nvgLineTo(vg, v_x[i], v_y[i]);
+            nvgMoveTo(vg, float(u_x), float(u_y));
+            nvgLineTo(vg, float(v_x), float(v_y));
             nvgStroke(vg);
         }
 

@@ -35,13 +35,14 @@ enum { max_vertex_neis = 4 };
 struct vertex
 {
     vec2 position;
-    int  incident[max_vertex_neis];
     vec2 closest[max_vertex_neis];
+    int  edges[max_vertex_neis];
 };
 
 struct event
 {
     int  next;
+    int  prev;
     vec2 position;
     vec2 closest_left;
     vec2 closest_right;
@@ -51,8 +52,7 @@ struct edge
 {
     int u;
     int v;
-    int num_events;
-    int first_event;
+    int events_head;
 };
 
 struct graph
@@ -60,7 +60,9 @@ struct graph
     int num_verts;
     int num_edges;
     int num_events;
+
     vertex* vertices;
+    edge*   edges;
     event*  events;
 };
 
