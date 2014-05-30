@@ -588,6 +588,11 @@ namespace
             data = allocate<T>(mem, max_size);
         }
 
+        ~queue()
+        {
+            mem->deallocate(data);
+        }
+
         int front;
         int size;
         int max_size;
@@ -625,34 +630,53 @@ namespace
         q.size = 0;
     }
 
-    void trace_edges(const csr_grid& vertices, const csr_grid& edges, queue<int>& queue_edge, queue<int>& queue_vert,
-                     alloc_scope<char>& visited_edge, alloc_scope<char>& visited_vert, alloc_scope<int>& parent,
-                     int start_vert, voronoi_traced_edges& out)
+    struct tracing_state
+    {
+        tracing_state(memory* mem, int num_verts, int num_edges)
+            : queue_edge(mem, num_edges)
+            , queue_vert(mem, num_verts)
+            , visited_edge(mem, num_edges)
+            , visited_vert(mem, num_verts)
+            , parent(mem, num_edges)
+        {
+            zero_mem(visited_edge);
+            zero_mem(visited_vert);
+            zero_mem(parent);
+        }
+
+        queue<int> queue_edge;
+        queue<int> queue_vert;
+        alloc_scope<char> visited_edge;
+        alloc_scope<char> visited_vert;
+        alloc_scope<int>  parent;
+    };
+
+    void trace_incident_edges(const csr_grid& vertices, const csr_grid& edges, const voronoi_edge_normals& /*normal_indices*/, int start_vert, tracing_state& state, voronoi_traced_edges& out)
     {
         int* out_u = out.u;
         int* out_v = out.v;
 
         csr_grid_neis neis = cell_neis(edges, start_vert);
 
-        clear(queue_edge);
-        zero_mem(parent);
+        clear(state.queue_edge);
+        zero_mem(state.parent);
 
         for (int i = 0; i < neis.num; ++i)
         {
-            parent[neis.nz_idx[i]] = neis.lin_idx[i];
-            visited_edge[neis.nz_idx[i]] = 1;
-            enqueue(queue_edge, neis.lin_idx[i]);
+            state.parent[neis.nz_idx[i]] = neis.lin_idx[i];
+            state.visited_edge[neis.nz_idx[i]] = 1;
+            enqueue(state.queue_edge, neis.lin_idx[i]);
         }
 
         int seen_verts[max_grid_neis];
         int seen_vert_count = 0;
         int num_edges = out.num_edges;
 
-        while (size(queue_edge) > 0 && seen_vert_count < max_grid_neis)
+        while (size(state.queue_edge) > 0 && seen_vert_count < max_grid_neis)
         {
-            int edge_pt = dequeue(queue_edge);
+            int edge_pt = dequeue(state.queue_edge);
 
-            visited_edge[nz(edges, edge_pt)] = 1;
+            state.visited_edge[nz(edges, edge_pt)] = 1;
 
             csr_grid_neis vert_neis = cell_neis(vertices, edge_pt);
 
@@ -663,10 +687,10 @@ namespace
                 int vert = vert_neis.lin_idx[i];
                 int vert_nz = vert_neis.nz_idx[i];
 
-                if (visited_vert[vert_nz] != 1)
+                if (state.visited_vert[vert_nz] != 1)
                 {
                     pushed_verts = true;
-                    enqueue(queue_vert, vert);
+                    enqueue(state.queue_vert, vert);
                 }
 
                 bool seen_vert = false;
@@ -699,10 +723,10 @@ namespace
 
             for (int i = 0; i < neis.num; ++i)
             {
-                if (visited_edge[neis.nz_idx[i]] != 1)
+                if (state.visited_edge[neis.nz_idx[i]] != 1)
                 {
-                    parent[neis.nz_idx[i]] = edge_pt;
-                    enqueue(queue_edge, neis.lin_idx[i]);
+                    state.parent[neis.nz_idx[i]] = edge_pt;
+                    enqueue(state.queue_edge, neis.lin_idx[i]);
                 }
             }
         }
@@ -712,26 +736,18 @@ namespace
 }
 
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
-                 const voronoi_edge_normals& /*edge_normal_indices*/, int start_vert, voronoi_traced_edges& out)
+                 const voronoi_edge_normals& edge_normal_indices, int start_vert, voronoi_traced_edges& out)
 {
-    alloc_scope<char> visited_edge(scratch, edges.num_nz);
-    alloc_scope<char> visited_vert(scratch, vertices.num_nz);
-    alloc_scope<int>  parent(scratch, edges.num_nz);
-    zero_mem(visited_edge);
-    zero_mem(visited_vert);
-    zero_mem(parent);
+    tracing_state state(scratch, vertices.num_nz, edges.num_nz);
 
-    queue<int> queue_edge(scratch, edges.num_nz);
-    queue<int> queue_vert(scratch, vertices.num_nz);
+    enqueue(state.queue_vert, start_vert);
+    state.visited_vert[nz(vertices, start_vert)] = 1;
 
-    enqueue(queue_vert, start_vert);
-    visited_vert[nz(vertices, start_vert)] = 1;
-
-    while (size(queue_vert) > 0)
+    while (size(state.queue_vert) > 0)
     {
-        int vert = dequeue(queue_vert);
-        visited_vert[nz(vertices, vert)] = 1;
-        trace_edges(vertices, edges, queue_edge, queue_vert, visited_edge, visited_vert, parent, vert, out);
+        int vert = dequeue(state.queue_vert);
+        state.visited_vert[nz(vertices, vert)] = 1;
+        trace_incident_edges(vertices, edges, edge_normal_indices, vert, state, out);
     }
 }
 
