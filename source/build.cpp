@@ -286,7 +286,7 @@ void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors)
 
 namespace
 {
-    inline void store_edge_normal(vec2 edge_from, vec2 edge_to, float* out_x, float* out_y)
+    inline void store_edge_normal(vec2 edge_from, vec2 edge_to, float*& out_x, float*& out_y)
     {
         vec2 dir = normalized(sub(edge_from, edge_to));
         *(out_x++) = +dir.y;
