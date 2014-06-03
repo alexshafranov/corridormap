@@ -288,9 +288,9 @@ void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors)
 
 namespace
 {
-    inline void store_edge_normal(vec2 edge_from, vec2 edge_to, float*& out_x, float*& out_y)
+    inline void store_edge_normal(vec2 u, vec2 v, float*& out_x, float*& out_y)
     {
-        vec2 dir = normalized(sub(edge_from, edge_to));
+        vec2 dir = normalized(sub(v, u));
         *(out_x++) = +dir.y;
         *(out_y++) = -dir.x;
     }
@@ -298,8 +298,8 @@ namespace
 
 void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals& out)
 {
-    const float* poly_x = in.x;
-    const float* poly_y = in.y;
+    float* poly_x = in.x;
+    float* poly_y = in.y;
     const int* num_poly_verts = in.num_poly_verts;
     const int num_polys = in.num_polys;
 
@@ -325,6 +325,9 @@ void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals&
             vec2 next = { poly_x[next_idx], poly_y[next_idx] };
             store_edge_normal(curr, next, normal_x, normal_y);
         }
+
+        poly_x += nverts;
+        poly_y += nverts;
 
         *(num_obstacle_normals++) = nverts;
     }
