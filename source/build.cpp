@@ -298,8 +298,8 @@ namespace
 
 void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals& out)
 {
-    float* poly_x = in.x;
-    float* poly_y = in.y;
+    const float* poly_x = in.x;
+    const float* poly_y = in.y;
     const int* num_poly_verts = in.num_poly_verts;
     const int num_polys = in.num_polys;
 
