@@ -22,7 +22,10 @@
 #ifndef CORRIDORMAP_BUILD_H_
 #define CORRIDORMAP_BUILD_H_
 
+#include <math.h>
+
 #include "corridormap/build_types.h"
+#include "corridormap/runtime_types.h"
 
 namespace corridormap { class memory; }
 namespace corridormap { class renderer; }
@@ -81,6 +84,51 @@ csr_grid_neis cell_neis(const csr_grid& grid, int linear_index);
 // go over pixels to find connections between voronoi vertices and event points - the points where closest obstacles change.
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
                  const voronoi_edge_normals& edge_normal_indices, int start_vert, voronoi_traced_edges& out, const voronoi_features& features);
+
+}
+
+namespace corridormap {
+
+inline vec2 make_vec2(float x, float y)
+{
+    vec2 result = { x, y };
+    return result;
+}
+
+inline vec2 add(vec2 a, vec2 b)
+{
+    return make_vec2(a.x + b.x, a.y + b.y);
+}
+
+inline vec2 sub(vec2 a, vec2 b)
+{
+    return make_vec2(a.x - b.x, a.y - b.y);
+}
+
+inline vec2 scale(vec2 a, float val)
+{
+    return make_vec2(a.x*val, a.y*val);
+}
+
+inline vec2 normalized(vec2 a)
+{
+    return scale(a, 1.f/sqrt(a.x*a.x + a.y*a.y));
+}
+
+inline float dot(vec2 a, vec2 b)
+{
+    return a.x*b.x + a.y*b.y;
+}
+
+inline float len(vec2 a)
+{
+    return sqrt(dot(a, a));
+}
+
+inline float clamp(float val, float a, float b)
+{
+    return (val < a) ? a : (val > b ? b : val);
+}
 
 }
 

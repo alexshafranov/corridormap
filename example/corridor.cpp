@@ -246,6 +246,14 @@ int main()
 
         corridormap::trace_edges(&mem, vert_csr, edge_csr, edge_normal_indices, features.verts[0], traced_edges, features);
         printf("edge_count=%d\n", traced_edges.num_edges);
+        printf("event_count=%d\n", traced_edges.num_events);
+
+        for (int i = 0; i < traced_edges.num_events; ++i)
+        {
+            int x = traced_edges.events[i] % features.grid_width;
+            int y = traced_edges.events[i] / features.grid_width;
+            printf("event=<%d, %d>\n", x, y);
+        }
     }
 
     while (!glfwWindowShouldClose(window))
@@ -305,9 +313,9 @@ int main()
 
         for (int i = 0; i < traced_edges.num_events; ++i)
         {
-            float x = static_cast<float>(traced_edges.events[i] % features.grid_width);
-            float y = static_cast<float>(traced_edges.events[i] / features.grid_width);
-            nvgCircle(vg, x, y, 5.f);
+            int x = traced_edges.events[i] % features.grid_width;
+            int y = traced_edges.events[i] / features.grid_width;
+            nvgCircle(vg, static_cast<float>(x), static_cast<float>(y), 5.f);
         }
 
         nvgFill(vg);
@@ -335,6 +343,68 @@ int main()
 
             nvgClosePath(vg);
             nvgFill(vg);
+
+            offset += num_poly_verts[i];
+        }
+
+        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        nvgStrokeWidth(vg, 2.f);
+
+        offset = 0;
+
+        for (int i = 0; i < obstacles.num_polys; ++i)
+        {
+            int nverts = num_poly_verts[i];
+
+            int curr_idx = nverts - 1;
+            int next_idx = 0;
+
+            int normal_offset = normals.obstacle_normal_offsets[i];
+
+            for (; next_idx < nverts; curr_idx = next_idx++)
+            {
+                corridormap::vec2 vert = { obstacle_verts_x[offset + curr_idx], obstacle_verts_y[offset + curr_idx] };
+                corridormap::vec2 normal_curr = { normals.x[normal_offset + curr_idx], normals.y[normal_offset + curr_idx] };
+                corridormap::vec2 normal_next = { normals.x[normal_offset + next_idx], normals.y[normal_offset + next_idx] };
+                corridormap::vec2 tip_curr = add(vert, scale(normal_curr, 12.f));
+                corridormap::vec2 tip_next = add(vert, scale(normal_next, 12.f));
+
+                float x = vert.x;
+                float y = vert.y;
+
+                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
+                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, x, y);
+
+                x = tip_curr.x;
+                y = tip_curr.y;
+
+                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
+                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+
+                nvgLineTo(vg, x, y);
+                nvgStroke(vg);
+
+                x = vert.x;
+                y = vert.y;
+
+                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
+                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, x, y);
+
+                x = tip_next.x;
+                y = tip_next.y;
+
+                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
+                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+
+                nvgLineTo(vg, x, y);
+                nvgStroke(vg);
+            }
 
             offset += num_poly_verts[i];
         }
