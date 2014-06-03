@@ -360,7 +360,7 @@ namespace
         const int obstacle_id,
         const vec2 edge_point)
     {
-        int oid = obstacle_id & 0x00111111;
+        int oid = obstacle_id;
 
         int num_normals = num_obstacle_normals[oid];
 
@@ -749,7 +749,7 @@ namespace
                     {
                         unsigned int prev_color_l = features.edge_obstacle_ids_left[prev];
                         unsigned int curr_color_l = features.edge_obstacle_ids_left[curr];
-                        unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
+                        // unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
                         unsigned int curr_color_r = features.edge_obstacle_ids_right[curr];
                         // printf("cl=%d cr=%d pl=%d pr=%d\n", curr_color_l, curr_color_r, prev_color_l, prev_color_r);
 
@@ -762,24 +762,26 @@ namespace
                         if (prev_color_l != curr_color_l)
                         {
                             std::swap(curr_l, curr_r);
+                            std::swap(curr_color_l, curr_color_r);
                         }
 
-                        if (prev_color_l != curr_color_l)
-                        {
-                            continue;
-                        }
+                        // if (prev_color_l != curr_color_l)
+                        // {
+                        //     continue;
+                        // }
 
-                        if (prev_color_r != curr_color_r)
-                        {
-                            continue;
-                        }
+                        // if (prev_color_r != curr_color_r)
+                        // {
+                        //     continue;
+                        // }
 
                         // printf("pl=%d pr=%d cl=%d cr=%d\n", prev_l, prev_r, curr_l, curr_r);
                         int lin_idx = linear_index(edges, curr);
                         // int id_left = features.edge_obstacle_ids_left[curr] & 0x00111111;
+                        int id_left = curr_color_l;
                         // int type = features.edge_obstacle_ids_left[curr] >> 24;
-                        // int id_right = features.edge_obstacle_ids_right[curr];
-                        // printf("x=%d y=%d l=%d r=%d ol=%d or=%d t=%d\n", lin_idx%edges.num_cols, lin_idx/edges.num_cols, curr_l, curr_r, id_left, id_right, type);
+                        int id_right = curr_color_r;
+                        printf("x=%d y=%d nl=%d nr=%d ol=%d or=%d\n", lin_idx%edges.num_cols, lin_idx/edges.num_cols, curr_l, curr_r, id_left, id_right);
 
                         if (prev_l != curr_l)
                         {
@@ -813,30 +815,30 @@ namespace
             {
                 if (state.visited_edge[neis.nz_idx[i]] != 1)
                 {
-                    int prev = nz(edges, edge_pt);
-                    int curr = neis.nz_idx[i];
+                    // int prev = nz(edges, edge_pt);
+                    // int curr = neis.nz_idx[i];
 
-                    unsigned int prev_color_l = features.edge_obstacle_ids_left[prev];
-                    unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
-                    unsigned int curr_color_l = features.edge_obstacle_ids_left[curr];
-                    unsigned int curr_color_r = features.edge_obstacle_ids_right[curr];
+                    // unsigned int prev_color_l = features.edge_obstacle_ids_left[prev];
+                    // unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
+                    // unsigned int curr_color_l = features.edge_obstacle_ids_left[curr];
+                    // unsigned int curr_color_r = features.edge_obstacle_ids_right[curr];
 
-                    if (prev_color_l != curr_color_l)
-                    {
-                        std::swap(curr_color_l, curr_color_r);
-                    }
+                    // if (prev_color_l != curr_color_l)
+                    // {
+                    //     std::swap(curr_color_l, curr_color_r);
+                    // }
 
-                    if (prev_color_l != curr_color_l)
-                    {
-                        printf("ne left\n");
-                        continue;
-                    }
+                    // if (prev_color_l != curr_color_l)
+                    // {
+                    //     printf("ne left\n");
+                    //     continue;
+                    // }
 
-                    if (prev_color_r != curr_color_r)
-                    {
-                        printf("ne right\n");
-                        continue;
-                    }
+                    // if (prev_color_r != curr_color_r)
+                    // {
+                    //     printf("ne right\n");
+                    //     continue;
+                    // }
 
                     state.parent[neis.nz_idx[i]] = nz(edges, edge_pt);
                     enqueue(state.queue_edge, neis.lin_idx[i]);
