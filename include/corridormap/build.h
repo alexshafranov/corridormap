@@ -56,7 +56,7 @@ void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals&
 
 // if edge point lies in vector space spanned by two consecutive normals assign first normal's index. otherwise keep zero.
 void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles,
-                                     const footprint_normals& normals, voronoi_edge_normals& out);
+                                     const footprint_normals& normals, bbox2 bounds, voronoi_edge_normals& out);
 
 // for each position (pos_x, pos_y), obstacle index in obstacle_offsets and footprint (obstacle_ids)
 // compute closest point on that obstacle and output it to out_x, out_y.
@@ -80,7 +80,7 @@ csr_grid_neis cell_neis(const csr_grid& grid, int linear_index);
 
 // go over pixels to find connections between voronoi vertices and event points - the points where closest obstacles change.
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
-                 const voronoi_edge_normals& edge_normal_indices, int start_vert, voronoi_traced_edges& out);
+                 const voronoi_edge_normals& edge_normal_indices, int start_vert, voronoi_traced_edges& out, const voronoi_features& features);
 
 }
 

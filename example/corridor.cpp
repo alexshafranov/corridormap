@@ -229,7 +229,7 @@ int main()
         printf("voronoi edge marks: %d\n", cl_runtime.voronoi_edge_mark_count);
 
         corridormap::voronoi_edge_normals edge_normal_indices = corridormap::allocate_voronoi_edge_normals(&mem, features.num_edge_points);
-        corridormap::build_edge_point_normal_indices(features, obstacles, normals, edge_normal_indices);
+        corridormap::build_edge_point_normal_indices(features, obstacles, normals, obstacle_bounds, edge_normal_indices);
 
         corridormap::csr_grid vert_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_vert_points);
         corridormap::build_csr(features.verts, vert_csr);
@@ -244,7 +244,7 @@ int main()
 
         traced_edges = corridormap::allocate_voronoi_traced_edges(&mem, features.num_vert_points, obstacles.num_verts);
 
-        corridormap::trace_edges(&mem, vert_csr, edge_csr, edge_normal_indices, features.verts[0], traced_edges);
+        corridormap::trace_edges(&mem, vert_csr, edge_csr, edge_normal_indices, features.verts[0], traced_edges, features);
         printf("edge_count=%d\n", traced_edges.num_edges);
     }
 
@@ -301,6 +301,13 @@ int main()
             float x = static_cast<float>(features.verts[i] % features.grid_width);
             float y = static_cast<float>(features.verts[i] / features.grid_width);
             nvgCircle(vg, x, y, 10.f);
+        }
+
+        for (int i = 0; i < traced_edges.num_events; ++i)
+        {
+            float x = static_cast<float>(traced_edges.events[i] % features.grid_width);
+            float y = static_cast<float>(traced_edges.events[i] / features.grid_width);
+            nvgCircle(vg, x, y, 5.f);
         }
 
         nvgFill(vg);

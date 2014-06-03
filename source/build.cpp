@@ -19,6 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <stdio.h>
+
 #include <algorithm>
 #include <math.h>
 #include <float.h>
@@ -358,8 +360,11 @@ namespace
         const int obstacle_id,
         const vec2 edge_point)
     {
-        int num_normals = num_obstacle_normals[obstacle_id];
-        int first_normal_idx = obstacle_normal_offsets[obstacle_id];
+        int oid = obstacle_id & 0x00111111;
+
+        int num_normals = num_obstacle_normals[oid];
+
+        int first_normal_idx = obstacle_normal_offsets[oid];
         int last_normal_idx = first_normal_idx + num_normals - 1;
 
         int curr_idx = last_normal_idx;
@@ -387,9 +392,10 @@ namespace
     }
 }
 
-void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles, const footprint_normals& normals, voronoi_edge_normals& out)
+void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles, const footprint_normals& normals, bbox2 bounds, voronoi_edge_normals& out)
 {
     const int grid_width = features.grid_width;
+    const int grid_height = features.grid_height;
     const int num_edge_points = features.num_edge_points;
     const unsigned int* edges = features.edges;
     const unsigned int* obstacle_ids_left = features.edge_obstacle_ids_left;
@@ -406,13 +412,19 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
     int* normal_indices_left = out.edge_normal_indices_left;
     int* normal_indices_right = out.edge_normal_indices_right;
 
+    float bounds_width = bounds.max[0] - bounds.min[0];
+    float bounds_height = bounds.max[1] - bounds.min[1];
+
     for (int i = 0; i < num_edge_points; ++i)
     {
         unsigned int edge_point_idx = edges[i];
         unsigned int obstacle_left = obstacle_ids_left[i];
         unsigned int obstacle_right = obstacle_ids_right[i];
 
-        vec2 edge_point = { float(edge_point_idx%grid_width), float(edge_point_idx/grid_width) };
+        int edge_point_x = edge_point_idx%grid_width;
+        int edge_point_y = edge_point_idx/grid_width;
+
+        vec2 edge_point = { bounds.min[0] + float(edge_point_x)/grid_width * bounds_width, bounds.min[1] + float(edge_point_y)/grid_height * bounds_height};
 
         int left_idx  = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_left, edge_point);
         int right_idx = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_right, edge_point);
@@ -651,10 +663,27 @@ namespace
         alloc_scope<int>  parent;
     };
 
-    void trace_incident_edges(const csr_grid& vertices, const csr_grid& edges, const voronoi_edge_normals& /*normal_indices*/, int start_vert, tracing_state& state, voronoi_traced_edges& out)
+    int linear_index(const csr_grid& grid, int nz_index)
+    {
+        int col = grid.column[nz_index];
+        int row = 0;
+
+        for (; row < grid.num_rows; ++row)
+        {
+            if (nz_index < grid.row_offset[row+1])
+            {
+                break;
+            }
+        }
+
+        return row*grid.num_cols + col;
+    }
+
+    void trace_incident_edges(const csr_grid& vertices, const csr_grid& edges, const voronoi_edge_normals& normal_indices, int start_vert, tracing_state& state, voronoi_traced_edges& out, const voronoi_features& features)
     {
         int* out_u = out.u;
         int* out_v = out.v;
+        int* out_events = out.events;
 
         csr_grid_neis neis = cell_neis(edges, start_vert);
 
@@ -663,7 +692,7 @@ namespace
 
         for (int i = 0; i < neis.num; ++i)
         {
-            state.parent[neis.nz_idx[i]] = neis.lin_idx[i];
+            state.parent[neis.nz_idx[i]] = -1;
             state.visited_edge[neis.nz_idx[i]] = 1;
             enqueue(state.queue_edge, neis.lin_idx[i]);
         }
@@ -711,6 +740,65 @@ namespace
                     num_edges++;
 
                     seen_verts[seen_vert_count++] = vert;
+
+                    int num_events = 0;
+                    int curr = nz(edges, edge_pt);
+                    int prev = state.parent[curr];
+
+                    for (; prev != -1; curr = prev, prev = state.parent[curr])
+                    {
+                        unsigned int prev_color_l = features.edge_obstacle_ids_left[prev];
+                        unsigned int curr_color_l = features.edge_obstacle_ids_left[curr];
+                        unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
+                        unsigned int curr_color_r = features.edge_obstacle_ids_right[curr];
+                        // printf("cl=%d cr=%d pl=%d pr=%d\n", curr_color_l, curr_color_r, prev_color_l, prev_color_r);
+
+                        int prev_l = normal_indices.edge_normal_indices_left[prev];
+                        int prev_r = normal_indices.edge_normal_indices_right[prev];
+
+                        int curr_l = normal_indices.edge_normal_indices_left[curr];
+                        int curr_r = normal_indices.edge_normal_indices_right[curr];
+
+                        if (prev_color_l != curr_color_l)
+                        {
+                            std::swap(curr_l, curr_r);
+                        }
+
+                        if (prev_color_l != curr_color_l)
+                        {
+                            continue;
+                        }
+
+                        if (prev_color_r != curr_color_r)
+                        {
+                            continue;
+                        }
+
+                        // printf("pl=%d pr=%d cl=%d cr=%d\n", prev_l, prev_r, curr_l, curr_r);
+                        int lin_idx = linear_index(edges, curr);
+                        // int id_left = features.edge_obstacle_ids_left[curr] & 0x00111111;
+                        // int type = features.edge_obstacle_ids_left[curr] >> 24;
+                        // int id_right = features.edge_obstacle_ids_right[curr];
+                        // printf("x=%d y=%d l=%d r=%d ol=%d or=%d t=%d\n", lin_idx%edges.num_cols, lin_idx/edges.num_cols, curr_l, curr_r, id_left, id_right, type);
+
+                        if (prev_l != curr_l)
+                        {
+                            num_events++;
+                            out_events[out.num_events] = lin_idx;
+                            out.num_events++;
+                            continue;
+                        }
+
+                        if (prev_r != curr_r)
+                        {
+                            num_events++;
+                            out_events[out.num_events] = lin_idx;
+                            out.num_events++;
+                            continue;
+                        }
+                    }
+
+                    printf("num_events=%d\n", num_events);
                 }
             }
 
@@ -725,8 +813,34 @@ namespace
             {
                 if (state.visited_edge[neis.nz_idx[i]] != 1)
                 {
-                    state.parent[neis.nz_idx[i]] = edge_pt;
+                    int prev = nz(edges, edge_pt);
+                    int curr = neis.nz_idx[i];
+
+                    unsigned int prev_color_l = features.edge_obstacle_ids_left[prev];
+                    unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
+                    unsigned int curr_color_l = features.edge_obstacle_ids_left[curr];
+                    unsigned int curr_color_r = features.edge_obstacle_ids_right[curr];
+
+                    if (prev_color_l != curr_color_l)
+                    {
+                        std::swap(curr_color_l, curr_color_r);
+                    }
+
+                    if (prev_color_l != curr_color_l)
+                    {
+                        printf("ne left\n");
+                        continue;
+                    }
+
+                    if (prev_color_r != curr_color_r)
+                    {
+                        printf("ne right\n");
+                        continue;
+                    }
+
+                    state.parent[neis.nz_idx[i]] = nz(edges, edge_pt);
                     enqueue(state.queue_edge, neis.lin_idx[i]);
+                    break;
                 }
             }
         }
@@ -736,7 +850,7 @@ namespace
 }
 
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
-                 const voronoi_edge_normals& edge_normal_indices, int start_vert, voronoi_traced_edges& out)
+                 const voronoi_edge_normals& edge_normal_indices, int start_vert, voronoi_traced_edges& out, const voronoi_features& features)
 {
     tracing_state state(scratch, vertices.num_nz, edges.num_nz);
 
@@ -747,7 +861,7 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
     {
         int vert = dequeue(state.queue_vert);
         state.visited_vert[nz(vertices, vert)] = 1;
-        trace_incident_edges(vertices, edges, edge_normal_indices, vert, state, out);
+        trace_incident_edges(vertices, edges, edge_normal_indices, vert, state, out, features);
     }
 }
 
