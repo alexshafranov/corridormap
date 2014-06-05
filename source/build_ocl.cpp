@@ -335,9 +335,10 @@ cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image)
     cl_kernel kernel_edge = runtime.kernels[kernel_id_store_edge_obstacle_ids];
     {
         clSetKernelArg(kernel_edge, 0, sizeof(cl_mem), &voronoi_image);
-        clSetKernelArg(kernel_edge, 1, sizeof(cl_mem), &runtime.voronoi_edges_compacted_buf);
-        clSetKernelArg(kernel_edge, 2, sizeof(cl_mem), &runtime.voronoi_edge_ids_left);
-        clSetKernelArg(kernel_edge, 3, sizeof(cl_mem), &runtime.voronoi_edge_ids_right);
+        clSetKernelArg(kernel_edge, 1, sizeof(cl_mem), &runtime.voronoi_edges_img);
+        clSetKernelArg(kernel_edge, 2, sizeof(cl_mem), &runtime.voronoi_edges_compacted_buf);
+        clSetKernelArg(kernel_edge, 3, sizeof(cl_mem), &runtime.voronoi_edge_ids_left);
+        clSetKernelArg(kernel_edge, 4, sizeof(cl_mem), &runtime.voronoi_edge_ids_right);
 
         size_t global_work_size = runtime.voronoi_edge_mark_count;
         error_code = clEnqueueNDRangeKernel(runtime.queue, kernel_edge, 1, 0, &global_work_size, 0, 0, 0, 0);
