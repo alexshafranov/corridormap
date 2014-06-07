@@ -89,49 +89,4 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
 
 }
 
-namespace corridormap {
-
-inline vec2 make_vec2(float x, float y)
-{
-    vec2 result = { x, y };
-    return result;
-}
-
-inline vec2 add(vec2 a, vec2 b)
-{
-    return make_vec2(a.x + b.x, a.y + b.y);
-}
-
-inline vec2 sub(vec2 a, vec2 b)
-{
-    return make_vec2(a.x - b.x, a.y - b.y);
-}
-
-inline vec2 scale(vec2 a, float val)
-{
-    return make_vec2(a.x*val, a.y*val);
-}
-
-inline vec2 normalized(vec2 a)
-{
-    return scale(a, 1.f/sqrt(a.x*a.x + a.y*a.y));
-}
-
-inline float dot(vec2 a, vec2 b)
-{
-    return a.x*b.x + a.y*b.y;
-}
-
-inline float len(vec2 a)
-{
-    return sqrt(dot(a, a));
-}
-
-inline float clamp(float val, float a, float b)
-{
-    return (val < a) ? a : (val > b ? b : val);
-}
-
-}
-
 #endif

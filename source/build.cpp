@@ -28,6 +28,7 @@
 #include "corridormap/render_interface.h"
 #include "corridormap/runtime_types.h"
 #include "corridormap/build.h"
+#include "corridormap/vec2.h"
 
 namespace corridormap {
 

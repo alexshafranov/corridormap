@@ -37,6 +37,7 @@
 #include "corridormap/memory.h"
 #include "corridormap/render_gl.h"
 #include "corridormap/build.h"
+#include "corridormap/vec2.h"
 #include "corridormap/build_alloc.h"
 #include "corridormap/build_ocl.h"
 
