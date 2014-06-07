@@ -60,10 +60,10 @@ struct opencl_runtime
 
     // stores four obstacle ids per each vertex index in voronoi_vertices_compacted_buf.
     cl_mem voronoi_vertex_ids;
-    // stores left side obstacle id (color) for each edge point from voronoi_edges_compacted_buf.
-    cl_mem voronoi_edge_ids_left;
-    // stores right side obstacle id (color) for each edge point from voronoi_edges_compacted_buf.
-    cl_mem voronoi_edge_ids_right;
+    // stores one side obstacle id (color) for each edge point from voronoi_edges_compacted_buf.
+    cl_mem voronoi_edge_ids_1;
+    // stores one side obstacle id (color) for each edge point from voronoi_edges_compacted_buf.
+    cl_mem voronoi_edge_ids_2;
 
     // temp buffer.
     cl_mem compaction_sums_buf;
