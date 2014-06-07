@@ -184,7 +184,7 @@ struct voronoi_traced_edges
     int* edge_event_offset;
     // number of event points for each edge [0 .. num_edges).
     int* edge_num_events;
-    // linear indices of event points. [0 .. num_events) 
+    // linear indices of event points. [0 .. num_events)
     int* events;
 };
 
