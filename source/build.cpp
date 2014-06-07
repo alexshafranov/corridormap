@@ -773,7 +773,7 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
             out_u[num_edges] = u;
             out_v[num_edges] = v;
             out_event_offsets[num_edges] = num_events;
-            out_num_events[num_events] = num_edge_events;
+            out_num_events[num_edges] = num_edge_events;
 
             num_edges++;
             num_events += num_edge_events;

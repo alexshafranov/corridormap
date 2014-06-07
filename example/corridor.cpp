@@ -299,13 +299,23 @@ int main()
         {
             int u = traced_edges.u[i];
             int v = traced_edges.v[i];
+
             int u_x = u % features.grid_width;
             int u_y = u / features.grid_width;
             int v_x = v % features.grid_width;
             int v_y = v / features.grid_width;
 
+            int events_offset = traced_edges.edge_event_offset[i];
+
             nvgBeginPath(vg);
             nvgMoveTo(vg, float(u_x), float(u_y));
+
+            for (int j = 0; j < traced_edges.edge_num_events[i]; ++j)
+            {
+                int curr = traced_edges.events[events_offset + j];
+                nvgLineTo(vg, float(curr % features.grid_width), float(curr / features.grid_width));
+            }
+
             nvgLineTo(vg, float(v_x), float(v_y));
             nvgStroke(vg);
         }
@@ -354,43 +364,6 @@ int main()
 
         nvgStrokeColor(vg, nvgRGB(0, 0, 0));
         nvgStrokeWidth(vg, 2.f);
-
-        offset = 0;
-
-        for (int i = 0; i < obstacles.num_polys; ++i)
-        {
-            int nverts = num_poly_verts[i];
-
-            int curr_idx = nverts - 1;
-            int next_idx = 0;
-
-            int normal_offset = normals.obstacle_normal_offsets[i];
-
-            for (; next_idx < nverts; curr_idx = next_idx++)
-            {
-                corridormap::vec2 vert = { obstacle_verts_x[offset + curr_idx], obstacle_verts_y[offset + curr_idx] };
-                corridormap::vec2 normal_curr = { normals.x[normal_offset + curr_idx], normals.y[normal_offset + curr_idx] };
-                corridormap::vec2 normal_next = { normals.x[normal_offset + next_idx], normals.y[normal_offset + next_idx] };
-                corridormap::vec2 tip_curr = add(vert, scale(normal_curr, 12.f));
-                corridormap::vec2 tip_next = add(vert, scale(normal_next, 12.f));
-
-                vert = footprint_to_image(vert, obstacle_bounds, features.grid_width, features.grid_height);
-                tip_curr = footprint_to_image(tip_curr, obstacle_bounds, features.grid_width, features.grid_height);
-                tip_next = footprint_to_image(tip_next, obstacle_bounds, features.grid_width, features.grid_height);
-
-                nvgBeginPath(vg);
-                nvgMoveTo(vg, vert.x, vert.y);
-                nvgLineTo(vg, tip_curr.x, tip_curr.y);
-                nvgStroke(vg);
-
-                nvgBeginPath(vg);
-                nvgMoveTo(vg, vert.x, vert.y);
-                nvgLineTo(vg, tip_next.x, tip_next.y);
-                nvgStroke(vg);
-            }
-
-            offset += num_poly_verts[i];
-        }
 
         nvgEndFrame(vg);
 
