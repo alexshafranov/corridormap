@@ -180,9 +180,9 @@ struct voronoi_traced_edges
     int* u;
     // u linear index (y*num_rows + x). range [0 .. num_edges).
     int* v;
-    // for each edge [0 .. num) stores the offset to events array.
+    // for each edge [0 .. num_edges) stores the offset to events array.
     int* edge_event_offset;
-    // number of event points for each edge [0 .. num).
+    // number of event points for each edge [0 .. num_edges).
     int* edge_num_events;
     // linear indices of event points. [0 .. num_events) 
     int* events;

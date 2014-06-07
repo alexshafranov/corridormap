@@ -601,227 +601,6 @@ namespace
         q.size = 0;
     }
 
-    struct tracing_state
-    {
-        tracing_state(memory* mem, int num_verts, int num_edges)
-            : queue_edge(mem, num_edges)
-            , queue_vert(mem, num_verts)
-            , visited_edge(mem, num_edges)
-            , visited_vert(mem, num_verts)
-            , parent(mem, num_edges)
-        {
-            zero_mem(visited_edge);
-            zero_mem(visited_vert);
-            zero_mem(parent);
-        }
-
-        queue<int> queue_edge;
-        queue<int> queue_vert;
-        alloc_scope<char> visited_edge;
-        alloc_scope<char> visited_vert;
-        alloc_scope<int>  parent;
-    };
-
-    // int linear_index(const csr_grid& grid, int nz_index)
-    // {
-    //     int col = grid.column[nz_index];
-    //     int row = 0;
-
-    //     for (; row < grid.num_rows; ++row)
-    //     {
-    //         if (nz_index < grid.row_offset[row+1])
-    //         {
-    //             break;
-    //         }
-    //     }
-
-    //     return row*grid.num_cols + col;
-    // }
-
-    // void trace_incident_edges(const csr_grid& vertices, const csr_grid& edges, const voronoi_edge_normals& normal_indices, int start_vert, tracing_state& state, voronoi_traced_edges& out, const voronoi_features& features)
-    // {
-    //     int* out_u = out.u;
-    //     int* out_v = out.v;
-    //     int* out_events = out.events;
-
-    //     csr_grid_neis neis = cell_neis(edges, start_vert);
-
-    //     clear(state.queue_edge);
-    //     zero_mem(state.parent);
-
-    //     for (int i = 0; i < neis.num; ++i)
-    //     {
-    //         state.parent[neis.nz_idx[i]] = -1;
-    //         state.visited_edge[neis.nz_idx[i]] = 1;
-    //         enqueue(state.queue_edge, neis.lin_idx[i]);
-    //     }
-
-    //     int seen_verts[max_grid_neis];
-    //     int seen_vert_count = 0;
-    //     int num_edges = out.num_edges;
-
-    //     while (size(state.queue_edge) > 0 && seen_vert_count < max_grid_neis)
-    //     {
-    //         int edge_pt = dequeue(state.queue_edge);
-
-    //         state.visited_edge[nz(edges, edge_pt)] = 1;
-
-    //         csr_grid_neis vert_neis = cell_neis(vertices, edge_pt);
-
-    //         bool pushed_verts = false;
-
-    //         for (int i = 0; i < vert_neis.num; ++i)
-    //         {
-    //             int vert = vert_neis.lin_idx[i];
-    //             int vert_nz = vert_neis.nz_idx[i];
-
-    //             if (state.visited_vert[vert_nz] != 1)
-    //             {
-    //                 pushed_verts = true;
-    //                 enqueue(state.queue_vert, vert);
-    //             }
-
-    //             bool seen_vert = false;
-
-    //             for (int k = 0; k < seen_vert_count; ++k)
-    //             {
-    //                 if (seen_verts[k] == vert)
-    //                 {
-    //                     seen_vert = true;
-    //                     break;
-    //                 }
-    //             }
-
-    //             if (start_vert != vert && !seen_vert)
-    //             {
-    //                 out_u[num_edges] = start_vert;
-    //                 out_v[num_edges] = vert;
-    //                 num_edges++;
-
-    //                 seen_verts[seen_vert_count++] = vert;
-
-    //                 int num_events = 0;
-    //                 int prev = nz(edges, edge_pt);
-    //                 int curr = state.parent[prev];
-
-    //                 for (; curr != -1; prev = curr, curr = state.parent[curr])
-    //                 {
-    //                     unsigned int prev_color_l = features.edge_obstacle_ids_1[prev];
-    //                     unsigned int curr_color_l = features.edge_obstacle_ids_1[curr];
-    //                     // unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
-    //                     unsigned int curr_color_r = features.edge_obstacle_ids_2[curr];
-    //                     // printf("cl=%d cr=%d pl=%d pr=%d\n", curr_color_l, curr_color_r, prev_color_l, prev_color_r);
-
-    //                     int prev_l = normal_indices.edge_normal_indices_1[prev];
-    //                     int prev_r = normal_indices.edge_normal_indices_2[prev];
-
-    //                     int curr_l = normal_indices.edge_normal_indices_1[curr];
-    //                     int curr_r = normal_indices.edge_normal_indices_2[curr];
-
-    //                     int swapped = 0;
-
-    //                     // int lin_idx_prev = linear_index(edges, prev);
-    //                     // printf("px=%d py=%d pcl=%d ccl=%d ccr=%d\n", lin_idx_prev%edges.num_cols, lin_idx_prev/edges.num_cols, prev_color_l, curr_color_l, curr_color_r);
-
-    //                     // if (prev_color_l != curr_color_l)
-    //                     // {
-    //                     //     swapped = 1;
-    //                     //     std::swap(curr_l, curr_r);
-    //                     //     std::swap(curr_color_l, curr_color_r);
-    //                     // }
-
-    //                     // if (prev_color_l != curr_color_l)
-    //                     // {
-    //                     //     continue;
-    //                     // }
-
-    //                     // if (prev_color_r != curr_color_r)
-    //                     // {
-    //                     //     continue;
-    //                     // }
-
-    //                     // printf("pl=%d pr=%d cl=%d cr=%d\n", prev_l, prev_r, curr_l, curr_r);
-    //                     int lin_idx = linear_index(edges, curr);
-    //                     // int id_left = features.edge_obstacle_ids_left[curr] & 0x00111111;
-    //                     int id_left = curr_color_l;
-    //                     // int type = features.edge_obstacle_ids_left[curr] >> 24;
-    //                     int id_right = curr_color_r;
-    //                     printf("x=%d y=%d nl=%d nr=%d ol=%d or=%d s=%d\n", lin_idx%edges.num_cols, lin_idx/edges.num_cols, curr_l, curr_r, id_left, id_right, swapped);
-
-    //                     if (prev_color_l != curr_color_l)
-    //                     {
-    //                         swapped = 1;
-    //                         std::swap(curr_l, curr_r);
-    //                         std::swap(curr_color_l, curr_color_r);
-    //                     }
-
-    //                     if (prev_l != curr_l)
-    //                     {
-    //                         num_events++;
-    //                         out_events[out.num_events] = lin_idx;
-    //                         out.num_events++;
-    //                         continue;
-    //                     }
-
-    //                     if (prev_r != curr_r)
-    //                     {
-    //                         num_events++;
-    //                         out_events[out.num_events] = lin_idx;
-    //                         out.num_events++;
-    //                         continue;
-    //                     }
-    //                 }
-
-    //                 printf("num_events=%d\n", num_events);
-    //             }
-    //         }
-
-    //         if (pushed_verts)
-    //         {
-    //             continue;
-    //         }
-
-    //         csr_grid_neis neis = cell_neis(edges, edge_pt);
-
-    //         for (int i = 0; i < neis.num; ++i)
-    //         {
-    //             if (state.visited_edge[neis.nz_idx[i]] != 1)
-    //             {
-    //                 // int prev = nz(edges, edge_pt);
-    //                 // int curr = neis.nz_idx[i];
-
-    //                 // unsigned int prev_color_l = features.edge_obstacle_ids_left[prev];
-    //                 // unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
-    //                 // unsigned int curr_color_l = features.edge_obstacle_ids_left[curr];
-    //                 // unsigned int curr_color_r = features.edge_obstacle_ids_right[curr];
-
-    //                 // if (prev_color_l != curr_color_l)
-    //                 // {
-    //                 //     std::swap(curr_color_l, curr_color_r);
-    //                 // }
-
-    //                 // if (prev_color_l != curr_color_l)
-    //                 // {
-    //                 //     printf("ne left\n");
-    //                 //     continue;
-    //                 // }
-
-    //                 // if (prev_color_r != curr_color_r)
-    //                 // {
-    //                 //     printf("ne right\n");
-    //                 //     continue;
-    //                 // }
-
-    //                 state.parent[neis.nz_idx[i]] = nz(edges, edge_pt);
-    //                 enqueue(state.queue_edge, neis.lin_idx[i]);
-    //                 break;
-    //             }
-    //         }
-    //     }
-
-    //     out.num_edges = num_edges;
-    // }
-
     int get_next_point(const csr_grid& edges, const voronoi_features& features, int current_point, int previous_point)
     {
         unsigned int side_1 = features.edge_obstacle_ids_1[nz(edges, current_point)];
@@ -917,50 +696,98 @@ namespace
 
         return -1;
     }
+
+    int trace_event_points(const csr_grid& vertices, const csr_grid& edges, const voronoi_features& features, const voronoi_edge_normals& normals,
+                           int start_vert, int edge_point, int* events)
+    {
+        int num_events = 0;
+        int prev = edge_point;
+
+        for (int curr = edge_point; curr >= 0;)
+        {
+            if (get_neigbour_vertex(vertices, curr, start_vert) >= 0)
+            {
+                break;
+            }
+
+            int p_n1 = normals.edge_normal_indices_1[nz(edges, prev)];
+            int p_n2 = normals.edge_normal_indices_2[nz(edges, prev)];
+            int c_n1 = normals.edge_normal_indices_1[nz(edges, curr)];
+            int c_n2 = normals.edge_normal_indices_2[nz(edges, curr)];
+
+            if (p_n1 != c_n1 || p_n2 != c_n2)
+            {
+                events[num_events] = curr;
+                num_events++;
+            }
+
+            int next = get_next_point(edges, features, curr, prev);
+            prev = curr;
+            curr = next;
+        }
+
+        return num_events;
+    }
 }
 
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
                  voronoi_edge_normals& edge_normal_indices, voronoi_features& features, voronoi_traced_edges& out)
 {
-    tracing_state state(scratch, vertices.num_nz, edges.num_nz);
+    queue<int> queue_vert(scratch, vertices.num_nz);
+    alloc_scope<char> visited_vert(scratch, vertices.num_nz);
+    alloc_scope<char> visited_edge(scratch, edges.num_nz);
+    zero_mem(visited_vert);
+    zero_mem(visited_edge);
 
     int start_vert = features.verts[0];
 
-    enqueue(state.queue_vert, start_vert);
-    state.visited_vert[nz(vertices, start_vert)] = 1;
+    enqueue(queue_vert, start_vert);
+    visited_vert[nz(vertices, start_vert)] = 1;
 
     int* out_u = out.u;
     int* out_v = out.v;
-    int num_edges = 0;
+    int* out_events = out.events;
+    int* out_event_offsets = out.edge_event_offset;
+    int* out_num_events = out.edge_num_events;
 
-    while (size(state.queue_vert) > 0)
+    int num_edges = 0;
+    int num_events = 0;
+
+    while (size(queue_vert) > 0)
     {
-        int u = dequeue(state.queue_vert);
-        state.visited_vert[nz(vertices, u)] = 1;
+        int u = dequeue(queue_vert);
+        visited_vert[nz(vertices, u)] = 1;
 
         csr_grid_neis neis = cell_neis(edges, u);
 
         for (int i = 0; i < neis.num; ++i)
         {
-            int v = trace_incident_edge(vertices, edges, features, edge_normal_indices, state.visited_edge, u, neis.lin_idx[i]);
+            int v = trace_incident_edge(vertices, edges, features, edge_normal_indices, visited_edge, u, neis.lin_idx[i]);
 
             if (v < 0)
             {
                 continue;
             }
 
+            int num_edge_events = trace_event_points(vertices, edges, features, edge_normal_indices, u, neis.lin_idx[i], out_events + num_events);
+
             out_u[num_edges] = u;
             out_v[num_edges] = v;
-            num_edges++;
+            out_event_offsets[num_edges] = num_events;
+            out_num_events[num_events] = num_edge_events;
 
-            if (state.visited_vert[nz(vertices, v)] != 1)
+            num_edges++;
+            num_events += num_edge_events;
+
+            if (visited_vert[nz(vertices, v)] != 1)
             {
-                enqueue(state.queue_vert, v);
+                enqueue(queue_vert, v);
             }
         }
     }
 
     out.num_edges = num_edges;
+    out.num_events = num_events;
 }
 
 }
