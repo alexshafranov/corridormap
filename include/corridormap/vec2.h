@@ -40,6 +40,11 @@ inline vec2 sub(vec2 a, vec2 b)
     return make_vec2(a.x - b.x, a.y - b.y);
 }
 
+inline vec2 mul(vec2 a, vec2 b)
+{
+    return make_vec2(a.x * b.x, a.y * b.y);
+}
+
 inline vec2 scale(vec2 a, float val)
 {
     return make_vec2(a.x*val, a.y*val);

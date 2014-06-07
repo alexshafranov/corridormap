@@ -90,6 +90,14 @@ namespace
     const int render_target_height = 1024;
 }
 
+corridormap::vec2 footprint_to_image(corridormap::vec2 v, corridormap::bbox2 bounds, int width, int height)
+{
+    corridormap::vec2 inv_dim = corridormap::make_vec2(1.f/(bounds.max[0] - bounds.min[0]), 1.f/(bounds.max[1] - bounds.min[1]));
+    corridormap::vec2 bounds_min = corridormap::make_vec2(bounds.min[0], bounds.min[1]);
+    corridormap::vec2 img_dim = corridormap::make_vec2((float)width, (float)height);
+    return mul(mul(sub(v, bounds_min), inv_dim), img_dim);
+}
+
 int main()
 {
     glfw_context glfw_ctx;
@@ -307,8 +315,8 @@ int main()
 
         for (int i = 0; i < features.num_vert_points; ++i)
         {
-            float x = static_cast<float>(features.verts[i] % features.grid_width);
-            float y = static_cast<float>(features.verts[i] / features.grid_width);
+            float x = float(features.verts[i] % features.grid_width);
+            float y = float(features.verts[i] / features.grid_width);
             nvgCircle(vg, x, y, 10.f);
         }
 
@@ -316,7 +324,7 @@ int main()
         {
             int x = traced_edges.events[i] % features.grid_width;
             int y = traced_edges.events[i] / features.grid_width;
-            nvgCircle(vg, static_cast<float>(x), static_cast<float>(y), 5.f);
+            nvgCircle(vg, float(x), float(y), 5.f);
         }
 
         nvgFill(vg);
@@ -327,19 +335,15 @@ int main()
         {
             nvgBeginPath(vg);
 
-            float x = obstacle_verts_x[offset];
-            float y = obstacle_verts_y[offset];
-            x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
-            y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
-            nvgMoveTo(vg, x, y);
+            corridormap::vec2 vert = corridormap::make_vec2(obstacle_verts_x[offset], obstacle_verts_y[offset]);
+            corridormap::vec2 img_vert = footprint_to_image(vert, obstacle_bounds, features.grid_width, features.grid_height);
+            nvgMoveTo(vg, img_vert.x, img_vert.y);
 
             for (int v = 1; v < num_poly_verts[i]; ++v)
             {
-                float x = obstacle_verts_x[offset + v];
-                float y = obstacle_verts_y[offset + v];
-                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
-                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
-                nvgLineTo(vg, x, y);
+                corridormap::vec2 vert = corridormap::make_vec2(obstacle_verts_x[offset + v], obstacle_verts_y[offset + v]);
+                corridormap::vec2 img_vert = footprint_to_image(vert, obstacle_bounds, features.grid_width, features.grid_height);
+                nvgLineTo(vg, img_vert.x, img_vert.y);
             }
 
             nvgClosePath(vg);
