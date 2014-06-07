@@ -824,9 +824,11 @@ namespace
 }
 
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
-                 const voronoi_edge_normals& edge_normal_indices, int start_vert, voronoi_traced_edges& out, const voronoi_features& features)
+                 voronoi_edge_normals& edge_normal_indices, voronoi_features& features, voronoi_traced_edges& out)
 {
     tracing_state state(scratch, vertices.num_nz, edges.num_nz);
+
+    int start_vert = features.verts[0];
 
     enqueue(state.queue_vert, start_vert);
     state.visited_vert[nz(vertices, start_vert)] = 1;

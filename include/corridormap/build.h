@@ -82,8 +82,10 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col);
 csr_grid_neis cell_neis(const csr_grid& grid, int linear_index);
 
 // go over pixels to find connections between voronoi vertices and event points - the points where closest obstacles change.
+// also arrange edge obstacle ids in edge_normal_indices and voronoi_features such that if two edge points a and b are on the same edge,
+// side_1 of a equals to side_1 of b and side_2 of a equals to side_2 of b.
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
-                 const voronoi_edge_normals& edge_normal_indices, int start_vert, voronoi_traced_edges& out, const voronoi_features& features);
+                 voronoi_edge_normals& edge_normal_indices, voronoi_features& features, voronoi_traced_edges& out);
 
 }
 

@@ -244,7 +244,7 @@ int main()
 
         traced_edges = corridormap::allocate_voronoi_traced_edges(&mem, features.num_vert_points, obstacles.num_verts);
 
-        corridormap::trace_edges(&mem, vert_csr, edge_csr, edge_normal_indices, features.verts[0], traced_edges, features);
+        corridormap::trace_edges(&mem, vert_csr, edge_csr, edge_normal_indices, features, traced_edges);
         printf("edge_count=%d\n", traced_edges.num_edges);
         printf("event_count=%d\n", traced_edges.num_events);
 
