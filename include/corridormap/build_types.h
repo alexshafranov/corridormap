@@ -95,10 +95,10 @@ struct voronoi_features
     unsigned int* edges;
     // IDs (colors) of obstacles surrounding each vertex. [0..4*num_vert_points).
     unsigned int* vert_obstacle_ids;
-    // IDs (colors) of obstacles from the left side of each edge point. [0..num_edge_points).
-    unsigned int* edge_obstacle_ids_left;
-    // IDs (colors) of obstacles from the right side of each edge point. [0..num_edge_points).
-    unsigned int* edge_obstacle_ids_right;
+    // First IDs (colors) of obstacles of each edge point. [0..num_edge_points).
+    unsigned int* edge_obstacle_ids_1;
+    // Second IDs (colors) of obstacles of each edge point. [0..num_edge_points).
+    unsigned int* edge_obstacle_ids_2;
 };
 
 // obstacle polygon edge normals.
@@ -121,14 +121,14 @@ struct footprint_normals
 // indices of obstacle normals associated with voronoi edge points.
 struct voronoi_edge_normals
 {
-    // normal index on the left side.
+    // normal index on one side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
     // [0..num_edge_points]
-    int* edge_normal_indices_left;
-    // normal index on the right side.
+    int* edge_normal_indices_1;
+    // normal index on another side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
     // [0..num_edge_points]
-    int* edge_normal_indices_right;
+    int* edge_normal_indices_2;
 };
 
 // Compressed-Sparse-Row format for boolean grid,

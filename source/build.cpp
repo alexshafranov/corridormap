@@ -360,8 +360,8 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
     const int grid_height = features.grid_height;
     const int num_edge_points = features.num_edge_points;
     const unsigned int* edges = features.edges;
-    const unsigned int* obstacle_ids_left = features.edge_obstacle_ids_left;
-    const unsigned int* obstacle_ids_right = features.edge_obstacle_ids_right;
+    const unsigned int* obstacle_ids_1 = features.edge_obstacle_ids_1;
+    const unsigned int* obstacle_ids_2 = features.edge_obstacle_ids_2;
 
     const float* vertex_x = obstacles.x;
     const float* vertex_y = obstacles.y;
@@ -371,8 +371,8 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
     const int* num_obstacle_normals = normals.num_obstacle_normals;
     const int* obstacle_normal_offsets = normals.obstacle_normal_offsets;
 
-    int* normal_indices_left = out.edge_normal_indices_left;
-    int* normal_indices_right = out.edge_normal_indices_right;
+    int* normal_indices_1 = out.edge_normal_indices_1;
+    int* normal_indices_2 = out.edge_normal_indices_2;
 
     float bounds_width = bounds.max[0] - bounds.min[0];
     float bounds_height = bounds.max[1] - bounds.min[1];
@@ -380,19 +380,16 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
     for (int i = 0; i < num_edge_points; ++i)
     {
         unsigned int edge_point_idx = edges[i];
-        unsigned int obstacle_left = obstacle_ids_left[i];
-        unsigned int obstacle_right = obstacle_ids_right[i];
+        unsigned int obstacle_1 = obstacle_ids_1[i];
+        unsigned int obstacle_2 = obstacle_ids_2[i];
 
         int edge_point_x = edge_point_idx%grid_width;
         int edge_point_y = edge_point_idx/grid_width;
 
         vec2 edge_point = { bounds.min[0] + float(edge_point_x)/grid_width * bounds_width, bounds.min[1] + float(edge_point_y)/grid_height * bounds_height};
 
-        int left_idx  = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_left, edge_point);
-        int right_idx = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_right, edge_point);
-
-        normal_indices_left[i]  = left_idx;
-        normal_indices_right[i] = right_idx;
+        normal_indices_1[i] = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_1, edge_point);
+        normal_indices_2[i] = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_2, edge_point);
     }
 }
 
@@ -704,28 +701,34 @@ namespace
                     seen_verts[seen_vert_count++] = vert;
 
                     int num_events = 0;
-                    int curr = nz(edges, edge_pt);
-                    int prev = state.parent[curr];
+                    int prev = nz(edges, edge_pt);
+                    int curr = state.parent[prev];
 
-                    for (; prev != -1; curr = prev, prev = state.parent[curr])
+                    for (; curr != -1; prev = curr, curr = state.parent[curr])
                     {
-                        unsigned int prev_color_l = features.edge_obstacle_ids_left[prev];
-                        unsigned int curr_color_l = features.edge_obstacle_ids_left[curr];
+                        unsigned int prev_color_l = features.edge_obstacle_ids_1[prev];
+                        unsigned int curr_color_l = features.edge_obstacle_ids_1[curr];
                         // unsigned int prev_color_r = features.edge_obstacle_ids_right[prev];
-                        unsigned int curr_color_r = features.edge_obstacle_ids_right[curr];
+                        unsigned int curr_color_r = features.edge_obstacle_ids_2[curr];
                         // printf("cl=%d cr=%d pl=%d pr=%d\n", curr_color_l, curr_color_r, prev_color_l, prev_color_r);
 
-                        int prev_l = normal_indices.edge_normal_indices_left[prev];
-                        int prev_r = normal_indices.edge_normal_indices_right[prev];
+                        int prev_l = normal_indices.edge_normal_indices_1[prev];
+                        int prev_r = normal_indices.edge_normal_indices_2[prev];
 
-                        int curr_l = normal_indices.edge_normal_indices_left[curr];
-                        int curr_r = normal_indices.edge_normal_indices_right[curr];
+                        int curr_l = normal_indices.edge_normal_indices_1[curr];
+                        int curr_r = normal_indices.edge_normal_indices_2[curr];
 
-                        if (prev_color_l != curr_color_l)
-                        {
-                            std::swap(curr_l, curr_r);
-                            std::swap(curr_color_l, curr_color_r);
-                        }
+                        int swapped = 0;
+
+                        // int lin_idx_prev = linear_index(edges, prev);
+                        // printf("px=%d py=%d pcl=%d ccl=%d ccr=%d\n", lin_idx_prev%edges.num_cols, lin_idx_prev/edges.num_cols, prev_color_l, curr_color_l, curr_color_r);
+
+                        // if (prev_color_l != curr_color_l)
+                        // {
+                        //     swapped = 1;
+                        //     std::swap(curr_l, curr_r);
+                        //     std::swap(curr_color_l, curr_color_r);
+                        // }
 
                         // if (prev_color_l != curr_color_l)
                         // {
@@ -743,7 +746,14 @@ namespace
                         int id_left = curr_color_l;
                         // int type = features.edge_obstacle_ids_left[curr] >> 24;
                         int id_right = curr_color_r;
-                        printf("x=%d y=%d nl=%d nr=%d ol=%d or=%d\n", lin_idx%edges.num_cols, lin_idx/edges.num_cols, curr_l, curr_r, id_left, id_right);
+                        printf("x=%d y=%d nl=%d nr=%d ol=%d or=%d s=%d\n", lin_idx%edges.num_cols, lin_idx/edges.num_cols, curr_l, curr_r, id_left, id_right, swapped);
+
+                        if (prev_color_l != curr_color_l)
+                        {
+                            swapped = 1;
+                            std::swap(curr_l, curr_r);
+                            std::swap(curr_color_l, curr_color_r);
+                        }
 
                         if (prev_l != curr_l)
                         {

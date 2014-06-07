@@ -59,8 +59,8 @@ voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int grid
     result.verts = allocate<unsigned int>(mem, num_vert_points);
     result.edges = allocate<unsigned int>(mem, num_edge_points);
     result.vert_obstacle_ids = allocate<unsigned int>(mem, 4*num_vert_points);
-    result.edge_obstacle_ids_left = allocate<unsigned int>(mem, num_edge_points);
-    result.edge_obstacle_ids_right = allocate<unsigned int>(mem, num_edge_points);
+    result.edge_obstacle_ids_1 = allocate<unsigned int>(mem, num_edge_points);
+    result.edge_obstacle_ids_2 = allocate<unsigned int>(mem, num_edge_points);
 
     return result;
 }
@@ -70,8 +70,8 @@ void deallocate(memory* mem, voronoi_features& features)
     mem->deallocate(features.verts);
     mem->deallocate(features.edges);
     mem->deallocate(features.vert_obstacle_ids);
-    mem->deallocate(features.edge_obstacle_ids_left);
-    mem->deallocate(features.edge_obstacle_ids_right);
+    mem->deallocate(features.edge_obstacle_ids_1);
+    mem->deallocate(features.edge_obstacle_ids_2);
     memset(&features, 0, sizeof(features));
 }
 
@@ -104,15 +104,15 @@ voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_poi
 {
     voronoi_edge_normals result;
     memset(&result, 0, sizeof(result));
-    result.edge_normal_indices_left = allocate<int>(mem, num_edge_points);
-    result.edge_normal_indices_right = allocate<int>(mem, num_edge_points);
+    result.edge_normal_indices_1 = allocate<int>(mem, num_edge_points);
+    result.edge_normal_indices_2 = allocate<int>(mem, num_edge_points);
     return result;
 }
 
 void deallocate(memory* mem, voronoi_edge_normals& result)
 {
-    mem->deallocate(result.edge_normal_indices_left);
-    mem->deallocate(result.edge_normal_indices_right);
+    mem->deallocate(result.edge_normal_indices_1);
+    mem->deallocate(result.edge_normal_indices_2);
     memset(&result, 0, sizeof(result));
 }
 
