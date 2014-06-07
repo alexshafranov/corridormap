@@ -374,40 +374,18 @@ int main()
                 corridormap::vec2 tip_curr = add(vert, scale(normal_curr, 12.f));
                 corridormap::vec2 tip_next = add(vert, scale(normal_next, 12.f));
 
-                float x = vert.x;
-                float y = vert.y;
-
-                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
-                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
+                vert = footprint_to_image(vert, obstacle_bounds, features.grid_width, features.grid_height);
+                tip_curr = footprint_to_image(tip_curr, obstacle_bounds, features.grid_width, features.grid_height);
+                tip_next = footprint_to_image(tip_next, obstacle_bounds, features.grid_width, features.grid_height);
 
                 nvgBeginPath(vg);
-                nvgMoveTo(vg, x, y);
-
-                x = tip_curr.x;
-                y = tip_curr.y;
-
-                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
-                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
-
-                nvgLineTo(vg, x, y);
+                nvgMoveTo(vg, vert.x, vert.y);
+                nvgLineTo(vg, tip_curr.x, tip_curr.y);
                 nvgStroke(vg);
 
-                x = vert.x;
-                y = vert.y;
-
-                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
-                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
-
                 nvgBeginPath(vg);
-                nvgMoveTo(vg, x, y);
-
-                x = tip_next.x;
-                y = tip_next.y;
-
-                x = (x - obstacle_bounds.min[0]) / (obstacle_bounds.max[0] - obstacle_bounds.min[0]) * features.grid_width;
-                y = (y - obstacle_bounds.min[1]) / (obstacle_bounds.max[1] - obstacle_bounds.min[1]) * features.grid_height;
-
-                nvgLineTo(vg, x, y);
+                nvgMoveTo(vg, vert.x, vert.y);
+                nvgLineTo(vg, tip_next.x, tip_next.y);
                 nvgStroke(vg);
             }
 
