@@ -170,12 +170,8 @@ struct voronoi_traced_edges
 {
     // number of edges found.
     int num_edges;
-    // max edges allocated.
-    int max_edges;
     // number of event points found.
     int num_events;
-    // max events allocated.
-    int max_events;
     // u linear index (y*num_rows + x). range [0 .. num_edges).
     int* u;
     // u linear index (y*num_rows + x). range [0 .. num_edges).
