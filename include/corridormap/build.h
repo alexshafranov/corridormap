@@ -37,7 +37,7 @@ bbox2 bounds(const footprint& f, float border);
 
 // maximum distance for points and lines.
 // computed such that distance mesh "covers" the full render target in ortho projection.
-float max_distance(bbox2 scene_bbox);
+float max_distance(bbox2 bounds);
 
 // computes required number of triangles to represent a distance mesh for point (cone).
 int distance_mesh_tris_for_point(float max_dist, float max_error);
@@ -46,7 +46,7 @@ int distance_mesh_tris_for_point(float max_dist, float max_error);
 int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error);
 
 // build distance mesh for the input footprint. polygon vertex becomes a cone sector, edge - a "tent".
-void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float max_error, distance_mesh& out);
+void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, float max_error, distance_mesh& out);
 
 // renders distance mesh using the specified render interface.
 void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
@@ -55,7 +55,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh);
 void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors);
 
 // go over all edges in the input footprint and compute normals for each.
-void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals& out);
+void build_footprint_normals(const footprint& in, bbox2 bounds, footprint_normals& out);
 
 // if edge point lies in vector space spanned by two consecutive normals assign first normal's index. otherwise keep zero.
 void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles,
@@ -86,6 +86,9 @@ csr_grid_neis cell_neis(const csr_grid& grid, int linear_index);
 // side_1[a] == side_1[b] and side_2[a] == side_2[b].
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
                  voronoi_edge_normals& edge_normal_indices, voronoi_features& features, voronoi_traced_edges& out);
+
+//
+void build_voronoi_diagram(const voronoi_traced_edges& traced_edges, voronoi_diagram& out);
 
 }
 

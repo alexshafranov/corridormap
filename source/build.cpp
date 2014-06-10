@@ -66,10 +66,10 @@ bbox2 bounds(const footprint& f, float border)
     return result;
 }
 
-float max_distance(bbox2 scene_bbox)
+float max_distance(bbox2 bounds)
 {
-    float w = scene_bbox.max[0] - scene_bbox.min[0];
-    float h = scene_bbox.max[1] - scene_bbox.min[1];
+    float w = bounds.max[0] - bounds.min[0];
+    float h = bounds.max[1] - bounds.min[1];
     return std::max(w, h) * CORRIDORMAP_SQRT_2;
 }
 
@@ -132,7 +132,7 @@ namespace
     }
 }
 
-void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float max_error, distance_mesh& out)
+void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, float max_error, distance_mesh& out)
 {
     corridormap_assert(max_dist > max_error);
 
@@ -196,10 +196,10 @@ void build_distance_mesh(const footprint& in, bbox2 bbox, float max_dist, float 
 
     // 3. generate borders.
     {
-        vec2 lt = { bbox.min[0], bbox.max[1] };
-        vec2 lb = { bbox.min[0], bbox.min[1] };
-        vec2 rt = { bbox.max[0], bbox.max[1] };
-        vec2 rb = { bbox.max[0], bbox.min[1] };
+        vec2 lt = { bounds.min[0], bounds.max[1] };
+        vec2 lb = { bounds.min[0], bounds.min[1] };
+        vec2 rt = { bounds.max[0], bounds.max[1] };
+        vec2 rb = { bounds.max[0], bounds.min[1] };
 
         vec2 len = sub(rt, lb);
 
@@ -254,7 +254,7 @@ namespace
     }
 }
 
-void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals& out)
+void build_footprint_normals(const footprint& in, bbox2 bounds, footprint_normals& out)
 {
     const float* poly_x = in.x;
     const float* poly_y = in.y;
@@ -291,10 +291,10 @@ void build_footprint_normals(const footprint& in, bbox2 bbox, footprint_normals&
     }
 
     {
-        vec2 lt = { bbox.min[0], bbox.max[1] };
-        vec2 lb = { bbox.min[0], bbox.min[1] };
-        vec2 rt = { bbox.max[0], bbox.max[1] };
-        vec2 rb = { bbox.max[0], bbox.min[1] };
+        vec2 lt = { bounds.min[0], bounds.max[1] };
+        vec2 lb = { bounds.min[0], bounds.min[1] };
+        vec2 rt = { bounds.max[0], bounds.max[1] };
+        vec2 rb = { bounds.max[0], bounds.min[1] };
 
         store_edge_normal(lb, rb, normal_x, normal_y);
         store_edge_normal(rb, rt, normal_x, normal_y);

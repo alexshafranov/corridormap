@@ -59,6 +59,7 @@ struct free_list
 {
     int head;
     int first_free;
+    int num_elems;
     int max_elems;
     T* elems;
 };
