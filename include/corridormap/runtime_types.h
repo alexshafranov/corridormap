@@ -30,40 +30,44 @@ struct vec2
     float y;
 };
 
-enum { max_vertex_neis = 4 };
+enum { max_vertex_sides = 4 };
 
 struct vertex
 {
-    vec2 position;
-    vec2 closest[max_vertex_neis];
-    int  edges[max_vertex_neis];
+    int next;
+    int half_edge;
+    vec2 pos;
+    vec2 sides[max_vertex_sides];
+};
+
+struct half_edge
+{
+    int next;
+    int source;
+    int event;
 };
 
 struct event
 {
-    int  next;
-    int  prev;
+    int next[2];
     vec2 position;
-    vec2 closest_left;
-    vec2 closest_right;
+    vec2 sides[2];
 };
 
-struct edge
+template <typename T>
+struct free_list
 {
-    int u;
-    int v;
-    int events_head;
+    int head;
+    int first_free;
+    int max_elems;
+    T* elems;
 };
 
-struct graph
+struct voronoi_diagram
 {
-    int num_verts;
-    int num_edges;
-    int num_events;
-
-    vertex* vertices;
-    edge*   edges;
-    event*  events;
+    free_list<vertex> vertices;
+    free_list<half_edge> half_edges;
+    free_list<event> events;
 };
 
 }
