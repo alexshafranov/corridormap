@@ -24,6 +24,8 @@
 
 namespace corridormap {
 
+static const int null_idx = ~0u;
+
 struct vec2
 {
     float x;
@@ -50,7 +52,7 @@ struct half_edge
 struct event
 {
     int next[2];
-    vec2 position;
+    vec2 pos;
     vec2 sides[2];
 };
 

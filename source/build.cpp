@@ -392,55 +392,6 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
     }
 }
 
-void compute_closest_points(const footprint& obstacles, const int* obstacle_offsets, const float* pos_x, const float* pos_y,
-                            const unsigned int* obstacle_ids, const int num_points, float* out_x, float* out_y)
-{
-    const float* obst_x = obstacles.x;
-    const float* obst_y = obstacles.y;
-    const int* num_obst_verts = obstacles.num_poly_verts;
-
-    for (int i = 0; i < num_points; ++i)
-    {
-        vec2 point = { pos_x[i], pos_y[i] };
-        vec2 closest = { FLT_MAX, FLT_MAX };
-
-        float min_dist = FLT_MAX;
-
-        unsigned int obstacle_id = obstacle_ids[i];
-        int first_vertex_idx = obstacle_offsets[obstacle_id];
-        int last_vertex_idx = first_vertex_idx + num_obst_verts[obstacle_id] - 1;
-
-        int curr_idx = last_vertex_idx;
-        int next_idx = first_vertex_idx;
-
-        for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
-        {
-            vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
-            vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
-
-            vec2 seg = sub(p1, p0);
-            vec2 dir = normalized(seg);
-            float seg_len = len(seg);
-
-            float proj = dot(sub(point, p0), dir);
-
-            vec2 seg_closest = add(p0, scale(dir, clamp(proj, 0.f, seg_len)));
-
-            vec2 seg_closest_dir = sub(seg_closest, point);
-            float seg_closest_dist = dot(seg_closest_dir, seg_closest_dir);
-
-            if (seg_closest_dist < min_dist)
-            {
-                min_dist = seg_closest_dist;
-                closest = seg_closest;
-            }
-        }
-
-        out_x[i] = closest.x;
-        out_y[i] = closest.y;
-    }
-}
-
 void build_csr(const unsigned int* nz_coords, csr_grid& out)
 {
     int* column = out.column;
@@ -787,6 +738,104 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
 
     out.num_edges = num_edges;
     out.num_events = num_events;
+}
+
+namespace
+{
+    vec2 compute_closest_point(const footprint& obstacles, const int* obstacle_offsets, unsigned int obstacle_id, const vec2& point)
+    {
+        const float* obst_x = obstacles.x;
+        const float* obst_y = obstacles.y;
+        const int* num_obst_verts = obstacles.num_poly_verts;
+
+        vec2 closest = { FLT_MAX, FLT_MAX };
+
+        float min_dist = FLT_MAX;
+
+        int first_vertex_idx = obstacle_offsets[obstacle_id];
+        int last_vertex_idx = first_vertex_idx + num_obst_verts[obstacle_id] - 1;
+
+        int curr_idx = last_vertex_idx;
+        int next_idx = first_vertex_idx;
+
+        for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
+        {
+            vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
+            vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
+
+            vec2 seg = sub(p1, p0);
+            vec2 dir = normalized(seg);
+            float seg_len = len(seg);
+
+            float proj = dot(sub(point, p0), dir);
+
+            vec2 seg_closest = add(p0, scale(dir, clamp(proj, 0.f, seg_len)));
+
+            vec2 seg_closest_dir = sub(seg_closest, point);
+            float seg_closest_dist = dot(seg_closest_dir, seg_closest_dir);
+
+            if (seg_closest_dist < min_dist)
+            {
+                min_dist = seg_closest_dist;
+                closest = seg_closest;
+            }
+        }
+
+        return closest;
+    }
+
+    vec2 convert_from_image(int lin_idx, int grid_width, int grid_height, bbox2 bounds)
+    {
+        float bounds_width = bounds.max[0] - bounds.min[0];
+        float bounds_height = bounds.max[1] - bounds.min[1];
+        float vx = float(lin_idx % grid_width);
+        float vy = float(lin_idx / grid_width);
+        vx = vx / grid_width * bounds_width + bounds.min[0];
+        vy = vy / grid_height * bounds_height + bounds.min[1];
+        return make_vec2(vx, vy);
+    }
+}
+
+void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offsets, bbox2 bounds, const voronoi_features& features,
+                           const csr_grid& edge_grid, const voronoi_traced_edges& traced_edges, voronoi_diagram& out)
+{
+    // 1. convert vertices from image to footprint coordinates.
+    for (int i = 0; i < features.num_vert_points; ++i)
+    {
+        int vert = features.verts[i];
+        out.vertices.elems[i].pos = convert_from_image(vert, features.grid_width, features.grid_height, bounds);
+    }
+
+    // 2. compute vertex sides.
+    for (int i = 0; i < features.num_vert_points; ++i)
+    {
+        vec2 point = out.vertices.elems[i].pos;
+
+        for (int j = 0; j < 4; ++j)
+        {
+            unsigned int obstacle_id = features.vert_obstacle_ids[i*4 + j];
+            vec2 closest = compute_closest_point(obstacles, obstacle_offsets, obstacle_id, point);
+            out.vertices.elems[i].sides[j] = closest;
+        }
+    }
+
+    // 3. convert events from image to footprint coordinates.
+    for (int i = 0; i < traced_edges.num_events; ++i)
+    {
+        int event = traced_edges.events[i];
+        out.events.elems[i].pos = convert_from_image(event, features.grid_width, features.grid_height, bounds);
+    }
+
+    // 4. compute event sides.
+    for (int i = 0; i < traced_edges.num_events; ++i)
+    {
+        vec2 point = out.events.elems[i].pos;
+        int event = traced_edges.events[i];
+        unsigned int obstacle_id_0 = features.edge_obstacle_ids_1[nz(edge_grid, event)];
+        unsigned int obstacle_id_1 = features.edge_obstacle_ids_2[nz(edge_grid, event)];
+        out.events.elems[i].sides[0] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_0, point);
+        out.events.elems[i].sides[1] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_1, point);
+    }
 }
 
 }
