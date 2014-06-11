@@ -24,7 +24,7 @@
 
 namespace corridormap {
 
-static const int null_idx = ~0u;
+enum { null_idx = ~0u };
 
 struct vec2
 {
@@ -34,25 +34,38 @@ struct vec2
 
 enum { max_vertex_sides = 4 };
 
+// vertex of the voronoi diagram.
 struct vertex
 {
+    // link to the next vertex in pool.
     int next;
+    // index of the first outgoing half-edge.
     int half_edge;
+    // position.
     vec2 pos;
+    // closest points on surrounding obstacles.
     vec2 sides[max_vertex_sides];
 };
 
+// one direction of the edge in voronoi diagram.
 struct half_edge
 {
+    // link to the next half-edge in pool.
     int next;
-    int source;
+    // index of the target vertex.
+    int target;
+    // index of the head of the event list when going this half-edge direction.
     int event;
 };
 
+// edge event point - position on the edge where closest obstacle changes.
 struct event
 {
+    // next event for both half-edge directions.
     int next[2];
+    // position.
     vec2 pos;
+    // closest points on left and right obstacles.
     vec2 sides[2];
 };
 
@@ -66,10 +79,14 @@ struct free_list
     T* elems;
 };
 
+// Generalized Voronoi Diagram where edges and vertices are annotated with the closest obstacle information.
 struct voronoi_diagram
 {
+    // pool of vertices.
     free_list<vertex> vertices;
+    // pool of half-edges.
     free_list<half_edge> half_edges;
+    // pool of edge events.
     free_list<event> events;
 };
 

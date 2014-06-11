@@ -82,7 +82,7 @@ csr_grid_neis cell_neis(const csr_grid& grid, int linear_index);
 void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
                  voronoi_edge_normals& edge_normal_indices, voronoi_features& features, voronoi_traced_edges& out);
 
-//
+// builds annotated voronoi diagram (i.e. Explicit Corridor Map) represented as a half-edge mesh.
 void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offsets, bbox2 bounds, const voronoi_features& features,
                            const csr_grid& edge_grid, const voronoi_traced_edges& traced_edges, voronoi_diagram& out);
 
