@@ -30,7 +30,7 @@ namespace corridormap { class memory; }
 
 namespace corridormap {
 
-// inits library opencl runtime from render interface shared context, creates opencl command queue.
+// inits library's opencl runtime from render interface shared context, creates opencl command queue.
 opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared);
 
 // releases opencl objects.

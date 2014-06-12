@@ -71,13 +71,13 @@ public:
     // copy render target from video memory.
     virtual void read_pixels(unsigned char* destination) = 0;
 
-    // create shared opencl context.
+    // creates shared opencl context.
     virtual opencl_shared create_opencl_shared() = 0;
     // creates opencl memory object shared with rendered backbuffer.
     virtual cl_mem share_pixels(cl_context shared_context, cl_mem_flags flags, cl_int* error_code) = 0;
-    // acquire opencl/opengl shared object.
+    // acquires opencl/opengl shared object.
     virtual cl_int acquire_shared(cl_command_queue queue, cl_mem object) = 0;
-    // release opencl/opengl shared object.
+    // releases opencl/opengl shared object.
     virtual cl_int release_shared(cl_command_queue queue, cl_mem object) = 0;
 };
 
