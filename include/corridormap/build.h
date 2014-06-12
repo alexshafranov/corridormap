@@ -84,7 +84,7 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
 
 // builds annotated voronoi diagram (i.e. Explicit Corridor Map) represented as a half-edge mesh.
 void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offsets, bbox2 bounds, const voronoi_features& features,
-                           const csr_grid& edge_grid, const voronoi_traced_edges& traced_edges, voronoi_diagram& out);
+                           const csr_grid& edge_grid,  const csr_grid& vertex_grid, const voronoi_traced_edges& traced_edges, voronoi_diagram& out);
 
 }
 

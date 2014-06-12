@@ -796,14 +796,60 @@ namespace
     }
 }
 
-void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offsets, bbox2 bounds, const voronoi_features& features,
-                           const csr_grid& edge_grid, const voronoi_traced_edges& traced_edges, voronoi_diagram& out)
+namespace
 {
-    // 1. convert vertices from image to footprint coordinates.
+    void add_half_edge(vertex* vertices, half_edge* half_edges, int vert, int h_edge)
+    {
+        int head = vertices[vert].half_edge;
+
+        if (head == null_idx)
+        {
+            vertices[vert].half_edge = h_edge;
+            half_edges[h_edge].next = h_edge;
+        }
+        else
+        {
+            int next = half_edges[head].next;
+            half_edges[head].next = h_edge;
+            half_edges[h_edge].next = next;
+        }
+    }
+
+    void add_event(half_edge* half_edges, event* events, int h_edge, int evt)
+    {
+        int dir = h_edge & 1;
+        int head = half_edges[h_edge].event;
+
+        if (head == null_idx)
+        {
+            half_edges[h_edge].event = evt;
+            events[evt].next[dir] = null_idx;
+        }
+        else
+        {
+            int tail = head;
+
+            while (events[tail].next[dir] != null_idx)
+            {
+                tail = events[tail].next[dir];
+            }
+
+            events[tail].next[dir] = evt;
+            events[evt].next[dir] = null_idx;
+        }
+    }
+}
+
+void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offsets, bbox2 bounds, const voronoi_features& features,
+                           const csr_grid& edge_grid,  const csr_grid& vertex_grid, const voronoi_traced_edges& traced_edges, voronoi_diagram& out)
+{
+    // 1. convert vertices from image to footprint coordinates and initialize offsets.
     for (int i = 0; i < features.num_vert_points; ++i)
     {
         int vert = features.verts[i];
         out.vertices.elems[i].pos = convert_from_image(vert, features.grid_width, features.grid_height, bounds);
+        out.vertices.elems[i].next = null_idx;
+        out.vertices.elems[i].half_edge = null_idx;
     }
 
     // 2. compute vertex sides.
@@ -824,6 +870,8 @@ void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offse
     {
         int event = traced_edges.events[i];
         out.events.elems[i].pos = convert_from_image(event, features.grid_width, features.grid_height, bounds);
+        out.events.elems[i].next[0] = null_idx;
+        out.events.elems[i].next[1] = null_idx;
     }
 
     // 4. compute event sides.
@@ -835,6 +883,38 @@ void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offse
         unsigned int obstacle_id_1 = features.edge_obstacle_ids_2[nz(edge_grid, event)];
         out.events.elems[i].sides[0] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_0, point);
         out.events.elems[i].sides[1] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_1, point);
+    }
+
+    // 5. topology.
+    for (int i = 0; i < traced_edges.num_edges; ++i)
+    {
+        int u = nz(vertex_grid, traced_edges.u[i]);
+        int v = nz(vertex_grid, traced_edges.v[i]);
+
+        out.half_edges.elems[i*2 + 0].target = v;
+        out.half_edges.elems[i*2 + 1].target = u;
+        out.half_edges.elems[i*2 + 0].event = null_idx;
+        out.half_edges.elems[i*2 + 1].event = null_idx;
+
+        add_half_edge(out.vertices.elems, out.half_edges.elems, u, i*2 + 0);
+        add_half_edge(out.vertices.elems, out.half_edges.elems, v, i*2 + 1);
+    }
+
+    // 6. events.
+    for (int i = 0; i < traced_edges.num_edges; ++i)
+    {
+        int event_offset = traced_edges.edge_event_offset[i];
+        int num_events = traced_edges.edge_num_events[i];
+
+        for (int j = 0; j < num_events; ++j)
+        {
+            add_event(out.half_edges.elems, out.events.elems, i*2 + 0, event_offset + j);
+        }
+
+        for (int j = num_events - 1; j >= 0; --j)
+        {
+            add_event(out.half_edges.elems, out.events.elems, i*2 + 1, event_offset + j);
+        }
     }
 }
 

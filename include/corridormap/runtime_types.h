@@ -50,7 +50,7 @@ struct vertex
 // one direction of the edge in voronoi diagram.
 struct half_edge
 {
-    // link to the next half-edge in pool.
+    // link to the next incident half-edge.
     int next;
     // index of the target vertex.
     int target;
