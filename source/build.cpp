@@ -795,6 +795,13 @@ namespace
         return make_vec2(vx, vy);
     }
 
+    bool is_ccw(vec2 u, vec2 v1, vec2 v2)
+    {
+        vec2 d1 = sub(v1, u);
+        vec2 d2 = sub(v2, u);
+        return d1.x*d2.y - d2.x*d1.y > 0.f;
+    }
+
     void add_half_edge(vertex* vertices, half_edge* half_edges, int vert, int h_edge)
     {
         int head = vertices[vert].half_edge;
@@ -806,9 +813,49 @@ namespace
         }
         else
         {
-            int next = half_edges[head].next;
-            half_edges[head].next = h_edge;
-            half_edges[h_edge].next = next;
+            vec2 u = vertices[vert].pos;
+            vec2 v2 = vertices[half_edges[h_edge].target].pos;
+
+            int insert_after = null_idx;
+            int curr = head;
+
+            for (;;)
+            {
+                vec2 v1 = vertices[half_edges[curr].target].pos;
+
+                if (!is_ccw(u, v1, v2))
+                {
+                    break;
+                }
+
+                insert_after = curr;
+                curr = half_edges[curr].next;
+
+                if (curr == head)
+                {
+                    break;
+                }
+            }
+
+            if (insert_after == null_idx)
+            {
+                int tail = head;
+
+                while (half_edges[tail].next != null_idx)
+                {
+                    tail = half_edges[tail].next;
+                }
+
+                vertices[vert].half_edge = h_edge;
+                half_edges[h_edge].next = head;
+                half_edges[tail].next = h_edge;
+            }
+            else
+            {
+                int next = half_edges[insert_after].next;
+                half_edges[insert_after].next = h_edge;
+                half_edges[h_edge].next = next;
+            }
         }
     }
 
