@@ -190,8 +190,8 @@ void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, floa
         poly_x += npverts;
         poly_y += npverts;
 
-        *(segment_colors++)    = i;
-        *(num_segment_verts++) = nsegverts;
+        *segment_colors++    = i;
+        *num_segment_verts++ = nsegverts;
     }
 
     // 3. generate borders.
@@ -203,14 +203,14 @@ void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, floa
 
         vec2 len = sub(rt, lb);
 
-        *(num_segment_verts++) = build_tent_side(verts, lb, rb, len.x, max_dist);
-        *(num_segment_verts++) = build_tent_side(verts, rb, rt, len.y, max_dist);
-        *(num_segment_verts++) = build_tent_side(verts, rt, lt, len.x, max_dist);
-        *(num_segment_verts++) = build_tent_side(verts, lt, lb, len.y, max_dist);
+        *num_segment_verts++ = build_tent_side(verts, lb, rb, len.x, max_dist);
+        *num_segment_verts++ = build_tent_side(verts, rb, rt, len.y, max_dist);
+        *num_segment_verts++ = build_tent_side(verts, rt, lt, len.x, max_dist);
+        *num_segment_verts++ = build_tent_side(verts, lt, lb, len.y, max_dist);
 
         for (int i = 0; i < num_border_segments; ++i)
         {
-            *(segment_colors++) = num_polys + i;
+            *segment_colors++ = num_polys + i;
         }
     }
 
@@ -249,8 +249,8 @@ namespace
     inline void store_edge_normal(vec2 u, vec2 v, float*& out_x, float*& out_y)
     {
         vec2 dir = normalized(sub(v, u));
-        *(out_x++) = +dir.y;
-        *(out_y++) = -dir.x;
+        *out_x++ = +dir.y;
+        *out_y++ = -dir.x;
     }
 }
 
@@ -270,7 +270,7 @@ void build_footprint_normals(const footprint& in, bbox2 bounds, footprint_normal
 
     for (int i = 0; i < num_polys; ++i)
     {
-        *(obstacle_normal_offsets++) = num_normals;
+        *obstacle_normal_offsets++ = num_normals;
 
         int nverts = num_poly_verts[i];
 
@@ -287,7 +287,7 @@ void build_footprint_normals(const footprint& in, bbox2 bounds, footprint_normal
         poly_x += nverts;
         poly_y += nverts;
 
-        *(num_obstacle_normals++) = nverts;
+        *num_obstacle_normals++ = nverts;
     }
 
     {
@@ -303,8 +303,8 @@ void build_footprint_normals(const footprint& in, bbox2 bounds, footprint_normal
 
         for (int i = 0; i < num_border_segments; ++i)
         {
-            *(obstacle_normal_offsets++) = num_normals + i;
-            *(num_obstacle_normals++) = 1;
+            *obstacle_normal_offsets++ = num_normals + i;
+            *num_obstacle_normals++ = 1;
         }
     }
 }
