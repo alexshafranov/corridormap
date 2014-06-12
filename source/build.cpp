@@ -794,10 +794,7 @@ namespace
         vy = vy / grid_height * bounds_height + bounds.min[1];
         return make_vec2(vx, vy);
     }
-}
 
-namespace
-{
     void add_half_edge(vertex* vertices, half_edge* half_edges, int vert, int h_edge)
     {
         int head = vertices[vert].half_edge;
