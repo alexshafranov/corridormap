@@ -19,18 +19,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORRIDORMAP_RUNTIME_H_
-#define CORRIDORMAP_RUNTIME_H_
-
-#include "corridormap/runtime_types.h"
-
-namespace corridormap { class memory; }
+#include <string.h>
+#include "corridormap/assert.h"
+#include "corridormap/memory.h"
+#include "corridormap/runtime.h"
 
 namespace corridormap {
 
-voronoi_diagram allocate_voronoi_diagram(memory* mem, int max_vertices, int max_edges, int max_events);
-void deallocate(memory* mem, voronoi_diagram& d);
+voronoi_diagram allocate_voronoi_diagram(memory* mem, int max_vertices, int max_edges, int max_events)
+{
+    voronoi_diagram result;
+    memset(&result, 0, sizeof(result));
 
+    result.vertices.elems = allocate<vertex>(mem, max_vertices);
+    result.half_edges.elems = allocate<half_edge>(mem, 2*max_edges);
+    result.events.elems = allocate<event>(mem, max_events);
+    result.vertices.max_elems = max_vertices;
+    result.half_edges.max_elems = 2*max_edges;
+    result.events.max_elems = max_events;
+    return result;
 }
 
-#endif CORRIDORMAP_RUNTIME_H_
+void deallocate(memory* mem, voronoi_diagram& d)
+{
+    mem->deallocate(d.vertices.elems);
+    mem->deallocate(d.half_edges.elems);
+    mem->deallocate(d.events.elems);
+    memset(&d, 0, sizeof(d));
+}
+
+}
