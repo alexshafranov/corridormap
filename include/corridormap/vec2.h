@@ -19,8 +19,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORRIDORMAP_BUILD_VEC2_H_
-#define CORRIDORMAP_BUILD_VEC2_H_
+#ifndef CORRIDORMAP_VEC2_H_
+#define CORRIDORMAP_VEC2_H_
+
+#include <math.h>
+#include "corridormap/runtime_types.h"
 
 namespace corridormap {
 

@@ -37,8 +37,8 @@ enum { max_vertex_sides = 4 };
 // vertex of the voronoi diagram.
 struct vertex
 {
-    // link to the next vertex in pool.
-    int next;
+    // pool link.
+    int link;
     // index of the first outgoing half-edge.
     int half_edge;
     // position.
@@ -58,9 +58,20 @@ struct half_edge
     int event;
 };
 
+// edge of the voronoi diagram.
+struct edge
+{
+    // pool link.
+    int link;
+    // two halves of the edge.
+    half_edge dir[2];
+};
+
 // edge event point - position on the edge where closest obstacle changes.
 struct event
 {
+    // pool link.
+    int link;
     // next event for both half-edge directions.
     int next[2];
     // position.
@@ -84,8 +95,8 @@ struct voronoi_diagram
 {
     // pool of vertices.
     free_list<vertex> vertices;
-    // pool of half-edges.
-    free_list<half_edge> half_edges;
+    // pool of edges.
+    free_list<edge> edges;
     // pool of edge events.
     free_list<event> events;
 };

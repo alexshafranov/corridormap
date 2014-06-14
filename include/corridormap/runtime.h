@@ -28,8 +28,66 @@ namespace corridormap { class memory; }
 
 namespace corridormap {
 
-voronoi_diagram allocate_voronoi_diagram(memory* mem, int max_vertices, int max_edges, int max_events);
-void deallocate(memory* mem, voronoi_diagram& d);
+// allocate and initialize voronoi diagram.
+voronoi_diagram create_voronoi_diagram(memory* mem, int max_vertices, int max_edges, int max_events);
+// destroy voronoi diagram.
+void destroy(memory* mem, voronoi_diagram& d);
+
+// creates a new vertex with the specified position.
+vertex* create_vertex(voronoi_diagram& diagram, vec2 pos);
+
+// creates an edge between vertices u and v.
+edge* create_edge(voronoi_diagram& diagram, int u, int v);
+
+// creates a new event and appends it to the specified edge.
+event* create_event(voronoi_diagram& diagram, vec2 pos, int edge);
+
+}
+
+namespace corridormap {
+
+template <typename T>
+void init(free_list<T>& lst)
+{
+    lst.head = null_idx;
+    lst.num_elems = 0;
+    lst.first_free = 0;
+
+    for (int i = 0; i < lst.max_elems - 1; ++i)
+    {
+        lst.elems[i].link = i + 1;
+    }
+
+    lst.elems[lst.max_elems - 1].link = null_idx;
+}
+
+template <typename T>
+T* allocate(free_list<T>& lst)
+{
+    if (lst.first_free == null_idx)
+    {
+        return 0;
+    }
+
+    int result_index = lst.first_free;
+    T* result = lst.elems + result_index;
+
+    lst.first_free = lst.elems[lst.first_free].link;
+
+    if (lst.head == null_idx)
+    {
+        lst.head = result_index;
+    }
+    else
+    {
+        lst.elems[result_index].link = lst.elems[lst.head].link;
+        lst.head = result_index;
+    }
+
+    lst.num_elems++;
+
+    return result;
+}
 
 }
 

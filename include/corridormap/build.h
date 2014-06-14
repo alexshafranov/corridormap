@@ -22,8 +22,6 @@
 #ifndef CORRIDORMAP_BUILD_H_
 #define CORRIDORMAP_BUILD_H_
 
-#include <math.h>
-
 #include "corridormap/build_types.h"
 #include "corridormap/runtime_types.h"
 

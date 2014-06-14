@@ -20,15 +20,14 @@
 // SOFTWARE.
 
 #include <algorithm>
-#include <math.h>
 #include <float.h>
 #include <string.h>
 #include "corridormap/assert.h"
 #include "corridormap/memory.h"
 #include "corridormap/render_interface.h"
-#include "corridormap/runtime_types.h"
-#include "corridormap/build.h"
 #include "corridormap/vec2.h"
+#include "corridormap/runtime.h"
+#include "corridormap/build.h"
 
 namespace corridormap {
 
@@ -794,170 +793,54 @@ namespace
         vy = vy / grid_height * bounds_height + bounds.min[1];
         return make_vec2(vx, vy);
     }
-
-    bool is_ccw(vec2 u, vec2 v1, vec2 v2)
-    {
-        vec2 d1 = sub(v1, u);
-        vec2 d2 = sub(v2, u);
-        return d1.x*d2.y - d2.x*d1.y > 0.f;
-    }
-
-    void add_half_edge(vertex* vertices, half_edge* half_edges, int vert, int h_edge)
-    {
-        int head = vertices[vert].half_edge;
-
-        if (head == null_idx)
-        {
-            vertices[vert].half_edge = h_edge;
-            half_edges[h_edge].next = h_edge;
-        }
-        else
-        {
-            vec2 u = vertices[vert].pos;
-            vec2 v2 = vertices[half_edges[h_edge].target].pos;
-
-            int insert_after = null_idx;
-            int curr = head;
-
-            for (;;)
-            {
-                vec2 v1 = vertices[half_edges[curr].target].pos;
-
-                if (!is_ccw(u, v1, v2))
-                {
-                    break;
-                }
-
-                insert_after = curr;
-                curr = half_edges[curr].next;
-
-                if (curr == head)
-                {
-                    break;
-                }
-            }
-
-            if (insert_after == null_idx)
-            {
-                int tail = head;
-
-                while (half_edges[tail].next != null_idx)
-                {
-                    tail = half_edges[tail].next;
-                }
-
-                vertices[vert].half_edge = h_edge;
-                half_edges[h_edge].next = head;
-                half_edges[tail].next = h_edge;
-            }
-            else
-            {
-                int next = half_edges[insert_after].next;
-                half_edges[insert_after].next = h_edge;
-                half_edges[h_edge].next = next;
-            }
-        }
-    }
-
-    void add_event(half_edge* half_edges, event* events, int h_edge, int evt)
-    {
-        int dir = h_edge & 1;
-        int head = half_edges[h_edge].event;
-
-        if (head == null_idx)
-        {
-            half_edges[h_edge].event = evt;
-            events[evt].next[dir] = null_idx;
-        }
-        else
-        {
-            int tail = head;
-
-            while (events[tail].next[dir] != null_idx)
-            {
-                tail = events[tail].next[dir];
-            }
-
-            events[tail].next[dir] = evt;
-            events[evt].next[dir] = null_idx;
-        }
-    }
 }
 
 void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offsets, bbox2 bounds, const voronoi_features& features,
                            const csr_grid& edge_grid,  const csr_grid& vertex_grid, const voronoi_traced_edges& traced_edges, voronoi_diagram& out)
 {
-    // 1. convert vertices from image to footprint coordinates and initialize offsets.
+    // 1. vertices: convert positions and compute sides.
     for (int i = 0; i < features.num_vert_points; ++i)
     {
-        int vert = features.verts[i];
-        out.vertices.elems[i].pos = convert_from_image(vert, features.grid_width, features.grid_height, bounds);
-        out.vertices.elems[i].next = null_idx;
-        out.vertices.elems[i].half_edge = null_idx;
-    }
+        vec2 pos = convert_from_image(features.verts[i], features.grid_width, features.grid_height, bounds);
+        vertex* v = create_vertex(out, pos);
 
-    // 2. compute vertex sides.
-    for (int i = 0; i < features.num_vert_points; ++i)
-    {
-        vec2 point = out.vertices.elems[i].pos;
-
-        for (int j = 0; j < 4; ++j)
+        for (int j = 0; j < max_vertex_sides; ++j)
         {
             unsigned int obstacle_id = features.vert_obstacle_ids[i*4 + j];
-            vec2 closest = compute_closest_point(obstacles, obstacle_offsets, obstacle_id, point);
-            out.vertices.elems[i].sides[j] = closest;
+            vec2 closest = compute_closest_point(obstacles, obstacle_offsets, obstacle_id, pos);
+            v->sides[j] = closest;
         }
+
+        v->half_edge = null_idx;
     }
 
-    // 3. convert events from image to footprint coordinates.
-    for (int i = 0; i < traced_edges.num_events; ++i)
-    {
-        int event = traced_edges.events[i];
-        out.events.elems[i].pos = convert_from_image(event, features.grid_width, features.grid_height, bounds);
-        out.events.elems[i].next[0] = null_idx;
-        out.events.elems[i].next[1] = null_idx;
-    }
-
-    // 4. compute event sides.
-    for (int i = 0; i < traced_edges.num_events; ++i)
-    {
-        vec2 point = out.events.elems[i].pos;
-        int event = traced_edges.events[i];
-        unsigned int obstacle_id_0 = features.edge_obstacle_ids_1[nz(edge_grid, event)];
-        unsigned int obstacle_id_1 = features.edge_obstacle_ids_2[nz(edge_grid, event)];
-        out.events.elems[i].sides[0] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_0, point);
-        out.events.elems[i].sides[1] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_1, point);
-    }
-
-    // 5. topology.
+    // 2. create edges.
     for (int i = 0; i < traced_edges.num_edges; ++i)
     {
         int u = nz(vertex_grid, traced_edges.u[i]);
         int v = nz(vertex_grid, traced_edges.v[i]);
 
-        out.half_edges.elems[i*2 + 0].target = v;
-        out.half_edges.elems[i*2 + 1].target = u;
-        out.half_edges.elems[i*2 + 0].event = null_idx;
-        out.half_edges.elems[i*2 + 1].event = null_idx;
-
-        add_half_edge(out.vertices.elems, out.half_edges.elems, u, i*2 + 0);
-        add_half_edge(out.vertices.elems, out.half_edges.elems, v, i*2 + 1);
+        create_edge(out, u, v);
     }
 
-    // 6. events.
+    // 3. events: convert positions and compute sides.
     for (int i = 0; i < traced_edges.num_edges; ++i)
     {
         int event_offset = traced_edges.edge_event_offset[i];
         int num_events = traced_edges.edge_num_events[i];
 
-        for (int j = 0; j < num_events; ++j)
+        for (int j = event_offset; j < event_offset + num_events; ++j)
         {
-            add_event(out.half_edges.elems, out.events.elems, i*2 + 0, event_offset + j);
-        }
+            int evt_lin_idx = traced_edges.events[j];
+            vec2 pos = convert_from_image(evt_lin_idx, features.grid_width, features.grid_height, bounds);
 
-        for (int j = num_events - 1; j >= 0; --j)
-        {
-            add_event(out.half_edges.elems, out.events.elems, i*2 + 1, event_offset + j);
+            event* e = create_event(out, pos, i);
+
+            unsigned int obstacle_id_0 = features.edge_obstacle_ids_1[nz(edge_grid, evt_lin_idx)];
+            unsigned int obstacle_id_1 = features.edge_obstacle_ids_2[nz(edge_grid, evt_lin_idx)];
+
+            e->sides[0] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_0, pos);
+            e->sides[1] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_1, pos);
         }
     }
 }
