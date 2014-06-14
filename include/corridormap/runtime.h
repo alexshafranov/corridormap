@@ -33,4 +33,4 @@ void deallocate(memory* mem, voronoi_diagram& d);
 
 }
 
-#endif CORRIDORMAP_RUNTIME_H_
+#endif
