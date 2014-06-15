@@ -50,6 +50,7 @@ template <typename T>
 void init(free_list<T>& lst)
 {
     lst.head = null_idx;
+    lst.tail = null_idx;
     lst.head_free = 0;
     lst.num_items = 0;
 
@@ -77,12 +78,14 @@ T* allocate(free_list<T>& lst)
     if (lst.head == null_idx)
     {
         lst.head = result_index;
+        lst.tail = result_index;
         lst.items[result_index].link = null_idx;
     }
     else
     {
-        lst.items[result_index].link = lst.items[lst.head].link;
-        lst.head = result_index;
+        lst.items[lst.tail].link = result_index;
+        lst.tail = result_index;
+        lst.items[result_index].link = null_idx;
     }
 
     lst.num_items++;
