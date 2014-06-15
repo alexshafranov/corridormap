@@ -41,6 +41,7 @@
 #include "corridormap/vec2.h"
 #include "corridormap/build_alloc.h"
 #include "corridormap/build_ocl.h"
+#include "debugdraw.h"
 
 // force NVIDIA GPU when using Optimus.
 #ifdef _WIN32
@@ -205,6 +206,7 @@ int main()
 
     corridormap::voronoi_features features;
     corridormap::voronoi_traced_edges traced_edges;
+    corridormap::voronoi_diagram diagram;
 
     {
         cl_int error_code;
@@ -247,27 +249,22 @@ int main()
         corridormap::csr_grid edge_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_edge_points);
         corridormap::build_csr(features.edges, edge_csr);
 
-        for (int i = 0; i < features.num_vert_points; ++i)
-        {
-            printf("<%d, %d>\n", features.verts[i]%features.grid_width, features.verts[i]/features.grid_width);
-        }
-
         traced_edges = corridormap::allocate_voronoi_traced_edges(&mem, features.num_vert_points, obstacles.num_verts);
 
         corridormap::trace_edges(&mem, vert_csr, edge_csr, edge_normal_indices, features, traced_edges);
         printf("edge_count=%d\n", traced_edges.num_edges);
         printf("event_count=%d\n", traced_edges.num_events);
 
-        for (int i = 0; i < traced_edges.num_events; ++i)
-        {
-            int x = traced_edges.events[i] % features.grid_width;
-            int y = traced_edges.events[i] / features.grid_width;
-            printf("event=<%d, %d>\n", x, y);
-        }
-
-        corridormap::voronoi_diagram diagram = corridormap::create_voronoi_diagram(&mem, features.num_vert_points, traced_edges.num_edges, traced_edges.num_events);
+        diagram = corridormap::create_voronoi_diagram(&mem, features.num_vert_points, traced_edges.num_edges, traced_edges.num_events);
         corridormap::build_voronoi_diagram(obstacles, normals.obstacle_normal_offsets, obstacle_bounds, features, edge_csr, vert_csr, traced_edges, diagram);
     }
+
+    corridormap::draw_params draw_params;
+    draw_params.obstacles = &obstacles;
+    draw_params.diagram = &diagram;
+    draw_params.bounds_min = corridormap::make_vec2(obstacle_bounds.min);
+    draw_params.bounds_max = corridormap::make_vec2(obstacle_bounds.max);
+    draw_params.image_dimensions = corridormap::make_vec2(0, 0);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -291,83 +288,64 @@ int main()
         float s = sx > sy ? sx : sy;
         nvgScale(vg, s, s);
 
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGB(200, 200, 200));
-        nvgRect(vg, 0, 0, (float)screen_width, (float)screen_height);
-        nvgFill(vg);
+        draw_params.image_dimensions = corridormap::make_vec2(float(screen_width), float(screen_height));
 
-        nvgStrokeColor(vg, nvgRGB(255, 255, 255));
-        nvgStrokeWidth(vg, 4.f);
+        corridormap::draw_voronoi_diagram(vg, draw_params);
 
-        for (int i = 0; i < traced_edges.num_edges; ++i)
-        {
-            int u = traced_edges.u[i];
-            int v = traced_edges.v[i];
+        // nvgBeginPath(vg);
+        // nvgFillColor(vg, nvgRGB(200, 200, 200));
+        // nvgRect(vg, 0, 0, (float)screen_width, (float)screen_height);
+        // nvgFill(vg);
 
-            int u_x = u % features.grid_width;
-            int u_y = u / features.grid_width;
-            int v_x = v % features.grid_width;
-            int v_y = v / features.grid_width;
+        // nvgStrokeColor(vg, nvgRGB(255, 255, 255));
+        // nvgStrokeWidth(vg, 4.f);
 
-            int events_offset = traced_edges.edge_event_offset[i];
+        // for (int i = 0; i < traced_edges.num_edges; ++i)
+        // {
+        //     int u = traced_edges.u[i];
+        //     int v = traced_edges.v[i];
 
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, float(u_x), float(u_y));
+        //     int u_x = u % features.grid_width;
+        //     int u_y = u / features.grid_width;
+        //     int v_x = v % features.grid_width;
+        //     int v_y = v / features.grid_width;
 
-            for (int j = 0; j < traced_edges.edge_num_events[i]; ++j)
-            {
-                int curr = traced_edges.events[events_offset + j];
-                nvgLineTo(vg, float(curr % features.grid_width), float(curr / features.grid_width));
-            }
+        //     int events_offset = traced_edges.edge_event_offset[i];
 
-            nvgLineTo(vg, float(v_x), float(v_y));
-            nvgStroke(vg);
-        }
+        //     nvgBeginPath(vg);
+        //     nvgMoveTo(vg, float(u_x), float(u_y));
 
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGB(255, 0, 0));
+        //     for (int j = 0; j < traced_edges.edge_num_events[i]; ++j)
+        //     {
+        //         int curr = traced_edges.events[events_offset + j];
+        //         nvgLineTo(vg, float(curr % features.grid_width), float(curr / features.grid_width));
+        //     }
 
-        for (int i = 0; i < features.num_vert_points; ++i)
-        {
-            float x = float(features.verts[i] % features.grid_width);
-            float y = float(features.verts[i] / features.grid_width);
-            nvgCircle(vg, x, y, 10.f);
-        }
+        //     nvgLineTo(vg, float(v_x), float(v_y));
+        //     nvgStroke(vg);
+        // }
 
-        for (int i = 0; i < traced_edges.num_events; ++i)
-        {
-            int x = traced_edges.events[i] % features.grid_width;
-            int y = traced_edges.events[i] / features.grid_width;
-            nvgCircle(vg, float(x), float(y), 5.f);
-        }
+        // nvgBeginPath(vg);
+        // nvgFillColor(vg, nvgRGB(255, 0, 0));
 
-        nvgFill(vg);
+        // for (int i = 0; i < features.num_vert_points; ++i)
+        // {
+        //     float x = float(features.verts[i] % features.grid_width);
+        //     float y = float(features.verts[i] / features.grid_width);
+        //     nvgCircle(vg, x, y, 10.f);
+        // }
 
-        int offset = 0;
+        // for (int i = 0; i < traced_edges.num_events; ++i)
+        // {
+        //     int x = traced_edges.events[i] % features.grid_width;
+        //     int y = traced_edges.events[i] / features.grid_width;
+        //     nvgCircle(vg, float(x), float(y), 5.f);
+        // }
 
-        for (int i = 0; i < sizeof(num_poly_verts)/sizeof(num_poly_verts[0]); ++i)
-        {
-            nvgBeginPath(vg);
+        // nvgFill(vg);
 
-            corridormap::vec2 vert = corridormap::make_vec2(obstacle_verts_x[offset], obstacle_verts_y[offset]);
-            corridormap::vec2 img_vert = footprint_to_image(vert, obstacle_bounds, features.grid_width, features.grid_height);
-            nvgMoveTo(vg, img_vert.x, img_vert.y);
-
-            for (int v = 1; v < num_poly_verts[i]; ++v)
-            {
-                corridormap::vec2 vert = corridormap::make_vec2(obstacle_verts_x[offset + v], obstacle_verts_y[offset + v]);
-                corridormap::vec2 img_vert = footprint_to_image(vert, obstacle_bounds, features.grid_width, features.grid_height);
-                nvgLineTo(vg, img_vert.x, img_vert.y);
-            }
-
-            nvgClosePath(vg);
-            nvgFill(vg);
-
-            offset += num_poly_verts[i];
-        }
-
-        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
-        nvgStrokeWidth(vg, 2.f);
+        // nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        // nvgStrokeWidth(vg, 2.f);
 
         nvgEndFrame(vg);
 

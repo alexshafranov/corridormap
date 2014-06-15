@@ -93,6 +93,30 @@ T* allocate(free_list<T>& lst)
     return result;
 }
 
+template <typename T>
+inline T* ptr(const free_list<T>& lst, int offset)
+{
+    return (offset != null_idx) ? lst.items + offset : 0;
+}
+
+template <typename T>
+inline T* first(const free_list<T>& lst)
+{
+    return ptr(lst, lst.head);
+}
+
+template <typename T>
+inline T* next(const free_list<T>& lst, T* item)
+{
+    int next_index = lst.items[int(item - lst.items)].link;
+    return ptr(lst, next_index);
+}
+
+inline vertex* target(const voronoi_diagram& diagram, half_edge* e)
+{
+    return ptr(diagram.vertices, e->target);
+}
+
 }
 
 #endif
