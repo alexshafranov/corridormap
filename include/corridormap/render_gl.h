@@ -160,11 +160,11 @@ namespace
     }
 }
 
-class renderer_gl : public renderer
+class Renderer_GL : public Renderer
 {
 public:
 
-    renderer_gl()
+    Renderer_GL()
         : _scratch_memory(0)
         , _frame_buffer(0)
         , _color_buffer_texture(0)
@@ -176,7 +176,7 @@ public:
         memset(&_debug_quad_shader, 0, sizeof(shader));
     }
 
-    virtual ~renderer_gl()
+    virtual ~Renderer_GL()
     {
         destroy_shader(_draw_shader);
         destroy_shader(_debug_quad_shader);
@@ -187,7 +187,7 @@ public:
         glDeleteFramebuffers(1, &_frame_buffer);
     }
 
-    virtual bool initialize(renderer::parameters params, memory* scratch_memory)
+    virtual bool initialize(Renderer::Parameters params, Memory* scratch_memory)
     {
         _params = params;
         _scratch_memory = scratch_memory;
@@ -308,7 +308,7 @@ public:
         glDepthMask(GL_TRUE);
     }
 
-    virtual void draw(const render_vertex* vertices, unsigned tri_count, unsigned color)
+    virtual void draw(const Render_Vertex* vertices, unsigned tri_count, unsigned color)
     {
         // set color for fragment shader.
         glUniform4f(
@@ -321,15 +321,15 @@ public:
         draw_array(vertices, tri_count);
     }
 
-    void draw_array(const render_vertex* vertices, unsigned tri_count)
+    void draw_array(const Render_Vertex* vertices, unsigned tri_count)
     {
         // upload vertices.
         glBindVertexArray(_vertex_array);
         glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-        glBufferData(GL_ARRAY_BUFFER, tri_count*3*sizeof(render_vertex), vertices, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, tri_count*3*sizeof(Render_Vertex), vertices, GL_STREAM_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(render_vertex), 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Render_Vertex), 0);
 
         // render.
         glDrawArrays(GL_TRIANGLES, 0, tri_count * 3);
@@ -371,7 +371,7 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        render_vertex quad[] =
+        Render_Vertex quad[] =
         {
             {-1.f, -1.f,  0.f},
             { 1.f, -1.f,  0.f},
@@ -388,9 +388,9 @@ public:
         glUseProgram(0);
     }
 
-    virtual opencl_shared create_opencl_shared()
+    virtual Opencl_Shared create_opencl_shared()
     {
-        opencl_shared result;
+        Opencl_Shared result;
         memset(&result, 0, sizeof(result));
 
         cl_int error_code;
@@ -460,8 +460,8 @@ public:
     }
 
 private:
-    renderer::parameters _params;
-    memory* _scratch_memory;
+    Renderer::Parameters _params;
+    Memory* _scratch_memory;
 
     GLuint _frame_buffer;
     GLuint _color_buffer_texture;

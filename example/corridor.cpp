@@ -92,14 +92,6 @@ namespace
     const int render_target_height = 1024;
 }
 
-corridormap::vec2 footprint_to_image(corridormap::vec2 v, corridormap::bbox2 bounds, int width, int height)
-{
-    corridormap::vec2 inv_dim = corridormap::make_vec2(1.f/(bounds.max[0] - bounds.min[0]), 1.f/(bounds.max[1] - bounds.min[1]));
-    corridormap::vec2 bounds_min = corridormap::make_vec2(bounds.min[0], bounds.min[1]);
-    corridormap::vec2 img_dim = corridormap::make_vec2((float)width, (float)height);
-    return mul(mul(sub(v, bounds_min), inv_dim), img_dim);
-}
-
 int main()
 {
     glfw_context glfw_ctx;
@@ -142,13 +134,13 @@ int main()
         return 1;
     }
 
-    corridormap::memory_malloc mem;
+    corridormap::Memory_Malloc mem;
 
     float obstacle_verts_x[] = { 10.f, 50.f, 30.f,  70.f, 80.f, 90.f, 90.f, 80.f, 70.f, 60.f, 60.f,  10.f, 40.f, 40.f, 10.f,  50.f, 80.f, 70.f, };
     float obstacle_verts_y[] = { 20.f, 20.f, 50.f,  20.f, 20.f, 30.f, 40.f, 50.f, 50.f, 40.f, 30.f,  70.f, 70.f, 90.f, 90.f,  70.f, 70.f, 80.f, };
     int num_poly_verts[] = { 3, 8, 4, 3 };
 
-    corridormap::footprint obstacles;
+    corridormap::Footprint obstacles;
     obstacles.x = obstacle_verts_x;
     obstacles.y = obstacle_verts_y;
     obstacles.num_polys = 4;
@@ -156,19 +148,19 @@ int main()
     obstacles.num_poly_verts = num_poly_verts;
 
     const float border = 10.f;
-    corridormap::bbox2 obstacle_bounds = corridormap::bounds(obstacles, border);
+    corridormap::Bbox2 obstacle_bounds = corridormap::bounds(obstacles, border);
 
     const float max_dist = corridormap::max_distance(obstacle_bounds);
     const float max_error = 0.1f;
 
-    corridormap::footprint_normals normals = corridormap::allocate_foorprint_normals(&mem, obstacles.num_polys, obstacles.num_verts);
+    corridormap::Footprint_Normals normals = corridormap::allocate_foorprint_normals(&mem, obstacles.num_polys, obstacles.num_verts);
     corridormap::build_footprint_normals(obstacles, obstacle_bounds, normals);
 
-    corridormap::distance_mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles.num_polys, max_distance_mesh_verts(obstacles, max_dist, max_error));
+    corridormap::Distance_Mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles.num_polys, max_distance_mesh_verts(obstacles, max_dist, max_error));
     corridormap::build_distance_mesh(obstacles, obstacle_bounds, max_dist, max_error, mesh);
 
-    corridormap::renderer_gl render_iface;
-    corridormap::renderer::parameters render_params;
+    corridormap::Renderer_GL render_iface;
+    corridormap::Renderer::Parameters render_params;
     render_params.render_target_width = render_target_width;
     render_params.render_target_height = render_target_height;
     render_params.min[0] = obstacle_bounds.min[0];
@@ -185,12 +177,12 @@ int main()
 
     corridormap::render_distance_mesh(&render_iface, mesh);
 
-    corridormap::renderer::opencl_shared cl_shared = render_iface.create_opencl_shared();
-    corridormap::opencl_runtime cl_runtime = corridormap::init_opencl_runtime(cl_shared);
+    corridormap::Renderer::Opencl_Shared cl_shared = render_iface.create_opencl_shared();
+    corridormap::Opencl_Runtime cl_runtime = corridormap::init_opencl_runtime(cl_shared);
 
     // build kernels.
     {
-        corridormap::compilation_status status = corridormap::build_kernels(cl_runtime);
+        corridormap::Compilation_Status status = corridormap::build_kernels(cl_runtime);
 
         if (status.kernel != corridormap::kernel_id_count)
         {
@@ -204,9 +196,9 @@ int main()
         }
     }
 
-    corridormap::voronoi_features features;
-    corridormap::voronoi_traced_edges traced_edges;
-    corridormap::voronoi_diagram diagram;
+    corridormap::Voronoi_Features features;
+    corridormap::Voronoi_Traced_Edges traced_edges;
+    corridormap::Voronoi_Diagram diagram;
 
     {
         cl_int error_code;
@@ -240,13 +232,13 @@ int main()
         printf("voronoi vertices: %d\n", cl_runtime.voronoi_vertex_mark_count);
         printf("voronoi edge marks: %d\n", cl_runtime.voronoi_edge_mark_count);
 
-        corridormap::voronoi_edge_normals edge_normal_indices = corridormap::allocate_voronoi_edge_normals(&mem, features.num_edge_points);
+        corridormap::Voronoi_Edge_Normals edge_normal_indices = corridormap::allocate_voronoi_edge_normals(&mem, features.num_edge_points);
         corridormap::build_edge_point_normal_indices(features, obstacles, normals, obstacle_bounds, edge_normal_indices);
 
-        corridormap::csr_grid vert_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_vert_points);
+        corridormap::CSR_Grid vert_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_vert_points);
         corridormap::build_csr(features.verts, vert_csr);
 
-        corridormap::csr_grid edge_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_edge_points);
+        corridormap::CSR_Grid edge_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_edge_points);
         corridormap::build_csr(features.edges, edge_csr);
 
         traced_edges = corridormap::allocate_voronoi_traced_edges(&mem, features.num_vert_points, obstacles.num_verts);
@@ -259,7 +251,7 @@ int main()
         corridormap::build_voronoi_diagram(obstacles, normals.obstacle_normal_offsets, obstacle_bounds, features, edge_csr, vert_csr, traced_edges, diagram);
     }
 
-    corridormap::draw_params draw_params;
+    corridormap::Draw_Params draw_params;
     draw_params.obstacles = &obstacles;
     draw_params.diagram = &diagram;
     draw_params.bounds_min = corridormap::make_vec2(obstacle_bounds.min);

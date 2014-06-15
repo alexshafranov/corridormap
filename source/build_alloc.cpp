@@ -25,21 +25,21 @@
 
 namespace corridormap {
 
-distance_mesh allocate_distance_mesh(memory* mem, int num_obstacle_polys, int max_verts)
+Distance_Mesh allocate_distance_mesh(Memory* mem, int num_obstacle_polys, int max_verts)
 {
-    distance_mesh result;
+    Distance_Mesh result;
     memset(&result, 0, sizeof(result));
 
     result.num_segments = 0;
     result.num_verts = 0;
-    result.verts = allocate<render_vertex>(mem, max_verts);
+    result.verts = allocate<Render_Vertex>(mem, max_verts);
     // 4 segments for border and num_obstacle_polys segments for obstacles.
     result.num_segment_verts = allocate<int>(mem, num_border_segments + num_obstacle_polys);
     result.segment_colors = allocate<unsigned int>(mem, num_border_segments + num_obstacle_polys);
     return result;
 }
 
-void deallocate(memory* mem, distance_mesh& mesh)
+void deallocate(Memory* mem, Distance_Mesh& mesh)
 {
     mem->deallocate(mesh.verts);
     mem->deallocate(mesh.num_segment_verts);
@@ -47,9 +47,9 @@ void deallocate(memory* mem, distance_mesh& mesh)
     memset(&mesh, 0, sizeof(mesh));
 }
 
-voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int grid_height, int num_vert_points, int num_edge_points)
+Voronoi_Features allocate_voronoi_features(Memory* mem, int grid_width, int grid_height, int num_vert_points, int num_edge_points)
 {
-    voronoi_features result;
+    Voronoi_Features result;
     memset(&result, 0, sizeof(result));
 
     result.grid_width = grid_width;
@@ -65,7 +65,7 @@ voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int grid
     return result;
 }
 
-void deallocate(memory* mem, voronoi_features& features)
+void deallocate(Memory* mem, Voronoi_Features& features)
 {
     mem->deallocate(features.verts);
     mem->deallocate(features.edges);
@@ -75,9 +75,9 @@ void deallocate(memory* mem, voronoi_features& features)
     memset(&features, 0, sizeof(features));
 }
 
-footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_poly_verts)
+Footprint_Normals allocate_foorprint_normals(Memory* mem, int num_polygons, int num_poly_verts)
 {
-    footprint_normals result;
+    Footprint_Normals result;
     memset(&result, 0, sizeof(result));
 
     result.num_obstacles = num_polygons + num_border_segments;
@@ -91,7 +91,7 @@ footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int 
 }
 
 // deallocates footprint normals. 'mem' must be the same that was used for allocation.
-void deallocate(memory* mem, footprint_normals& normals)
+void deallocate(Memory* mem, Footprint_Normals& normals)
 {
     mem->deallocate(normals.x);
     mem->deallocate(normals.y);
@@ -100,25 +100,25 @@ void deallocate(memory* mem, footprint_normals& normals)
     memset(&normals, 0, sizeof(normals));
 }
 
-voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points)
+Voronoi_Edge_Normals allocate_voronoi_edge_normals(Memory* mem, int num_edge_points)
 {
-    voronoi_edge_normals result;
+    Voronoi_Edge_Normals result;
     memset(&result, 0, sizeof(result));
     result.edge_normal_indices_1 = allocate<int>(mem, num_edge_points);
     result.edge_normal_indices_2 = allocate<int>(mem, num_edge_points);
     return result;
 }
 
-void deallocate(memory* mem, voronoi_edge_normals& result)
+void deallocate(Memory* mem, Voronoi_Edge_Normals& result)
 {
     mem->deallocate(result.edge_normal_indices_1);
     mem->deallocate(result.edge_normal_indices_2);
     memset(&result, 0, sizeof(result));
 }
 
-csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_zero)
+CSR_Grid allocate_csr_grid(Memory* mem, int num_rows, int num_cols, int num_non_zero)
 {
-    csr_grid result;
+    CSR_Grid result;
     memset(&result, 0, sizeof(result));
 
     result.num_rows = num_rows;
@@ -130,16 +130,16 @@ csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_
     return result;
 }
 
-void deallocate(memory* mem, csr_grid& grid)
+void deallocate(Memory* mem, CSR_Grid& grid)
 {
     mem->deallocate(grid.column);
     mem->deallocate(grid.row_offset);
     memset(&grid, 0, sizeof(grid));
 }
 
-voronoi_traced_edges allocate_voronoi_traced_edges(memory* mem, int num_voronoi_verts, int num_footprint_verts)
+Voronoi_Traced_Edges allocate_voronoi_traced_edges(Memory* mem, int num_voronoi_verts, int num_footprint_verts)
 {
-    voronoi_traced_edges result;
+    Voronoi_Traced_Edges result;
     memset(&result, 0, sizeof(result));
 
     int max_edges = num_voronoi_verts*max_grid_neis/2;
@@ -153,7 +153,7 @@ voronoi_traced_edges allocate_voronoi_traced_edges(memory* mem, int num_voronoi_
     return result;
 }
 
-void deallocate(memory* mem, voronoi_traced_edges& edges)
+void deallocate(Memory* mem, Voronoi_Traced_Edges& edges)
 {
     mem->deallocate(edges.u);
     mem->deallocate(edges.v);

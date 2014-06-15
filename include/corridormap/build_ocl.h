@@ -26,36 +26,36 @@
 #include "corridormap/build_ocl_types.h"
 #include "corridormap/render_interface.h"
 
-namespace corridormap { class memory; }
+namespace corridormap { class Memory; }
 
 namespace corridormap {
 
 // inits library's opencl runtime from render interface shared context, creates opencl command queue.
-opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared);
+Opencl_Runtime init_opencl_runtime(const Renderer::Opencl_Shared& shared);
 
 // releases opencl objects.
-void term_opencl_runtime(opencl_runtime& runtime);
+void term_opencl_runtime(Opencl_Runtime& runtime);
 
 // returns source code for the kernel with specified id.
-const char* get_kernel_source(kernel_id id);
+const char* get_kernel_source(Kernel_Id id);
 
 // creates and compiles library's opencl kernels.
-compilation_status build_kernels(opencl_runtime& runtime);
+Compilation_Status build_kernels(Opencl_Runtime& runtime);
 
 // marks voronoi vertices and egdes in runtime.voronoi_vertices_img and voronoi_edges_img from voronoi_image.
-cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image);
+cl_int mark_voronoi_features(Opencl_Runtime& runtime, cl_mem voronoi_image);
 
 // draw marks back to original voronoi image.
-cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color, unsigned int border);
+cl_int debug_voronoi_features(Opencl_Runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color, unsigned int border);
 
 // compact voronoi features on gpu, storing results in runtime.voronoi_vertices_compacted_buf and runtime.voronoi_edges_compacted_buf buffers.
-cl_int compact_voronoi_features(opencl_runtime& runtime);
+cl_int compact_voronoi_features(Opencl_Runtime& runtime);
 
 // store obstacle ids (colors) for vertices and edge points in compact arrays.
-cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image);
+cl_int store_obstacle_ids(Opencl_Runtime& runtime, cl_mem voronoi_image);
 
 // copy computed data from opencl device memory.
-cl_int transfer_voronoi_features(opencl_runtime& runtime, voronoi_features& features);
+cl_int transfer_voronoi_features(Opencl_Runtime& runtime, Voronoi_Features& features);
 
 }
 

@@ -36,10 +36,10 @@
 
 namespace corridormap {
 
-opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared)
+Opencl_Runtime init_opencl_runtime(const Renderer::Opencl_Shared& shared)
 {
-    opencl_runtime runtime;
-    memset(&runtime, 0, sizeof(opencl_runtime));
+    Opencl_Runtime runtime;
+    memset(&runtime, 0, sizeof(Opencl_Runtime));
 
     cl_int error_code;
     runtime.queue = clCreateCommandQueue(shared.context, shared.device, 0, &error_code);
@@ -55,7 +55,7 @@ opencl_runtime init_opencl_runtime(const renderer::opencl_shared& shared)
     return runtime;
 }
 
-void term_opencl_runtime(opencl_runtime& runtime)
+void term_opencl_runtime(Opencl_Runtime& runtime)
 {
     clReleaseMemObject(runtime.voronoi_vertices_img);
     clReleaseMemObject(runtime.voronoi_edges_img);
@@ -87,20 +87,20 @@ namespace
     };
 }
 
-const char* get_kernel_source(kernel_id id)
+const char* get_kernel_source(Kernel_Id id)
 {
     return kernel_source[id];
 }
 
-compilation_status build_kernels(opencl_runtime& runtime)
+Compilation_Status build_kernels(Opencl_Runtime& runtime)
 {
-    compilation_status status;
+    Compilation_Status status;
     status.code = CL_SUCCESS;
     status.kernel = kernel_id_count;
 
     for (int i = 0; i < kernel_id_count; ++i)
     {
-        status.kernel = static_cast<kernel_id>(i);
+        status.kernel = static_cast<Kernel_Id>(i);
 
         runtime.programs[i] = clCreateProgramWithSource(runtime.context, 1, &kernel_source[i], 0, &status.code);
 
@@ -130,7 +130,7 @@ compilation_status build_kernels(opencl_runtime& runtime)
 
 namespace
 {
-    cl_int allocate_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
+    cl_int allocate_voronoi_features(Opencl_Runtime& runtime, cl_mem voronoi_image)
     {
         cl_int error_code;
 
@@ -155,7 +155,7 @@ namespace
     }
 }
 
-cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
+cl_int mark_voronoi_features(Opencl_Runtime& runtime, cl_mem voronoi_image)
 {
     cl_int error_code = allocate_voronoi_features(runtime, voronoi_image);
     CORRIDORMAP_CHECK_OCL(error_code);
@@ -177,7 +177,7 @@ cl_int mark_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image)
     return clEnqueueNDRangeKernel(runtime.queue, kernel, 2, 0, global_work_size, 0, 0, 0, 0);
 }
 
-cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color, unsigned int border)
+cl_int debug_voronoi_features(Opencl_Runtime& runtime, cl_mem voronoi_image, cl_mem marks_image, unsigned int color, unsigned int border)
 {
     size_t width;
     clGetImageInfo(voronoi_image, CL_IMAGE_WIDTH, sizeof(width), &width, 0);
@@ -206,7 +206,7 @@ cl_int debug_voronoi_features(opencl_runtime& runtime, cl_mem voronoi_image, cl_
 
 namespace
 {
-    size_t get_compaction_wgsize(opencl_runtime& runtime)
+    size_t get_compaction_wgsize(Opencl_Runtime& runtime)
     {
         cl_kernel kernel_reduce = runtime.kernels[kernel_id_compaction_reduce];
 
@@ -221,7 +221,7 @@ namespace
 
 namespace
 {
-    cl_int compact_features(opencl_runtime& runtime, cl_mem image, cl_mem sums_buf, cl_mem offsets_buf, cl_mem* compacted_buf, cl_uint* count)
+    cl_int compact_features(Opencl_Runtime& runtime, cl_mem image, cl_mem sums_buf, cl_mem offsets_buf, cl_mem* compacted_buf, cl_uint* count)
     {
         cl_int error_code;
 
@@ -301,7 +301,7 @@ namespace
     }
 }
 
-cl_int compact_voronoi_features(opencl_runtime& runtime)
+cl_int compact_voronoi_features(Opencl_Runtime& runtime)
 {
     cl_int error_code;
 
@@ -321,7 +321,7 @@ cl_int compact_voronoi_features(opencl_runtime& runtime)
     return error_code;
 }
 
-cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image)
+cl_int store_obstacle_ids(Opencl_Runtime& runtime, cl_mem voronoi_image)
 {
     cl_int error_code;
 
@@ -359,7 +359,7 @@ cl_int store_obstacle_ids(opencl_runtime& runtime, cl_mem voronoi_image)
     return error_code;
 }
 
-cl_int transfer_voronoi_features(opencl_runtime& runtime, voronoi_features& features)
+cl_int transfer_voronoi_features(Opencl_Runtime& runtime, Voronoi_Features& features)
 {
     cl_int error_code;
 

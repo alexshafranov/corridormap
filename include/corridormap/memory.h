@@ -27,15 +27,15 @@
 
 namespace corridormap {
 
-class memory
+class Memory
 {
 public:
-    virtual ~memory() {}
+    virtual ~Memory() {}
     virtual void* allocate(size_t size, size_t align)=0;
     virtual void  deallocate(void* ptr)=0;
 };
 
-class memory_malloc : public memory
+class Memory_Malloc : public Memory
 {
 public:
     virtual void* allocate(size_t size, size_t align);
@@ -43,23 +43,23 @@ public:
 };
 
 template <typename T>
-T* allocate(memory* mem, size_t count, size_t align=sizeof(void*))
+T* allocate(Memory* mem, size_t count, size_t align=sizeof(void*))
 {
     return static_cast<T*>(mem->allocate(sizeof(T)*count, align));
 }
 
 template <typename T>
-class alloc_scope
+class Alloc_Scope
 {
 public:
-    alloc_scope(memory* mem, size_t count, size_t align=sizeof(void*))
+    Alloc_Scope(Memory* mem, size_t count, size_t align=sizeof(void*))
         : mem(mem)
         , count(count)
     {
         data = allocate<T>(mem, count, align);
     }
 
-    ~alloc_scope()
+    ~Alloc_Scope()
     {
         mem->deallocate(data);
     }
@@ -67,12 +67,12 @@ public:
     operator T*() { return data; }
 
     size_t count;
-    memory* mem;
+    Memory* mem;
     T* data;
 };
 
 template <typename T>
-void zero_mem(alloc_scope<T>& s)
+void zero_mem(Alloc_Scope<T>& s)
 {
     memset(s.data, 0, s.count*sizeof(T));
 }

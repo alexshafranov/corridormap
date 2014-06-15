@@ -27,49 +27,49 @@
 
 namespace corridormap {
 
-inline vec2 make_vec2(float x, float y)
+inline Vec2 make_vec2(float x, float y)
 {
-    vec2 result = { x, y };
+    Vec2 result = { x, y };
     return result;
 }
 
-inline vec2 make_vec2(const float* v)
+inline Vec2 make_vec2(const float* v)
 {
-    vec2 result = { v[0], v[1] };
+    Vec2 result = { v[0], v[1] };
     return result;
 }
 
-inline vec2 add(vec2 a, vec2 b)
+inline Vec2 add(Vec2 a, Vec2 b)
 {
     return make_vec2(a.x + b.x, a.y + b.y);
 }
 
-inline vec2 sub(vec2 a, vec2 b)
+inline Vec2 sub(Vec2 a, Vec2 b)
 {
     return make_vec2(a.x - b.x, a.y - b.y);
 }
 
-inline vec2 mul(vec2 a, vec2 b)
+inline Vec2 mul(Vec2 a, Vec2 b)
 {
     return make_vec2(a.x * b.x, a.y * b.y);
 }
 
-inline vec2 scale(vec2 a, float val)
+inline Vec2 scale(Vec2 a, float val)
 {
     return make_vec2(a.x*val, a.y*val);
 }
 
-inline vec2 normalized(vec2 a)
+inline Vec2 normalized(Vec2 a)
 {
     return scale(a, 1.f/sqrt(a.x*a.x + a.y*a.y));
 }
 
-inline float dot(vec2 a, vec2 b)
+inline float dot(Vec2 a, Vec2 b)
 {
     return a.x*b.x + a.y*b.y;
 }
 
-inline float len(vec2 a)
+inline float len(Vec2 a)
 {
     return sqrt(dot(a, a));
 }

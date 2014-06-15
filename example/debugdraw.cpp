@@ -27,9 +27,9 @@ namespace corridormap {
 
 namespace
 {
-    vec2 to_image(vec2 v, vec2 bounds_min, vec2 bounds_max, vec2 image_dim)
+    Vec2 to_image(Vec2 v, Vec2 bounds_min, Vec2 bounds_max, Vec2 image_dim)
     {
-        vec2 inv_dim = sub(bounds_max, bounds_min);
+        Vec2 inv_dim = sub(bounds_max, bounds_min);
         inv_dim = make_vec2(1.f / inv_dim.x, 1.f / inv_dim.y);
         return mul(mul(sub(v, bounds_min), inv_dim), image_dim);
     }
@@ -51,7 +51,7 @@ namespace
     };
 }
 
-void draw_voronoi_diagram(NVGcontext* vg, const draw_params& params)
+void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
 {
     // background.
     {
@@ -72,14 +72,14 @@ void draw_voronoi_diagram(NVGcontext* vg, const draw_params& params)
         {
             nvgBeginPath(vg);
 
-            vec2 vert = make_vec2(params.obstacles->x[offset], params.obstacles->y[offset]);
-            vec2 img_vert = to_image(vert, params.bounds_min, params.bounds_max, params.image_dimensions);
+            Vec2 vert = make_vec2(params.obstacles->x[offset], params.obstacles->y[offset]);
+            Vec2 img_vert = to_image(vert, params.bounds_min, params.bounds_max, params.image_dimensions);
             nvgMoveTo(vg, img_vert.x, img_vert.y);
 
             for (int v = 1; v < params.obstacles->num_poly_verts[i]; ++v)
             {
-                vec2 vert = make_vec2(params.obstacles->x[offset + v], params.obstacles->y[offset + v]);
-                vec2 img_vert = to_image(vert, params.bounds_min, params.bounds_max, params.image_dimensions);
+                Vec2 vert = make_vec2(params.obstacles->x[offset + v], params.obstacles->y[offset + v]);
+                Vec2 img_vert = to_image(vert, params.bounds_min, params.bounds_max, params.image_dimensions);
                 nvgLineTo(vg, img_vert.x, img_vert.y);
             }
 
@@ -95,12 +95,12 @@ void draw_voronoi_diagram(NVGcontext* vg, const draw_params& params)
         nvg_state_scope s(vg);
         nvgStrokeColor(vg, nvgRGB(127, 127, 255));
 
-        for (edge* e = first(params.diagram->edges); e != 0; e = next(params.diagram->edges, e))
+        for (Edge* e = first(params.diagram->edges); e != 0; e = next(params.diagram->edges, e))
         {
-            half_edge* e0 = e->dir + 0;
-            half_edge* e1 = e->dir + 1;
-            vec2 u = to_image(target(*params.diagram, e0)->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
-            vec2 v = to_image(target(*params.diagram, e1)->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
+            Half_Edge* e0 = e->dir + 0;
+            Half_Edge* e1 = e->dir + 1;
+            Vec2 u = to_image(target(*params.diagram, e0)->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
+            Vec2 v = to_image(target(*params.diagram, e1)->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
             nvgBeginPath(vg);
             nvgMoveTo(vg, u.x, u.y);
             nvgLineTo(vg, v.x, v.y);

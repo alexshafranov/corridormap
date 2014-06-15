@@ -28,16 +28,16 @@
 
 namespace corridormap {
 
-struct draw_params
+struct Draw_Params
 {
-    footprint* obstacles;
-    voronoi_diagram* diagram;
-    vec2 bounds_min;
-    vec2 bounds_max;
-    vec2 image_dimensions;
+    Footprint* obstacles;
+    Voronoi_Diagram* diagram;
+    Vec2 bounds_min;
+    Vec2 bounds_max;
+    Vec2 image_dimensions;
 };
 
-void draw_voronoi_diagram(NVGcontext* vg, const draw_params& params);
+void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params);
 
 }
 

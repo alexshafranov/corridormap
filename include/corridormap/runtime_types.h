@@ -26,7 +26,7 @@ namespace corridormap {
 
 enum { null_idx = ~0u };
 
-struct vec2
+struct Vec2
 {
     float x;
     float y;
@@ -35,20 +35,20 @@ struct vec2
 enum { max_vertex_sides = 4 };
 
 // vertex of the voronoi diagram.
-struct vertex
+struct Vertex
 {
     // pool link.
     int link;
     // index of the first outgoing half-edge.
     int half_edge;
     // position.
-    vec2 pos;
+    Vec2 pos;
     // closest points on surrounding obstacles.
-    vec2 sides[max_vertex_sides];
+    Vec2 sides[max_vertex_sides];
 };
 
 // one direction of the edge in voronoi diagram.
-struct half_edge
+struct Half_Edge
 {
     // link to the next incident half-edge.
     int next;
@@ -59,30 +59,30 @@ struct half_edge
 };
 
 // edge of the voronoi diagram.
-struct edge
+struct Edge
 {
     // pool link.
     int link;
     // two halves of the edge.
-    half_edge dir[2];
+    Half_Edge dir[2];
 };
 
 // edge event point - position on the edge where closest obstacle changes.
-struct event
+struct Event
 {
     // pool link.
     int link;
     // next event for both half-edge directions.
     int next[2];
     // position.
-    vec2 pos;
+    Vec2 pos;
     // closest points on left and right obstacles.
-    vec2 sides[2];
+    Vec2 sides[2];
 };
 
 // array based free list.
 template <typename T>
-struct free_list
+struct Free_List
 {
     // head of the list of allocated objects.
     int head;
@@ -99,14 +99,14 @@ struct free_list
 };
 
 // Generalized Voronoi Diagram where edges and vertices are annotated with the closest obstacle information.
-struct voronoi_diagram
+struct Voronoi_Diagram
 {
     // pool of vertices.
-    free_list<vertex> vertices;
+    Free_List<Vertex> vertices;
     // pool of edges.
-    free_list<edge> edges;
+    Free_List<Edge> edges;
     // pool of edge events.
-    free_list<event> events;
+    Free_List<Event> events;
 };
 
 }

@@ -26,7 +26,7 @@
 
 namespace corridormap {
 
-enum kernel_id
+enum Kernel_Id
 {
     #define CORRIDORMAP_KERNEL_ID(NAME) kernel_id_##NAME,
     #include "corridormap/kernel_id.inl"
@@ -35,7 +35,7 @@ enum kernel_id
 };
 
 // holds opencl api objects used by the library.
-struct opencl_runtime
+struct Opencl_Runtime
 {
     // opencl context.
     cl_context context;
@@ -77,12 +77,12 @@ struct opencl_runtime
 };
 
 // represents the result of corridormap::build_kernels.
-struct compilation_status
+struct Compilation_Status
 {
     // opencl error code.
     cl_int    code;
     // kernel_id during which build the error happened or kernel_id_count on success.
-    kernel_id kernel;
+    Kernel_Id kernel;
 };
 
 }

@@ -24,17 +24,17 @@
 
 #include <CL/opencl.h>
 
-namespace corridormap { struct render_vertex; }
-namespace corridormap { class memory; }
+namespace corridormap { struct Render_Vertex; }
+namespace corridormap { class Memory; }
 
 namespace corridormap {
 
 // abtract rendering backend interface.
-class renderer
+class Renderer
 {
 public:
     // initialization parameters.
-    struct parameters
+    struct Parameters
     {
         // width of render target.
         unsigned render_target_width;
@@ -49,22 +49,22 @@ public:
     };
 
     // opencl context and device for this renderer's GPU.
-    struct opencl_shared
+    struct Opencl_Shared
     {
         cl_platform_id  platform;
         cl_device_id    device;
         cl_context      context;
     };
 
-    virtual ~renderer() {}
+    virtual ~Renderer() {}
 
     // initialize renderer. returns false on failure.
-    virtual bool initialize(parameters params, memory* scratch_memory) = 0;
+    virtual bool initialize(Parameters params, Memory* scratch_memory) = 0;
 
     // begin scene. must be called before any calls to draw.
     virtual void begin() = 0;
     // draw mesh with uniform color. length of vertices array is tri_count*3.
-    virtual void draw(const render_vertex* vertices, unsigned tri_count, unsigned color) = 0;
+    virtual void draw(const Render_Vertex* vertices, unsigned tri_count, unsigned color) = 0;
     // end scene. must be called after all calls to draw.
     virtual void end() = 0;
 
@@ -72,7 +72,7 @@ public:
     virtual void read_pixels(unsigned char* destination) = 0;
 
     // creates shared opencl context.
-    virtual opencl_shared create_opencl_shared() = 0;
+    virtual Opencl_Shared create_opencl_shared() = 0;
     // creates opencl memory object shared with rendered backbuffer.
     virtual cl_mem share_pixels(cl_context shared_context, cl_mem_flags flags, cl_int* error_code) = 0;
     // acquires opencl/opengl shared object.

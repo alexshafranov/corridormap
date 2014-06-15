@@ -31,7 +31,7 @@ inline void* align_ptr(void* ptr, size_t value)
     return reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(ptr) + (value - 1)) & ~(value - 1));
 }
 
-void* memory_malloc::allocate(size_t size, size_t align)
+void* Memory_Malloc::allocate(size_t size, size_t align)
 {
     align = align < sizeof(uint32_t) ? sizeof(uint32_t) : align;
     void* p = malloc(sizeof(uint32_t) + align + size);
@@ -50,7 +50,7 @@ void* memory_malloc::allocate(size_t size, size_t align)
     return data;
 }
 
-void memory_malloc::deallocate(void* ptr)
+void Memory_Malloc::deallocate(void* ptr)
 {
     if (!ptr)
     {

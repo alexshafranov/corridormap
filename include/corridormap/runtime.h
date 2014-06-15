@@ -24,30 +24,30 @@
 
 #include "corridormap/runtime_types.h"
 
-namespace corridormap { class memory; }
+namespace corridormap { class Memory; }
 
 namespace corridormap {
 
 // allocate and initialize voronoi diagram.
-voronoi_diagram create_voronoi_diagram(memory* mem, int max_vertices, int max_edges, int max_events);
+Voronoi_Diagram create_voronoi_diagram(Memory* mem, int max_vertices, int max_edges, int max_events);
 // destroy voronoi diagram.
-void destroy(memory* mem, voronoi_diagram& d);
+void destroy(Memory* mem, Voronoi_Diagram& d);
 
 // creates a new vertex with the specified position.
-vertex* create_vertex(voronoi_diagram& diagram, vec2 pos);
+Vertex* create_vertex(Voronoi_Diagram& diagram, Vec2 pos);
 
 // creates an edge between vertices u and v.
-edge* create_edge(voronoi_diagram& diagram, int u, int v);
+Edge* create_edge(Voronoi_Diagram& diagram, int u, int v);
 
 // creates a new event and appends it to the specified edge.
-event* create_event(voronoi_diagram& diagram, vec2 pos, int edge);
+Event* create_event(Voronoi_Diagram& diagram, Vec2 pos, int edge);
 
 }
 
 namespace corridormap {
 
 template <typename T>
-void init(free_list<T>& lst)
+void init(Free_List<T>& lst)
 {
     lst.head = null_idx;
     lst.tail = null_idx;
@@ -63,7 +63,7 @@ void init(free_list<T>& lst)
 }
 
 template <typename T>
-T* allocate(free_list<T>& lst)
+T* allocate(Free_List<T>& lst)
 {
     if (lst.head_free == null_idx)
     {
@@ -94,25 +94,25 @@ T* allocate(free_list<T>& lst)
 }
 
 template <typename T>
-inline T* ptr(const free_list<T>& lst, int offset)
+inline T* ptr(const Free_List<T>& lst, int offset)
 {
     return (offset != null_idx) ? lst.items + offset : 0;
 }
 
 template <typename T>
-inline T* first(const free_list<T>& lst)
+inline T* first(const Free_List<T>& lst)
 {
     return ptr(lst, lst.head);
 }
 
 template <typename T>
-inline T* next(const free_list<T>& lst, T* item)
+inline T* next(const Free_List<T>& lst, T* item)
 {
     int next_index = lst.items[int(item - lst.items)].link;
     return ptr(lst, next_index);
 }
 
-inline vertex* target(const voronoi_diagram& diagram, half_edge* e)
+inline Vertex* target(const Voronoi_Diagram& diagram, Half_Edge* e)
 {
     return ptr(diagram.vertices, e->target);
 }

@@ -37,13 +37,13 @@ namespace
     const float CORRIDORMAP_PI     = 3.14159265f;
 }
 
-bbox2 bounds(const footprint& f, float border)
+Bbox2 bounds(const Footprint& f, float border)
 {
     const float* x = f.x;
     const float* y = f.y;
     const int num_verts = f.num_verts;
 
-    bbox2 result;
+    Bbox2 result;
     result.min[0] = +FLT_MAX;
     result.min[1] = +FLT_MAX;
     result.max[0] = -FLT_MAX;
@@ -65,7 +65,7 @@ bbox2 bounds(const footprint& f, float border)
     return result;
 }
 
-float max_distance(bbox2 bounds)
+float max_distance(Bbox2 bounds)
 {
     float w = bounds.max[0] - bounds.min[0];
     float h = bounds.max[1] - bounds.min[1];
@@ -79,7 +79,7 @@ int distance_mesh_tris_for_point(float max_dist, float max_error)
     return cone_triangle_count;
 }
 
-int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error)
+int max_distance_mesh_verts(const Footprint& f, float max_dist, float max_error)
 {
     int point_tris = distance_mesh_tris_for_point(max_dist, max_error);
     // point_tris triangles per vertex plus 4 triangles per edge plus four border planes.
@@ -88,15 +88,15 @@ int max_distance_mesh_verts(const footprint& f, float max_dist, float max_error)
 
 namespace
 {
-    inline int build_cone_sector(render_vertex*& output, vec2 pos, int steps, float step_angle, float start_angle, float radius)
+    inline int build_cone_sector(Render_Vertex*& output, Vec2 pos, int steps, float step_angle, float start_angle, float radius)
     {
         int nverts = 0;
 
         for (int i = 0; i < steps; ++i, nverts += 3)
         {
-            render_vertex* a = output++;
-            render_vertex* b = output++;
-            render_vertex* c = output++;
+            Render_Vertex* a = output++;
+            Render_Vertex* b = output++;
+            Render_Vertex* c = output++;
 
             a->x = pos.x;
             a->y = pos.y;
@@ -114,15 +114,15 @@ namespace
         return nverts;
     }
 
-    inline int build_tent_side(render_vertex*& output, vec2 a, vec2 b, float len, float size)
+    inline int build_tent_side(Render_Vertex*& output, Vec2 a, Vec2 b, float len, float size)
     {
-        vec2 e = sub(b, a);
-        vec2 n = scale(make_vec2(-e.y, e.x), 1.f/len);
+        Vec2 e = sub(b, a);
+        Vec2 n = scale(make_vec2(-e.y, e.x), 1.f/len);
 
-        render_vertex p0 = { a.x, a.y, 0.f };
-        render_vertex p1 = { b.x, b.y, 0.f };
-        render_vertex p2 = { a.x + size*n.x, a.y + size*n.y, size };
-        render_vertex p3 = { b.x + size*n.x, b.y + size*n.y, size };
+        Render_Vertex p0 = { a.x, a.y, 0.f };
+        Render_Vertex p1 = { b.x, b.y, 0.f };
+        Render_Vertex p2 = { a.x + size*n.x, a.y + size*n.y, size };
+        Render_Vertex p3 = { b.x + size*n.x, b.y + size*n.y, size };
 
         *output++ = p0; *output++ = p1; *output++ = p2;
         *output++ = p2; *output++ = p1; *output++ = p3;
@@ -131,7 +131,7 @@ namespace
     }
 }
 
-void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, float max_error, distance_mesh& out)
+void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, float max_error, Distance_Mesh& out)
 {
     corridormap_assert(max_dist > max_error);
 
@@ -146,7 +146,7 @@ void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, floa
     const int num_polys = in.num_polys;
 
     // output
-    render_vertex* verts = out.verts;
+    Render_Vertex* verts = out.verts;
     unsigned int* segment_colors = out.segment_colors;
     int* num_segment_verts = out.num_segment_verts;
 
@@ -161,14 +161,14 @@ void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, floa
 
         for (; next_idx < npverts; prev_idx = curr_idx, curr_idx = next_idx++)
         {
-            vec2 prev = { poly_x[prev_idx], poly_y[prev_idx] };
-            vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
-            vec2 next = { poly_x[next_idx], poly_y[next_idx] };
+            Vec2 prev = { poly_x[prev_idx], poly_y[prev_idx] };
+            Vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
+            Vec2 next = { poly_x[next_idx], poly_y[next_idx] };
 
             float len_e1 = len(sub(next, curr));
 
-            vec2 e0 = normalized(sub(prev, curr));
-            vec2 e1 = normalized(sub(next, curr));
+            Vec2 e0 = normalized(sub(prev, curr));
+            Vec2 e1 = normalized(sub(next, curr));
 
             float cos_inner = dot(e0, e1);
             float angle_inner = acos(cos_inner);
@@ -195,12 +195,12 @@ void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, floa
 
     // 3. generate borders.
     {
-        vec2 lt = { bounds.min[0], bounds.max[1] };
-        vec2 lb = { bounds.min[0], bounds.min[1] };
-        vec2 rt = { bounds.max[0], bounds.max[1] };
-        vec2 rb = { bounds.max[0], bounds.min[1] };
+        Vec2 lt = { bounds.min[0], bounds.max[1] };
+        Vec2 lb = { bounds.min[0], bounds.min[1] };
+        Vec2 rt = { bounds.max[0], bounds.max[1] };
+        Vec2 rb = { bounds.max[0], bounds.min[1] };
 
-        vec2 len = sub(rt, lb);
+        Vec2 len = sub(rt, lb);
 
         *num_segment_verts++ = build_tent_side(verts, lb, rb, len.x, max_dist);
         *num_segment_verts++ = build_tent_side(verts, rb, rt, len.y, max_dist);
@@ -217,7 +217,7 @@ void build_distance_mesh(const footprint& in, bbox2 bounds, float max_dist, floa
     out.num_verts = static_cast<int>(verts - out.verts);
 }
 
-void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
+void render_distance_mesh(Renderer* render_iface, const Distance_Mesh& mesh)
 {
     render_iface->begin();
 
@@ -227,7 +227,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
     {
         int num_verts = mesh.num_segment_verts[i];
         unsigned color = mesh.segment_colors[i];
-        const render_vertex* vertices = mesh.verts + vertices_offset;
+        const Render_Vertex* vertices = mesh.verts + vertices_offset;
         render_iface->draw(vertices, num_verts/3, color);
         vertices_offset += num_verts;
     }
@@ -235,7 +235,7 @@ void render_distance_mesh(renderer* render_iface, const distance_mesh& mesh)
     render_iface->end();
 }
 
-void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors)
+void set_segment_colors(Distance_Mesh& mesh, unsigned int* colors, int ncolors)
 {
     for (int i = 0; i < mesh.num_segments; ++i)
     {
@@ -245,15 +245,15 @@ void set_segment_colors(distance_mesh& mesh, unsigned int* colors, int ncolors)
 
 namespace
 {
-    inline void store_edge_normal(vec2 u, vec2 v, float*& out_x, float*& out_y)
+    inline void store_edge_normal(Vec2 u, Vec2 v, float*& out_x, float*& out_y)
     {
-        vec2 dir = normalized(sub(v, u));
+        Vec2 dir = normalized(sub(v, u));
         *out_x++ = +dir.y;
         *out_y++ = -dir.x;
     }
 }
 
-void build_footprint_normals(const footprint& in, bbox2 bounds, footprint_normals& out)
+void build_footprint_normals(const Footprint& in, Bbox2 bounds, Footprint_Normals& out)
 {
     const float* poly_x = in.x;
     const float* poly_y = in.y;
@@ -278,8 +278,8 @@ void build_footprint_normals(const footprint& in, bbox2 bounds, footprint_normal
 
         for (; next_idx < nverts; curr_idx = next_idx++, ++num_normals)
         {
-            vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
-            vec2 next = { poly_x[next_idx], poly_y[next_idx] };
+            Vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
+            Vec2 next = { poly_x[next_idx], poly_y[next_idx] };
             store_edge_normal(curr, next, normal_x, normal_y);
         }
 
@@ -290,10 +290,10 @@ void build_footprint_normals(const footprint& in, bbox2 bounds, footprint_normal
     }
 
     {
-        vec2 lt = { bounds.min[0], bounds.max[1] };
-        vec2 lb = { bounds.min[0], bounds.min[1] };
-        vec2 rt = { bounds.max[0], bounds.max[1] };
-        vec2 rb = { bounds.max[0], bounds.min[1] };
+        Vec2 lt = { bounds.min[0], bounds.max[1] };
+        Vec2 lb = { bounds.min[0], bounds.min[1] };
+        Vec2 rt = { bounds.max[0], bounds.max[1] };
+        Vec2 rb = { bounds.max[0], bounds.min[1] };
 
         store_edge_normal(lb, rb, normal_x, normal_y);
         store_edge_normal(rb, rt, normal_x, normal_y);
@@ -318,7 +318,7 @@ namespace
         const int* num_obstacle_normals,
         const int* obstacle_normal_offsets,
         const int obstacle_id,
-        const vec2 edge_point)
+        const Vec2 edge_point)
     {
         int oid = obstacle_id;
 
@@ -332,12 +332,12 @@ namespace
 
         for (; next_idx <= last_normal_idx; curr_idx = next_idx++)
         {
-            vec2 vertex = { vertex_x[curr_idx], vertex_y[curr_idx] };
-            vec2 normal_curr = { normal_x[curr_idx], normal_y[curr_idx] };
-            vec2 normal_next = { normal_x[next_idx], normal_y[next_idx] };
+            Vec2 vertex = { vertex_x[curr_idx], vertex_y[curr_idx] };
+            Vec2 normal_curr = { normal_x[curr_idx], normal_y[curr_idx] };
+            Vec2 normal_next = { normal_x[next_idx], normal_y[next_idx] };
 
-            vec2 mid = normalized(scale(add(normal_curr, normal_next), 0.5f));
-            vec2 dir = normalized(sub(edge_point, vertex));
+            Vec2 mid = normalized(scale(add(normal_curr, normal_next), 0.5f));
+            Vec2 dir = normalized(sub(edge_point, vertex));
 
             float dot_n = dot(normal_curr, mid);
             float dot_d = dot(dir, mid);
@@ -352,7 +352,7 @@ namespace
     }
 }
 
-void build_edge_point_normal_indices(const voronoi_features& features, const footprint& obstacles, const footprint_normals& normals, bbox2 bounds, voronoi_edge_normals& out)
+void build_edge_point_normal_indices(const Voronoi_Features& features, const Footprint& obstacles, const Footprint_Normals& normals, Bbox2 bounds, Voronoi_Edge_Normals& out)
 {
     const int grid_width = features.grid_width;
     const int grid_height = features.grid_height;
@@ -384,14 +384,14 @@ void build_edge_point_normal_indices(const voronoi_features& features, const foo
         int edge_point_x = edge_point_idx%grid_width;
         int edge_point_y = edge_point_idx/grid_width;
 
-        vec2 edge_point = { bounds.min[0] + float(edge_point_x)/grid_width * bounds_width, bounds.min[1] + float(edge_point_y)/grid_height * bounds_height};
+        Vec2 edge_point = { bounds.min[0] + float(edge_point_x)/grid_width * bounds_width, bounds.min[1] + float(edge_point_y)/grid_height * bounds_height};
 
         normal_indices_1[i] = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_1, edge_point);
         normal_indices_2[i] = find_normal_index(vertex_x, vertex_y, normal_x, normal_y, num_obstacle_normals, obstacle_normal_offsets, obstacle_2, edge_point);
     }
 }
 
-void build_csr(const unsigned int* nz_coords, csr_grid& out)
+void build_csr(const unsigned int* nz_coords, CSR_Grid& out)
 {
     int* column = out.column;
     int* row_offset = out.row_offset;
@@ -423,7 +423,7 @@ void build_csr(const unsigned int* nz_coords, csr_grid& out)
     }
 }
 
-int nz(const csr_grid& grid, int row, int col)
+int nz(const CSR_Grid& grid, int row, int col)
 {
     const int* column = grid.column;
     int row_b = grid.row_offset[row + 0];
@@ -440,7 +440,7 @@ int nz(const csr_grid& grid, int row, int col)
     return grid.num_nz;
 }
 
-int nz(const csr_grid& grid, int linear_index)
+int nz(const CSR_Grid& grid, int linear_index)
 {
     return nz(grid, linear_index / grid.num_cols, linear_index % grid.num_cols);
 }
@@ -451,12 +451,12 @@ namespace
     int nei_offset_col[] = { -1, +0, +0, +1 };
 }
 
-csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
+CSR_Grid_Neis cell_neis(const CSR_Grid& grid, int row, int col)
 {
     int num_rows = grid.num_rows;
     int num_cols = grid.num_cols;
 
-    csr_grid_neis neis;
+    CSR_Grid_Neis neis;
     neis.num = 0;
 
     for (int i = 0; i < sizeof(nei_offset_row)/sizeof(nei_offset_row[0]); ++i)
@@ -489,7 +489,7 @@ csr_grid_neis cell_neis(const csr_grid& grid, int row, int col)
     return neis;
 }
 
-csr_grid_neis cell_neis(const csr_grid& grid, int linear_index)
+CSR_Grid_Neis cell_neis(const CSR_Grid& grid, int linear_index)
 {
     return cell_neis(grid, linear_index / grid.num_cols, linear_index % grid.num_cols);
 }
@@ -497,9 +497,9 @@ csr_grid_neis cell_neis(const csr_grid& grid, int linear_index)
 namespace
 {
     template <typename T>
-    struct queue
+    struct Queue
     {
-        queue(memory* mem, int max_size)
+        Queue(Memory* mem, int max_size)
             : front(0)
             , size(0)
             , max_size(max_size)
@@ -508,7 +508,7 @@ namespace
             data = allocate<T>(mem, max_size);
         }
 
-        ~queue()
+        ~Queue()
         {
             mem->deallocate(data);
         }
@@ -516,18 +516,18 @@ namespace
         int front;
         int size;
         int max_size;
-        memory* mem;
+        Memory* mem;
         T* data;
     };
 
     template <typename T>
-    int size(const queue<T>& q)
+    int size(const Queue<T>& q)
     {
         return q.size;
     }
 
     template <typename T>
-    void enqueue(queue<T>& q, const T val)
+    void enqueue(Queue<T>& q, const T val)
     {
         int idx = (q.front + q.size) % q.max_size;
         q.data[idx] = val;
@@ -535,7 +535,7 @@ namespace
     }
 
     template <typename T>
-    T dequeue(queue<T>& q)
+    T dequeue(Queue<T>& q)
     {
         T val = q.data[q.front % q.max_size];
         q.front++;
@@ -544,18 +544,18 @@ namespace
     }
 
     template <typename T>
-    void clear(queue<T>& q)
+    void clear(Queue<T>& q)
     {
         q.front = 0;
         q.size = 0;
     }
 
-    int get_next_point(const csr_grid& edges, const voronoi_features& features, int current_point, int previous_point)
+    int get_next_point(const CSR_Grid& edges, const Voronoi_Features& features, int current_point, int previous_point)
     {
         unsigned int side_1 = features.edge_obstacle_ids_1[nz(edges, current_point)];
         unsigned int side_2 = features.edge_obstacle_ids_2[nz(edges, current_point)];
 
-        csr_grid_neis neis = cell_neis(edges, current_point);
+        CSR_Grid_Neis neis = cell_neis(edges, current_point);
 
         for (int i = 0; i < neis.num; ++i)
         {
@@ -577,9 +577,9 @@ namespace
         return -1;
     }
 
-    int get_neigbour_vertex(const csr_grid& vertices, int cell_linear_index, int start_vert)
+    int get_neigbour_vertex(const CSR_Grid& vertices, int cell_linear_index, int start_vert)
     {
-        csr_grid_neis neis = cell_neis(vertices, cell_linear_index);
+        CSR_Grid_Neis neis = cell_neis(vertices, cell_linear_index);
 
         for (int i = 0; i < neis.num; ++i)
         {
@@ -592,7 +592,7 @@ namespace
         return -1;
     }
 
-    void fix_sides(voronoi_features& features, voronoi_edge_normals& normals, int prev_point_nz, int curr_point_nz)
+    void fix_sides(Voronoi_Features& features, Voronoi_Edge_Normals& normals, int prev_point_nz, int curr_point_nz)
     {
         unsigned int ps1 = features.edge_obstacle_ids_1[prev_point_nz];
 
@@ -615,7 +615,7 @@ namespace
         normals.edge_normal_indices_2[curr_point_nz] = ncs2;
     }
 
-    int trace_incident_edge(const csr_grid& vertices, const csr_grid& edges, voronoi_features& features, voronoi_edge_normals& normals,
+    int trace_incident_edge(const CSR_Grid& vertices, const CSR_Grid& edges, Voronoi_Features& features, Voronoi_Edge_Normals& normals,
                             char* visited_edges, int start_vert, int edge_point)
     {
         int prev = edge_point;
@@ -646,7 +646,7 @@ namespace
         return -1;
     }
 
-    int trace_event_points(const csr_grid& vertices, const csr_grid& edges, const voronoi_features& features, const voronoi_edge_normals& normals,
+    int trace_event_points(const CSR_Grid& vertices, const CSR_Grid& edges, const Voronoi_Features& features, const Voronoi_Edge_Normals& normals,
                            int start_vert, int edge_point, int* events)
     {
         int num_events = 0;
@@ -679,12 +679,12 @@ namespace
     }
 }
 
-void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edges,
-                 voronoi_edge_normals& edge_normal_indices, voronoi_features& features, voronoi_traced_edges& out)
+void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edges,
+                 Voronoi_Edge_Normals& edge_normal_indices, Voronoi_Features& features, Voronoi_Traced_Edges& out)
 {
-    queue<int> queue_vert(scratch, vertices.num_nz);
-    alloc_scope<char> visited_vert(scratch, vertices.num_nz);
-    alloc_scope<char> visited_edge(scratch, edges.num_nz);
+    Queue<int> queue_vert(scratch, vertices.num_nz);
+    Alloc_Scope<char> visited_vert(scratch, vertices.num_nz);
+    Alloc_Scope<char> visited_edge(scratch, edges.num_nz);
     zero_mem(visited_vert);
     zero_mem(visited_edge);
 
@@ -707,7 +707,7 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
         int u = dequeue(queue_vert);
         visited_vert[nz(vertices, u)] = 1;
 
-        csr_grid_neis neis = cell_neis(edges, u);
+        CSR_Grid_Neis neis = cell_neis(edges, u);
 
         for (int i = 0; i < neis.num; ++i)
         {
@@ -741,13 +741,13 @@ void trace_edges(memory* scratch, const csr_grid& vertices, const csr_grid& edge
 
 namespace
 {
-    vec2 compute_closest_point(const footprint& obstacles, const int* obstacle_offsets, unsigned int obstacle_id, const vec2& point)
+    Vec2 compute_closest_point(const Footprint& obstacles, const int* obstacle_offsets, unsigned int obstacle_id, const Vec2& point)
     {
         const float* obst_x = obstacles.x;
         const float* obst_y = obstacles.y;
         const int* num_obst_verts = obstacles.num_poly_verts;
 
-        vec2 closest = { FLT_MAX, FLT_MAX };
+        Vec2 closest = { FLT_MAX, FLT_MAX };
 
         float min_dist = FLT_MAX;
 
@@ -759,18 +759,18 @@ namespace
 
         for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
         {
-            vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
-            vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
+            Vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
+            Vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
 
-            vec2 seg = sub(p1, p0);
-            vec2 dir = normalized(seg);
+            Vec2 seg = sub(p1, p0);
+            Vec2 dir = normalized(seg);
             float seg_len = len(seg);
 
             float proj = dot(sub(point, p0), dir);
 
-            vec2 seg_closest = add(p0, scale(dir, clamp(proj, 0.f, seg_len)));
+            Vec2 seg_closest = add(p0, scale(dir, clamp(proj, 0.f, seg_len)));
 
-            vec2 seg_closest_dir = sub(seg_closest, point);
+            Vec2 seg_closest_dir = sub(seg_closest, point);
             float seg_closest_dist = dot(seg_closest_dir, seg_closest_dir);
 
             if (seg_closest_dist < min_dist)
@@ -783,7 +783,7 @@ namespace
         return closest;
     }
 
-    vec2 convert_from_image(int lin_idx, int grid_width, int grid_height, bbox2 bounds)
+    Vec2 convert_from_image(int lin_idx, int grid_width, int grid_height, Bbox2 bounds)
     {
         float bounds_width = bounds.max[0] - bounds.min[0];
         float bounds_height = bounds.max[1] - bounds.min[1];
@@ -795,19 +795,19 @@ namespace
     }
 }
 
-void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offsets, bbox2 bounds, const voronoi_features& features,
-                           const csr_grid& edge_grid,  const csr_grid& vertex_grid, const voronoi_traced_edges& traced_edges, voronoi_diagram& out)
+void build_voronoi_diagram(const Footprint& obstacles, const int* obstacle_offsets, Bbox2 bounds, const Voronoi_Features& features,
+                           const CSR_Grid& edge_grid,  const CSR_Grid& vertex_grid, const Voronoi_Traced_Edges& traced_edges, Voronoi_Diagram& out)
 {
     // 1. vertices: convert positions and compute sides.
     for (int i = 0; i < features.num_vert_points; ++i)
     {
-        vec2 pos = convert_from_image(features.verts[i], features.grid_width, features.grid_height, bounds);
-        vertex* v = create_vertex(out, pos);
+        Vec2 pos = convert_from_image(features.verts[i], features.grid_width, features.grid_height, bounds);
+        Vertex* v = create_vertex(out, pos);
 
         for (int j = 0; j < max_vertex_sides; ++j)
         {
             unsigned int obstacle_id = features.vert_obstacle_ids[i*4 + j];
-            vec2 closest = compute_closest_point(obstacles, obstacle_offsets, obstacle_id, pos);
+            Vec2 closest = compute_closest_point(obstacles, obstacle_offsets, obstacle_id, pos);
             v->sides[j] = closest;
         }
 
@@ -832,9 +832,9 @@ void build_voronoi_diagram(const footprint& obstacles, const int* obstacle_offse
         for (int j = event_offset; j < event_offset + num_events; ++j)
         {
             int evt_lin_idx = traced_edges.events[j];
-            vec2 pos = convert_from_image(evt_lin_idx, features.grid_width, features.grid_height, bounds);
+            Vec2 pos = convert_from_image(evt_lin_idx, features.grid_width, features.grid_height, bounds);
 
-            event* e = create_event(out, pos, i);
+            Event* e = create_event(out, pos, i);
 
             unsigned int obstacle_id_0 = features.edge_obstacle_ids_1[nz(edge_grid, evt_lin_idx)];
             unsigned int obstacle_id_1 = features.edge_obstacle_ids_2[nz(edge_grid, evt_lin_idx)];

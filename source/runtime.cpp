@@ -27,14 +27,14 @@
 
 namespace corridormap {
 
-voronoi_diagram create_voronoi_diagram(memory* mem, int max_vertices, int max_edges, int max_events)
+Voronoi_Diagram create_voronoi_diagram(Memory* mem, int max_vertices, int max_edges, int max_events)
 {
-    voronoi_diagram result;
+    Voronoi_Diagram result;
     memset(&result, 0, sizeof(result));
 
-    result.vertices.items = allocate<vertex>(mem, max_vertices);
-    result.edges.items = allocate<edge>(mem, max_edges);
-    result.events.items = allocate<event>(mem, max_events);
+    result.vertices.items = allocate<Vertex>(mem, max_vertices);
+    result.edges.items = allocate<Edge>(mem, max_edges);
+    result.events.items = allocate<Event>(mem, max_events);
 
     result.vertices.max_items = max_vertices;
     result.edges.max_items = max_edges;
@@ -47,7 +47,7 @@ voronoi_diagram create_voronoi_diagram(memory* mem, int max_vertices, int max_ed
     return result;
 }
 
-void destroy(memory* mem, voronoi_diagram& d)
+void destroy(Memory* mem, Voronoi_Diagram& d)
 {
     mem->deallocate(d.vertices.items);
     mem->deallocate(d.edges.items);
@@ -57,22 +57,22 @@ void destroy(memory* mem, voronoi_diagram& d)
 
 namespace
 {
-    bool is_ccw(vec2 u, vec2 v1, vec2 v2)
+    bool is_ccw(Vec2 u, Vec2 v1, Vec2 v2)
     {
-        vec2 d1 = sub(v1, u);
-        vec2 d2 = sub(v2, u);
+        Vec2 d1 = sub(v1, u);
+        Vec2 d2 = sub(v2, u);
         return d1.x*d2.y - d2.x*d1.y > 0.f;
     }
 
-    half_edge* get_half_edge(edge* edges, int idx)
+    Half_Edge* get_half_edge(Edge* edges, int idx)
     {
         return edges[idx>>1].dir + (idx&1);
     }
 
-    void add_half_edge(vertex* vertices, edge* edges, int vert, int h_edge)
+    void add_half_edge(Vertex* vertices, Edge* edges, int vert, int h_edge)
     {
         int head = vertices[vert].half_edge;
-        half_edge* new_half_edge = get_half_edge(edges, h_edge);
+        Half_Edge* new_half_edge = get_half_edge(edges, h_edge);
 
         if (head == null_idx)
         {
@@ -81,17 +81,17 @@ namespace
         }
         else
         {
-            vec2 u = vertices[vert].pos;
-            vec2 v2 = vertices[new_half_edge->target].pos;
+            Vec2 u = vertices[vert].pos;
+            Vec2 v2 = vertices[new_half_edge->target].pos;
 
             int insert_after = null_idx;
             int curr = head;
 
             for (;;)
             {
-                half_edge* curr_half_edge = get_half_edge(edges, curr);
+                Half_Edge* curr_half_edge = get_half_edge(edges, curr);
 
-                vec2 v1 = vertices[curr_half_edge->target].pos;
+                Vec2 v1 = vertices[curr_half_edge->target].pos;
 
                 if (!is_ccw(u, v1, v2))
                 {
@@ -109,7 +109,7 @@ namespace
 
             if (insert_after == null_idx)
             {
-                half_edge* tail_half_edge = get_half_edge(edges, head);
+                Half_Edge* tail_half_edge = get_half_edge(edges, head);
 
                 while (tail_half_edge->next != head)
                 {
@@ -122,7 +122,7 @@ namespace
             }
             else
             {
-                half_edge* insert_after_half_edge = get_half_edge(edges, insert_after);
+                Half_Edge* insert_after_half_edge = get_half_edge(edges, insert_after);
                 int next = insert_after_half_edge->next;
                 insert_after_half_edge->next = h_edge;
                 new_half_edge->next = next;
@@ -130,10 +130,10 @@ namespace
         }
     }
 
-    void append_event(edge* edges, event* events, int h_edge, int evt)
+    void append_event(Edge* edges, Event* events, int h_edge, int evt)
     {
         int dir = h_edge & 1;
-        half_edge* h = get_half_edge(edges, h_edge);
+        Half_Edge* h = get_half_edge(edges, h_edge);
         int head = h->event;
 
         if (head == null_idx)
@@ -155,27 +155,27 @@ namespace
         }
     }
 
-    void prepend_event(edge* edges, event* events, int h_edge, int evt)
+    void prepend_event(Edge* edges, Event* events, int h_edge, int evt)
     {
         int dir = h_edge & 1;
-        half_edge* h = get_half_edge(edges, h_edge);
+        Half_Edge* h = get_half_edge(edges, h_edge);
         int head = h->event;
         events[evt].next[dir] = head;
         h->event = evt;
     }
 }
 
-vertex* create_vertex(voronoi_diagram& diagram, vec2 pos)
+Vertex* create_vertex(Voronoi_Diagram& diagram, Vec2 pos)
 {
-    vertex* new_vertex = allocate(diagram.vertices);
+    Vertex* new_vertex = allocate(diagram.vertices);
     new_vertex->half_edge = null_idx;
     new_vertex->pos = pos;
     return new_vertex;
 }
 
-edge* create_edge(voronoi_diagram& diagram, int u, int v)
+Edge* create_edge(Voronoi_Diagram& diagram, int u, int v)
 {
-    edge* new_edge = allocate(diagram.edges);
+    Edge* new_edge = allocate(diagram.edges);
     new_edge->dir[0].target = v;
     new_edge->dir[1].target = u;
     new_edge->dir[0].event = null_idx;
@@ -186,9 +186,9 @@ edge* create_edge(voronoi_diagram& diagram, int u, int v)
     return new_edge;
 }
 
-event* create_event(voronoi_diagram& diagram, vec2 pos, int edge)
+Event* create_event(Voronoi_Diagram& diagram, Vec2 pos, int edge)
 {
-    event* new_event = allocate(diagram.events);
+    Event* new_event = allocate(diagram.events);
     new_event->pos = pos;
     new_event->next[0] = null_idx;
     new_event->next[1] = null_idx;

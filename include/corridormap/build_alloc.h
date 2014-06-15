@@ -26,23 +26,23 @@
 
 #include "corridormap/build_types.h"
 
-namespace corridormap { class memory; }
+namespace corridormap { class Memory; }
 
 namespace corridormap {
 
-distance_mesh allocate_distance_mesh(memory* mem, int num_obstacle_polys, int max_verts);
-voronoi_features allocate_voronoi_features(memory* mem, int grid_width, int grid_height, int num_vert_points, int num_edge_points);
-footprint_normals allocate_foorprint_normals(memory* mem, int num_polygons, int num_poly_verts);
-voronoi_edge_normals allocate_voronoi_edge_normals(memory* mem, int num_edge_points);
-csr_grid allocate_csr_grid(memory* mem, int num_rows, int num_cols, int num_non_zero);
-voronoi_traced_edges allocate_voronoi_traced_edges(memory* mem, int num_voronoi_verts, int num_footprint_verts);
+Distance_Mesh allocate_distance_mesh(Memory* mem, int num_obstacle_polys, int max_verts);
+Voronoi_Features allocate_voronoi_features(Memory* mem, int grid_width, int grid_height, int num_vert_points, int num_edge_points);
+Footprint_Normals allocate_foorprint_normals(Memory* mem, int num_polygons, int num_poly_verts);
+Voronoi_Edge_Normals allocate_voronoi_edge_normals(Memory* mem, int num_edge_points);
+CSR_Grid allocate_csr_grid(Memory* mem, int num_rows, int num_cols, int num_non_zero);
+Voronoi_Traced_Edges allocate_voronoi_traced_edges(Memory* mem, int num_voronoi_verts, int num_footprint_verts);
 
-void deallocate(memory* mem, distance_mesh& mesh);
-void deallocate(memory* mem, voronoi_features& features);
-void deallocate(memory* mem, footprint_normals& normals);
-void deallocate(memory* mem, voronoi_edge_normals& normals);
-void deallocate(memory* mem, csr_grid& grid);
-void deallocate(memory* mem, voronoi_traced_edges& edges);
+void deallocate(Memory* mem, Distance_Mesh& mesh);
+void deallocate(Memory* mem, Voronoi_Features& features);
+void deallocate(Memory* mem, Footprint_Normals& normals);
+void deallocate(Memory* mem, Voronoi_Edge_Normals& normals);
+void deallocate(Memory* mem, CSR_Grid& grid);
+void deallocate(Memory* mem, Voronoi_Traced_Edges& edges);
 
 }
 

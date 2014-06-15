@@ -131,13 +131,13 @@ int main()
 
     printf("opengl vendor=%s version=%s\n", vendor, version);
 
-    corridormap::memory_malloc mem;
+    corridormap::Memory_Malloc mem;
 
     float obstacle_verts_x[] = { 10.f, 50.f, 30.f,  70.f, 80.f, 90.f, 90.f, 80.f, 70.f, 60.f, 60.f,  10.f, 40.f, 40.f, 10.f,  50.f, 80.f, 70.f, };
     float obstacle_verts_y[] = { 20.f, 20.f, 50.f,  20.f, 20.f, 30.f, 40.f, 50.f, 50.f, 40.f, 30.f,  70.f, 70.f, 90.f, 90.f,  70.f, 70.f, 80.f, };
     int num_poly_verts[] = { 3, 8, 4, 3 };
 
-    corridormap::footprint obstacles;
+    corridormap::Footprint obstacles;
     obstacles.x = obstacle_verts_x;
     obstacles.y = obstacle_verts_y;
     obstacles.num_polys = 4;
@@ -145,17 +145,17 @@ int main()
     obstacles.num_poly_verts = num_poly_verts;
 
     const float border = 10.f;
-    corridormap::bbox2 obstacle_bounds = corridormap::bounds(obstacles, border);
+    corridormap::Bbox2 obstacle_bounds = corridormap::bounds(obstacles, border);
 
     const float max_dist = corridormap::max_distance(obstacle_bounds);
     const float max_error = 0.1f;
 
-    corridormap::distance_mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles.num_polys, max_distance_mesh_verts(obstacles, max_dist, max_error));
+    corridormap::Distance_Mesh mesh = corridormap::allocate_distance_mesh(&mem, obstacles.num_polys, max_distance_mesh_verts(obstacles, max_dist, max_error));
     corridormap::build_distance_mesh(obstacles, obstacle_bounds, max_dist, max_error, mesh);
     corridormap::set_segment_colors(mesh, colors, sizeof(colors)/sizeof(colors[0]));
 
-    corridormap::renderer_gl render_iface;
-    corridormap::renderer::parameters render_params;
+    corridormap::Renderer_GL render_iface;
+    corridormap::Renderer::Parameters render_params;
     render_params.render_target_width = render_target_width;
     render_params.render_target_height = render_target_height;
     render_params.min[0] = obstacle_bounds.min[0];
@@ -172,12 +172,12 @@ int main()
 
     corridormap::render_distance_mesh(&render_iface, mesh);
 
-    corridormap::renderer::opencl_shared cl_shared = render_iface.create_opencl_shared();
-    corridormap::opencl_runtime cl_runtime = corridormap::init_opencl_runtime(cl_shared);
+    corridormap::Renderer::Opencl_Shared cl_shared = render_iface.create_opencl_shared();
+    corridormap::Opencl_Runtime cl_runtime = corridormap::init_opencl_runtime(cl_shared);
 
     // build kernels.
     {
-        corridormap::compilation_status status = corridormap::build_kernels(cl_runtime);
+        corridormap::Compilation_Status status = corridormap::build_kernels(cl_runtime);
 
         if (status.kernel != corridormap::kernel_id_count)
         {
@@ -211,7 +211,7 @@ int main()
 
         clFinish(cl_runtime.queue);
 
-        corridormap::voronoi_features features = corridormap::allocate_voronoi_features(&mem, render_target_width, render_target_height, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
+        corridormap::Voronoi_Features features = corridormap::allocate_voronoi_features(&mem, render_target_width, render_target_height, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
         error_code = corridormap::transfer_voronoi_features(cl_runtime, features);
 
         clFinish(cl_runtime.queue);

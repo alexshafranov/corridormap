@@ -29,7 +29,7 @@
 namespace corridormap {
 
 // obstacles represented as a set of 2d convex polygons. polys are stored in CCW order.
-struct footprint
+struct Footprint
 {
     // the number of polygons.
     int num_polys;
@@ -44,14 +44,14 @@ struct footprint
 };
 
 // 2d bounding box.
-struct bbox2
+struct Bbox2
 {
     float min[2];
     float max[2];
 };
 
 // 3d vertex used for distance_mesh.
-struct render_vertex
+struct Render_Vertex
 {
     float x;
     float y;
@@ -64,14 +64,14 @@ enum { num_border_segments = 4 };
 // segmented distance mesh suitable for rendering.
 // each segment represents one footprint polygon.
 // triangles are stored as a list of vertices in CCW order.
-struct distance_mesh
+struct Distance_Mesh
 {
     // the number of segments.
     int num_segments;
     // the total number of vertices.
     int num_verts;
     // vertex array indexed in [0..num_verts) range.
-    render_vertex* verts;
+    Render_Vertex* verts;
     // the number of vertices per segment. indexed in [0..num_segments) range.
     int* num_segment_verts;
     // segment colors. indexed in [0..num_segments) range.
@@ -79,7 +79,7 @@ struct distance_mesh
 };
 
 // voronoi vertices and edges detected from the distance mesh render.
-struct voronoi_features
+struct Voronoi_Features
 {
     // rasterization grid width.
     int grid_width;
@@ -102,7 +102,7 @@ struct voronoi_features
 };
 
 // obstacle polygon edge normals.
-struct footprint_normals
+struct Footprint_Normals
 {
     // number of obstacles in footprint (number of polys + 4 border segments).
     int num_obstacles;
@@ -119,7 +119,7 @@ struct footprint_normals
 };
 
 // indices of obstacle normals associated with voronoi edge points.
-struct voronoi_edge_normals
+struct Voronoi_Edge_Normals
 {
     // normal index on one side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
@@ -133,7 +133,7 @@ struct voronoi_edge_normals
 
 // Compressed-Sparse-Row format for boolean grid,
 // used as a fast lookup of voronoi features during tracing.
-struct csr_grid
+struct CSR_Grid
 {
     // number of rows in the grid.
     int num_rows;
@@ -151,7 +151,7 @@ struct csr_grid
 enum { max_grid_neis = 4 };
 
 // pack of up to max_grid_neis cells.
-struct csr_grid_neis
+struct CSR_Grid_Neis
 {
     // number of neighbours [0..max_grid_neis].
     int num;
@@ -166,7 +166,7 @@ struct csr_grid_neis
 };
 
 // result of trace_edges
-struct voronoi_traced_edges
+struct Voronoi_Traced_Edges
 {
     // number of edges found.
     int num_edges;
