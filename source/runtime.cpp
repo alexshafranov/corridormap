@@ -32,13 +32,13 @@ voronoi_diagram create_voronoi_diagram(memory* mem, int max_vertices, int max_ed
     voronoi_diagram result;
     memset(&result, 0, sizeof(result));
 
-    result.vertices.elems = allocate<vertex>(mem, max_vertices);
-    result.edges.elems = allocate<edge>(mem, max_edges);
-    result.events.elems = allocate<event>(mem, max_events);
+    result.vertices.items = allocate<vertex>(mem, max_vertices);
+    result.edges.items = allocate<edge>(mem, max_edges);
+    result.events.items = allocate<event>(mem, max_events);
 
-    result.vertices.max_elems = max_vertices;
-    result.edges.max_elems = max_edges;
-    result.events.max_elems = max_events;
+    result.vertices.max_items = max_vertices;
+    result.edges.max_items = max_edges;
+    result.events.max_items = max_events;
 
     init(result.vertices);
     init(result.edges);
@@ -49,9 +49,9 @@ voronoi_diagram create_voronoi_diagram(memory* mem, int max_vertices, int max_ed
 
 void destroy(memory* mem, voronoi_diagram& d)
 {
-    mem->deallocate(d.vertices.elems);
-    mem->deallocate(d.edges.elems);
-    mem->deallocate(d.events.elems);
+    mem->deallocate(d.vertices.items);
+    mem->deallocate(d.edges.items);
+    mem->deallocate(d.events.items);
     memset(&d, 0, sizeof(d));
 }
 
@@ -180,9 +180,9 @@ edge* create_edge(voronoi_diagram& diagram, int u, int v)
     new_edge->dir[1].target = u;
     new_edge->dir[0].event = null_idx;
     new_edge->dir[1].event = null_idx;
-    int new_edge_idx = int(new_edge - diagram.edges.elems);
-    add_half_edge(diagram.vertices.elems, diagram.edges.elems, u, new_edge_idx*2 + 0);
-    add_half_edge(diagram.vertices.elems, diagram.edges.elems, v, new_edge_idx*2 + 1);
+    int new_edge_idx = int(new_edge - diagram.edges.items);
+    add_half_edge(diagram.vertices.items, diagram.edges.items, u, new_edge_idx*2 + 0);
+    add_half_edge(diagram.vertices.items, diagram.edges.items, v, new_edge_idx*2 + 1);
     return new_edge;
 }
 
@@ -192,9 +192,9 @@ event* create_event(voronoi_diagram& diagram, vec2 pos, int edge)
     new_event->pos = pos;
     new_event->next[0] = null_idx;
     new_event->next[1] = null_idx;
-    int new_event_idx = int(new_event - diagram.events.elems);
-    append_event(diagram.edges.elems, diagram.events.elems, edge*2 + 0, new_event_idx);
-    prepend_event(diagram.edges.elems, diagram.events.elems, edge*2 + 1, new_event_idx);
+    int new_event_idx = int(new_event - diagram.events.items);
+    append_event(diagram.edges.items, diagram.events.items, edge*2 + 0, new_event_idx);
+    prepend_event(diagram.edges.items, diagram.events.items, edge*2 + 1, new_event_idx);
     return new_event;
 }
 

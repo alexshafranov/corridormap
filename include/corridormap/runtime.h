@@ -50,42 +50,42 @@ template <typename T>
 void init(free_list<T>& lst)
 {
     lst.head = null_idx;
-    lst.num_elems = 0;
-    lst.first_free = 0;
+    lst.head_free = 0;
+    lst.num_items = 0;
 
-    for (int i = 0; i < lst.max_elems - 1; ++i)
+    for (int i = 0; i < lst.max_items - 1; ++i)
     {
-        lst.elems[i].link = i + 1;
+        lst.items[i].link = i + 1;
     }
 
-    lst.elems[lst.max_elems - 1].link = null_idx;
+    lst.items[lst.max_items - 1].link = null_idx;
 }
 
 template <typename T>
 T* allocate(free_list<T>& lst)
 {
-    if (lst.first_free == null_idx)
+    if (lst.head_free == null_idx)
     {
         return 0;
     }
 
-    int result_index = lst.first_free;
-    T* result = lst.elems + result_index;
+    int result_index = lst.head_free;
+    T* result = lst.items + result_index;
 
-    lst.first_free = lst.elems[lst.first_free].link;
+    lst.head_free = lst.items[lst.head_free].link;
 
     if (lst.head == null_idx)
     {
         lst.head = result_index;
-        lst.elems[result_index].link = null_idx;
+        lst.items[result_index].link = null_idx;
     }
     else
     {
-        lst.elems[result_index].link = lst.elems[lst.head].link;
+        lst.items[result_index].link = lst.items[lst.head].link;
         lst.head = result_index;
     }
 
-    lst.num_elems++;
+    lst.num_items++;
 
     return result;
 }

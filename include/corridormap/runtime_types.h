@@ -80,14 +80,22 @@ struct event
     vec2 sides[2];
 };
 
+// array based free list.
 template <typename T>
 struct free_list
 {
+    // head of the list of allocated objects.
     int head;
-    int first_free;
-    int num_elems;
-    int max_elems;
-    T* elems;
+    // tail of the list of allocated objects.
+    int tail;
+    // head of the list of free objects.
+    int head_free;
+    // total number of allocated objects.
+    int num_items;
+    // size of the items array.
+    int max_items;
+    // array of items of size max_items.
+    T* items;
 };
 
 // Generalized Voronoi Diagram where edges and vertices are annotated with the closest obstacle information.
