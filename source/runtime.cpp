@@ -111,7 +111,7 @@ namespace
             {
                 half_edge* tail_half_edge = get_half_edge(edges, head);
 
-                while (tail_half_edge->next != null_idx)
+                while (tail_half_edge->next != head)
                 {
                     tail_half_edge = get_half_edge(edges, tail_half_edge->next);
                 }
@@ -194,7 +194,7 @@ event* create_event(voronoi_diagram& diagram, vec2 pos, int edge)
     new_event->next[1] = null_idx;
     int new_event_idx = int(new_event - diagram.events.elems);
     append_event(diagram.edges.elems, diagram.events.elems, edge*2 + 0, new_event_idx);
-    prepend_event(diagram.edges.elems, diagram.events.elems, edge*2 + 0, new_event_idx);
+    prepend_event(diagram.edges.elems, diagram.events.elems, edge*2 + 1, new_event_idx);
     return new_event;
 }
 

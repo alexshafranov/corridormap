@@ -77,6 +77,7 @@ T* allocate(free_list<T>& lst)
     if (lst.head == null_idx)
     {
         lst.head = result_index;
+        lst.elems[result_index].link = null_idx;
     }
     else
     {

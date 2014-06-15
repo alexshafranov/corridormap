@@ -37,6 +37,7 @@
 #include "corridormap/memory.h"
 #include "corridormap/render_gl.h"
 #include "corridormap/build.h"
+#include "corridormap/runtime.h"
 #include "corridormap/vec2.h"
 #include "corridormap/build_alloc.h"
 #include "corridormap/build_ocl.h"
@@ -263,6 +264,9 @@ int main()
             int y = traced_edges.events[i] / features.grid_width;
             printf("event=<%d, %d>\n", x, y);
         }
+
+        corridormap::voronoi_diagram diagram = corridormap::create_voronoi_diagram(&mem, features.num_vert_points, traced_edges.num_edges, traced_edges.num_events);
+        corridormap::build_voronoi_diagram(obstacles, normals.obstacle_normal_offsets, obstacle_bounds, features, edge_csr, vert_csr, traced_edges, diagram);
     }
 
     while (!glfwWindowShouldClose(window))
