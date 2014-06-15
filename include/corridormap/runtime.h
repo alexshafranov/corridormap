@@ -93,6 +93,8 @@ T* allocate(Free_List<T>& lst)
     return result;
 }
 
+/// Free_List
+
 template <typename T>
 inline T* ptr(const Free_List<T>& lst, int offset)
 {
@@ -111,6 +113,16 @@ inline T* next(const Free_List<T>& lst, T* item)
     int next_index = lst.items[int(item - lst.items)].link;
     return ptr(lst, next_index);
 }
+
+/// Vertex
+
+inline Half_Edge* half_edge(const Voronoi_Diagram& diagram, Vertex* v)
+{
+    Edge* edge = ptr(diagram.edges, v->half_edge >> 1);
+    return edge ? edge->dir + (v->half_edge & 1) : 0;
+}
+
+/// Half_Edge
 
 inline Edge* edge(const Voronoi_Diagram& diagram, Half_Edge* e)
 {
@@ -137,10 +149,18 @@ inline Vertex* source(const Voronoi_Diagram& diagram, Half_Edge* e)
     return target(diagram, opposite(diagram, e));
 }
 
+inline Half_Edge* next(const Voronoi_Diagram& diagram, Half_Edge* e)
+{
+    Edge* edge = ptr(diagram.edges, e->next >> 1);
+    return edge ? edge->dir + (e->next & 1) : 0;
+}
+
 inline Event* event(const Voronoi_Diagram& diagram, Half_Edge* e)
 {
     return ptr(diagram.events, e->event);
 }
+
+/// Event
 
 inline Event* next(const Voronoi_Diagram& diagram, Event* e, int direction)
 {
