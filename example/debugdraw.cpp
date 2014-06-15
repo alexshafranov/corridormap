@@ -148,6 +148,49 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
 
         nvgStroke(vg);
     }
+
+    // corridor bounds.
+    {
+        NVG_State_Scope s(vg);
+        nvgStrokeColor(vg, nvgRGB(255, 0, 0));
+        nvgStrokeWidth(vg, 2.f);
+
+        for (Edge* edge = first(params.diagram->edges); edge != 0; edge = next(params.diagram->edges, edge))
+        {
+            Half_Edge* e0 = edge->dir + 0;
+            Vec2 u = to_image(source(*params.diagram, e0)->pos, params);
+
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, u.x, u.y);
+
+            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+            {
+                Vec2 diff = sub(e->sides[0], e->pos);
+                float dist = len(diff);
+                Vec2 n = normalized(diff);
+                Vec2 p = add(e->pos, scale(n, dist * 0.6f));
+                p = to_image(p, params);
+                nvgLineTo(vg, p.x, p.y);
+            }
+
+            nvgStroke(vg);
+
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, u.x, u.y);
+
+            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 1))
+            {
+                Vec2 diff = sub(e->sides[1], e->pos);
+                float dist = len(diff);
+                Vec2 n = normalized(diff);
+                Vec2 p = add(e->pos, scale(n, dist * 0.6f));
+                p = to_image(p, params);
+                nvgLineTo(vg, p.x, p.y);
+            }
+
+            nvgStroke(vg);
+        }
+    }
 }
 
 }
