@@ -112,9 +112,29 @@ inline T* next(const Free_List<T>& lst, T* item)
     return ptr(lst, next_index);
 }
 
+inline Edge* edge(const Voronoi_Diagram& diagram, Half_Edge* e)
+{
+    const char* a = reinterpret_cast<const char*>(diagram.edges.items);
+    const char* b = reinterpret_cast<const char*>(e);
+    int diff = int(b - a);
+    return diagram.edges.items + diff/sizeof(Edge);
+}
+
+inline Half_Edge* opposite(const Voronoi_Diagram& diagram, Half_Edge* e)
+{
+    Edge* p = edge(diagram, e);
+    int dir = int(e - p->dir);
+    return p->dir + (dir^1);
+}
+
 inline Vertex* target(const Voronoi_Diagram& diagram, Half_Edge* e)
 {
     return ptr(diagram.vertices, e->target);
+}
+
+inline Vertex* source(const Voronoi_Diagram& diagram, Half_Edge* e)
+{
+    return target(diagram, opposite(diagram, e));
 }
 
 inline Event* event(const Voronoi_Diagram& diagram, Half_Edge* e)

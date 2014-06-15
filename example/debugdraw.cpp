@@ -27,11 +27,11 @@ namespace corridormap {
 
 namespace
 {
-    Vec2 to_image(Vec2 v, Vec2 bounds_min, Vec2 bounds_max, Vec2 image_dim)
+    Vec2 to_image(Vec2 v, const Draw_Params& params)
     {
-        Vec2 inv_dim = sub(bounds_max, bounds_min);
+        Vec2 inv_dim = sub(params.bounds_max, params.bounds_min);
         inv_dim = make_vec2(1.f / inv_dim.x, 1.f / inv_dim.y);
-        return mul(mul(sub(v, bounds_min), inv_dim), image_dim);
+        return mul(mul(sub(v, params.bounds_min), inv_dim), params.image_dimensions);
     }
 
     struct NVG_State_Scope
@@ -56,7 +56,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
     // background.
     {
         NVG_State_Scope s(vg);
-        nvgFillColor(vg, nvgRGB(200, 200, 200));
+        nvgFillColor(vg, nvgRGB(120, 120, 120));
         nvgBeginPath(vg);
         nvgRect(vg, 0, 0, params.image_dimensions.x, params.image_dimensions.y);
         nvgFill(vg);
@@ -73,13 +73,13 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
             nvgBeginPath(vg);
 
             Vec2 vert = make_vec2(params.obstacles->x[offset], params.obstacles->y[offset]);
-            Vec2 img_vert = to_image(vert, params.bounds_min, params.bounds_max, params.image_dimensions);
+            Vec2 img_vert = to_image(vert, params);
             nvgMoveTo(vg, img_vert.x, img_vert.y);
 
             for (int v = 1; v < params.obstacles->num_poly_verts[i]; ++v)
             {
                 Vec2 vert = make_vec2(params.obstacles->x[offset + v], params.obstacles->y[offset + v]);
-                Vec2 img_vert = to_image(vert, params.bounds_min, params.bounds_max, params.image_dimensions);
+                Vec2 img_vert = to_image(vert, params);
                 nvgLineTo(vg, img_vert.x, img_vert.y);
             }
 
@@ -93,28 +93,60 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
     // edges.
     {
         NVG_State_Scope s(vg);
-        nvgStrokeColor(vg, nvgRGB(127, 127, 255));
+        nvgStrokeColor(vg, nvgRGB(0, 0, 255));
+        nvgStrokeWidth(vg, 2.f);
 
         for (Edge* edge = first(params.diagram->edges); edge != 0; edge = next(params.diagram->edges, edge))
         {
             Half_Edge* e0 = edge->dir + 0;
-            Half_Edge* e1 = edge->dir + 1;
 
-            Vec2 u = to_image(target(*params.diagram, e0)->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
-            Vec2 v = to_image(target(*params.diagram, e1)->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
+            Vec2 u = to_image(source(*params.diagram, e0)->pos, params);
+            Vec2 v = to_image(target(*params.diagram, e0)->pos, params);
 
             nvgBeginPath(vg);
             nvgMoveTo(vg, u.x, u.y);
 
-            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 1))
+            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
             {
-                Vec2 p = to_image(e->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
+                Vec2 p = to_image(e->pos, params);
                 nvgLineTo(vg, p.x, p.y);
             }
 
             nvgLineTo(vg, v.x, v.y);
             nvgStroke(vg);
         }
+    }
+
+    // events.
+    {
+        NVG_State_Scope s(vg);
+        nvgBeginPath(vg);
+        nvgStrokeColor(vg, nvgRGB(0, 0, 255));
+        nvgStrokeWidth(vg, 2.f);
+
+        for (Event* e = first(params.diagram->events); e != 0; e = next(params.diagram->events, e))
+        {
+            Vec2 p = to_image(e->pos, params);
+            nvgCircle(vg, p.x, p.y, 4.f);
+        }
+
+        nvgStroke(vg);
+    }
+
+    // vertices.
+    {
+        NVG_State_Scope s(vg);
+        nvgBeginPath(vg);
+        nvgStrokeColor(vg, nvgRGB(0, 0, 255));
+        nvgStrokeWidth(vg, 2.f);
+
+        for (Vertex* v = first(params.diagram->vertices); v != 0; v = next(params.diagram->vertices, v))
+        {
+            Vec2 p = to_image(v->pos, params);
+            nvgCircle(vg, p.x, p.y, 8.f);
+        }
+
+        nvgStroke(vg);
     }
 }
 

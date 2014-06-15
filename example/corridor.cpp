@@ -281,63 +281,7 @@ int main()
         nvgScale(vg, s, s);
 
         draw_params.image_dimensions = corridormap::make_vec2(float(screen_width), float(screen_height));
-
         corridormap::draw_voronoi_diagram(vg, draw_params);
-
-        // nvgBeginPath(vg);
-        // nvgFillColor(vg, nvgRGB(200, 200, 200));
-        // nvgRect(vg, 0, 0, (float)screen_width, (float)screen_height);
-        // nvgFill(vg);
-
-        // nvgStrokeColor(vg, nvgRGB(255, 255, 255));
-        // nvgStrokeWidth(vg, 4.f);
-
-        // for (int i = 0; i < traced_edges.num_edges; ++i)
-        // {
-        //     int u = traced_edges.u[i];
-        //     int v = traced_edges.v[i];
-
-        //     int u_x = u % features.grid_width;
-        //     int u_y = u / features.grid_width;
-        //     int v_x = v % features.grid_width;
-        //     int v_y = v / features.grid_width;
-
-        //     int events_offset = traced_edges.edge_event_offset[i];
-
-        //     nvgBeginPath(vg);
-        //     nvgMoveTo(vg, float(u_x), float(u_y));
-
-        //     for (int j = 0; j < traced_edges.edge_num_events[i]; ++j)
-        //     {
-        //         int curr = traced_edges.events[events_offset + j];
-        //         nvgLineTo(vg, float(curr % features.grid_width), float(curr / features.grid_width));
-        //     }
-
-        //     nvgLineTo(vg, float(v_x), float(v_y));
-        //     nvgStroke(vg);
-        // }
-
-        // nvgBeginPath(vg);
-        // nvgFillColor(vg, nvgRGB(255, 0, 0));
-
-        // for (int i = 0; i < features.num_vert_points; ++i)
-        // {
-        //     float x = float(features.verts[i] % features.grid_width);
-        //     float y = float(features.verts[i] / features.grid_width);
-        //     nvgCircle(vg, x, y, 10.f);
-        // }
-
-        // for (int i = 0; i < traced_edges.num_events; ++i)
-        // {
-        //     int x = traced_edges.events[i] % features.grid_width;
-        //     int y = traced_edges.events[i] / features.grid_width;
-        //     nvgCircle(vg, float(x), float(y), 5.f);
-        // }
-
-        // nvgFill(vg);
-
-        // nvgStrokeColor(vg, nvgRGB(0, 0, 0));
-        // nvgStrokeWidth(vg, 2.f);
 
         nvgEndFrame(vg);
 
