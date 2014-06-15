@@ -34,17 +34,17 @@ namespace
         return mul(mul(sub(v, bounds_min), inv_dim), image_dim);
     }
 
-    struct nvg_state_scope
+    struct NVG_State_Scope
     {
         NVGcontext* _vg;
 
-        nvg_state_scope(NVGcontext* vg)
+        NVG_State_Scope(NVGcontext* vg)
             : _vg(vg)
         {
             nvgSave(_vg);
         }
 
-        ~nvg_state_scope()
+        ~NVG_State_Scope()
         {
             nvgRestore(_vg);
         }
@@ -55,7 +55,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
 {
     // background.
     {
-        nvg_state_scope s(vg);
+        NVG_State_Scope s(vg);
         nvgFillColor(vg, nvgRGB(200, 200, 200));
         nvgBeginPath(vg);
         nvgRect(vg, 0, 0, params.image_dimensions.x, params.image_dimensions.y);
@@ -64,7 +64,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
 
     // obstacles.
     {
-        nvg_state_scope s(vg);
+        NVG_State_Scope s(vg);
         nvgFillColor(vg, nvgRGB(255, 255, 255));
 
         int offset = 0;
@@ -92,7 +92,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
 
     // edges.
     {
-        nvg_state_scope s(vg);
+        NVG_State_Scope s(vg);
         nvgStrokeColor(vg, nvgRGB(127, 127, 255));
 
         for (Edge* e = first(params.diagram->edges); e != 0; e = next(params.diagram->edges, e))
