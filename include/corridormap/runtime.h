@@ -117,6 +117,16 @@ inline Vertex* target(const Voronoi_Diagram& diagram, Half_Edge* e)
     return ptr(diagram.vertices, e->target);
 }
 
+inline Event* event(const Voronoi_Diagram& diagram, Half_Edge* e)
+{
+    return ptr(diagram.events, e->event);
+}
+
+inline Event* next(const Voronoi_Diagram& diagram, Event* e, int direction)
+{
+    return ptr(diagram.events, e->next[direction]);
+}
+
 }
 
 #endif

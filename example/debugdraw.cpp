@@ -95,14 +95,23 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
         NVG_State_Scope s(vg);
         nvgStrokeColor(vg, nvgRGB(127, 127, 255));
 
-        for (Edge* e = first(params.diagram->edges); e != 0; e = next(params.diagram->edges, e))
+        for (Edge* edge = first(params.diagram->edges); edge != 0; edge = next(params.diagram->edges, edge))
         {
-            Half_Edge* e0 = e->dir + 0;
-            Half_Edge* e1 = e->dir + 1;
+            Half_Edge* e0 = edge->dir + 0;
+            Half_Edge* e1 = edge->dir + 1;
+
             Vec2 u = to_image(target(*params.diagram, e0)->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
             Vec2 v = to_image(target(*params.diagram, e1)->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
+
             nvgBeginPath(vg);
             nvgMoveTo(vg, u.x, u.y);
+
+            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 1))
+            {
+                Vec2 p = to_image(e->pos, params.bounds_min, params.bounds_max, params.image_dimensions);
+                nvgLineTo(vg, p.x, p.y);
+            }
+
             nvgLineTo(vg, v.x, v.y);
             nvgStroke(vg);
         }
