@@ -146,6 +146,8 @@ Voronoi_Traced_Edges allocate_voronoi_traced_edges(Memory* mem, int num_voronoi_
     int max_events = num_footprint_verts*2;
     result.u = allocate<int>(mem, max_edges);
     result.v = allocate<int>(mem, max_edges);
+    result.obstacle_ids_1 = allocate<unsigned int>(mem, max_edges);
+    result.obstacle_ids_2 = allocate<unsigned int>(mem, max_edges);
     result.edge_event_offset = allocate<int>(mem, max_edges);
     result.edge_num_events = allocate<int>(mem, max_edges);
     result.events = allocate<int>(mem, max_events);

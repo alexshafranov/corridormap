@@ -176,6 +176,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
         for (Edge* edge = first(params.diagram->edges); edge != 0; edge = next(params.diagram->edges, edge))
         {
             Half_Edge* e0 = edge->dir + 0;
+            Half_Edge* e1 = edge->dir + 1;
 
             nvgStrokeColor(vg, nvgRGB(255, 0, 0));
             for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
@@ -220,22 +221,37 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
                 nvgLineTo(vg, s.b.x, s.b.y);
             }
             nvgStroke(vg);
-        }
-    }
 
-    // vertex sides.
-    {
-        NVG_State_Scope s(vg);
-        nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGB(255, 0, 255));
-        nvgStrokeWidth(vg, 2.f);
+            // vertex closest points.
 
-        for (Vertex* v = first(params.diagram->vertices); v != 0; v = next(params.diagram->vertices, v))
-        {
-            for (int i = 0; i < max_vertex_sides; ++i)
+            nvgStrokeColor(vg, nvgRGB(255, 0, 255));
             {
-                Segment s = to_image(v->pos, v->sides[i], 32.f, params);
                 nvgBeginPath(vg);
+                Segment s = to_image(target(*params.diagram, e0)->pos, e0->sides[0], 32.f, params);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
+
+            {
+                nvgBeginPath(vg);
+                Segment s = to_image(target(*params.diagram, e0)->pos, e0->sides[1], 32.f, params);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
+
+            {
+                nvgBeginPath(vg);
+                Segment s = to_image(target(*params.diagram, e1)->pos, e1->sides[0], 32.f, params);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
+
+            {
+                nvgBeginPath(vg);
+                Segment s = to_image(target(*params.diagram, e1)->pos, e1->sides[1], 32.f, params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);

@@ -32,8 +32,6 @@ struct Vec2
     float y;
 };
 
-enum { max_vertex_sides = 4 };
-
 // vertex of the voronoi diagram.
 struct Vertex
 {
@@ -43,8 +41,6 @@ struct Vertex
     int half_edge;
     // position.
     Vec2 pos;
-    // closest points on surrounding obstacles.
-    Vec2 sides[max_vertex_sides];
 };
 
 // one direction of the edge in voronoi diagram.
@@ -56,6 +52,8 @@ struct Half_Edge
     int target;
     // index of the head of the event list when going this half-edge direction.
     int event;
+    // closest points on left and right obstacles along the half-edge direction.
+    Vec2 sides[2];
 };
 
 // edge of the voronoi diagram.

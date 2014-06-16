@@ -176,6 +176,10 @@ struct Voronoi_Traced_Edges
     int* u;
     // u linear index (y*num_rows + x). range [0 .. num_edges).
     int* v;
+    // First IDs (colors) of obstacles of each edge. [0..num_edges).
+    unsigned int* obstacle_ids_1;
+    // Second IDs (colors) of obstacles of each edge. [0..num_edges).
+    unsigned int* obstacle_ids_2;
     // for each edge [0 .. num_edges) stores the offset to events array.
     int* edge_event_offset;
     // number of event points for each edge [0 .. num_edges).

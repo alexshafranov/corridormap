@@ -615,35 +615,53 @@ namespace
         normals.edge_normal_indices_2[curr_point_nz] = ncs2;
     }
 
-    int trace_incident_edge(const CSR_Grid& vertices, const CSR_Grid& edges, Voronoi_Features& features, Voronoi_Edge_Normals& normals,
-                            char* visited_edges, int start_vert, int edge_point)
+    struct Traced_Incident_Edge
     {
+        int vert;
+        unsigned int color1;
+        unsigned int color2;
+    };
+
+    Traced_Incident_Edge trace_incident_edge(const CSR_Grid& vertices, const CSR_Grid& edges, Voronoi_Features& features, Voronoi_Edge_Normals& normals,
+                                             char* visited_edges, int start_vert, int edge_point)
+    {
+        Traced_Incident_Edge result;
+        result.vert = -1;
+        result.color1 = 0;
+        result.color2 = 0;
+
         int prev = edge_point;
 
         for (int curr = edge_point; curr >= 0;)
         {
-            if (visited_edges[nz(edges, curr)])
+            int prev_nz = nz(edges, prev);
+            int curr_nz = nz(edges, curr);
+
+            if (visited_edges[curr_nz])
             {
-                return -1;
+                return result;
             }
 
-            visited_edges[nz(edges, curr)] = 1;
+            visited_edges[curr_nz] = 1;
+
+            fix_sides(features, normals, prev_nz, curr_nz);
 
             int vert = get_neigbour_vertex(vertices, curr, start_vert);
 
             if (vert >= 0)
             {
-                return vert;
+                result.vert = vert;
+                result.color1 = features.edge_obstacle_ids_1[curr_nz];
+                result.color2 = features.edge_obstacle_ids_2[curr_nz];
+                return result;
             }
-
-            fix_sides(features, normals, nz(edges, prev), nz(edges, curr));
 
             int next = get_next_point(edges, features, curr, prev);
             prev = curr;
             curr = next;
         }
 
-        return -1;
+        return result;
     }
 
     int trace_event_points(const CSR_Grid& vertices, const CSR_Grid& edges, const Voronoi_Features& features, const Voronoi_Edge_Normals& normals,
@@ -695,6 +713,8 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
 
     int* out_u = out.u;
     int* out_v = out.v;
+    unsigned int* out_obstacle_ids_1 = out.obstacle_ids_1;
+    unsigned int* out_obstacle_ids_2 = out.obstacle_ids_2;
     int* out_events = out.events;
     int* out_event_offsets = out.edge_event_offset;
     int* out_num_events = out.edge_num_events;
@@ -711,17 +731,20 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
 
         for (int i = 0; i < neis.num; ++i)
         {
-            int v = trace_incident_edge(vertices, edges, features, edge_normal_indices, visited_edge, u, neis.lin_idx[i]);
+            Traced_Incident_Edge e = trace_incident_edge(vertices, edges, features, edge_normal_indices, visited_edge, u, neis.lin_idx[i]);
 
-            if (v < 0)
+            if (e.vert < 0)
             {
                 continue;
             }
 
+            int v = e.vert;
             int num_edge_events = trace_event_points(vertices, edges, features, edge_normal_indices, u, neis.lin_idx[i], out_events + num_events);
 
             out_u[num_edges] = u;
             out_v[num_edges] = v;
+            out_obstacle_ids_1[num_edges] = e.color1;
+            out_obstacle_ids_2[num_edges] = e.color2;
             out_event_offsets[num_edges] = num_events;
             out_num_events[num_edges] = num_edge_events;
 
@@ -833,18 +856,11 @@ namespace
 void build_voronoi_diagram(const Footprint& obstacles, const int* obstacle_offsets, Bbox2 bounds, const Voronoi_Features& features,
                            const CSR_Grid& edge_grid,  const CSR_Grid& vertex_grid, const Voronoi_Traced_Edges& traced_edges, Voronoi_Diagram& out)
 {
-    // 1. vertices: convert positions and compute sides.
+    // 1. vertices: convert positions.
     for (int i = 0; i < features.num_vert_points; ++i)
     {
         Vec2 pos = convert_from_image(features.verts[i], features.grid_width, features.grid_height, bounds);
-        Vertex* v = create_vertex(out, pos);
-
-        for (int j = 0; j < max_vertex_sides; ++j)
-        {
-            unsigned int obstacle_id = features.vert_obstacle_ids[i*4 + j];
-            Vec2 closest = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id, pos);
-            v->sides[j] = closest;
-        }
+        create_vertex(out, pos);
     }
 
     // 2. create edges.
@@ -853,7 +869,18 @@ void build_voronoi_diagram(const Footprint& obstacles, const int* obstacle_offse
         int u = nz(vertex_grid, traced_edges.u[i]);
         int v = nz(vertex_grid, traced_edges.v[i]);
 
-        create_edge(out, u, v);
+        Edge* edge = create_edge(out, u, v);
+        Half_Edge* e0 = edge->dir + 0;
+        Half_Edge* e1 = edge->dir + 1;
+
+        unsigned int obstacle_id_1 = traced_edges.obstacle_ids_1[i];
+        unsigned int obstacle_id_2 = traced_edges.obstacle_ids_2[i];
+
+        e0->sides[0] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
+        e0->sides[1] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
+
+        e1->sides[0] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
+        e1->sides[1] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
     }
 
     // 3. events: convert positions and compute sides.
