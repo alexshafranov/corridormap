@@ -178,6 +178,40 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
             Half_Edge* e0 = edge->dir + 0;
             Half_Edge* e1 = edge->dir + 1;
 
+            {
+                nvgStrokeColor(vg, nvgRGB(255, 255, 255));
+                nvgBeginPath(vg);
+                Segment s0 = to_image(target(*params.diagram, e1)->pos, e1->sides[0], 32.f, params);
+                Segment s1 = to_image(target(*params.diagram, e0)->pos, e0->sides[0], 32.f, params);
+                nvgMoveTo(vg, s0.b.x, s0.b.y);
+
+                for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+                {
+                    Segment s = to_image(e->pos, e->sides[0], 32.f, params);
+                    nvgLineTo(vg, s.b.x, s.b.y);
+                }
+
+                nvgLineTo(vg, s1.b.x, s1.b.y);
+                nvgStroke(vg);
+            }
+
+            {
+                nvgStrokeColor(vg, nvgRGB(255, 255, 255));
+                nvgBeginPath(vg);
+                Segment s0 = to_image(target(*params.diagram, e1)->pos, e1->sides[1], 32.f, params);
+                Segment s1 = to_image(target(*params.diagram, e0)->pos, e0->sides[1], 32.f, params);
+                nvgMoveTo(vg, s0.b.x, s0.b.y);
+
+                for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+                {
+                    Segment s = to_image(e->pos, e->sides[1], 32.f, params);
+                    nvgLineTo(vg, s.b.x, s.b.y);
+                }
+
+                nvgLineTo(vg, s1.b.x, s1.b.y);
+                nvgStroke(vg);
+            }
+
             nvgStrokeColor(vg, nvgRGB(255, 0, 0));
             for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
             {
@@ -197,30 +231,6 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);
             }
-
-            Vec2 u = to_image(source(*params.diagram, e0)->pos, params);
-
-            nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, u.x, u.y);
-
-            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
-            {
-                Segment s = to_image(e->pos, e->sides[0], 32.f, params);
-                nvgLineTo(vg, s.b.x, s.b.y);
-            }
-            nvgStroke(vg);
-
-            nvgStrokeColor(vg, nvgRGB(0, 255, 0));
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, u.x, u.y);
-
-            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
-            {
-                Segment s = to_image(e->pos, e->sides[1], 32.f, params);
-                nvgLineTo(vg, s.b.x, s.b.y);
-            }
-            nvgStroke(vg);
 
             // vertex closest points.
 
