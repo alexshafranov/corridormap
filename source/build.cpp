@@ -741,7 +741,34 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
 
 namespace
 {
-    Vec2 compute_closest_point(const Footprint& obstacles, const int* obstacle_offsets, unsigned int obstacle_id, const Vec2& point)
+    struct Segement_Closest_Point
+    {
+        Vec2 closest;
+        float dist;
+    };
+
+    Segement_Closest_Point closest_to_segment(const Vec2& point, const Vec2& p0, const Vec2& p1)
+    {
+        Segement_Closest_Point result;
+
+        Vec2 seg = sub(p1, p0);
+        Vec2 dir = normalized(seg);
+        float seg_len = len(seg);
+
+        float proj = dot(sub(point, p0), dir);
+
+        Vec2 seg_closest = add(p0, scale(dir, clamp(proj, 0.f, seg_len)));
+
+        Vec2 seg_closest_dir = sub(seg_closest, point);
+        float seg_closest_dist = dot(seg_closest_dir, seg_closest_dir);
+
+        result.closest = seg_closest;
+        result.dist = seg_closest_dist;
+
+        return result;
+    }
+
+    Vec2 compute_closest_point(const Footprint& obstacles, const Bbox2& bounds, const int* obstacle_offsets, unsigned int obstacle_id, const Vec2& point)
     {
         const float* obst_x = obstacles.x;
         const float* obst_y = obstacles.y;
@@ -749,35 +776,43 @@ namespace
 
         Vec2 closest = { FLT_MAX, FLT_MAX };
 
-        float min_dist = FLT_MAX;
-
-        int first_vertex_idx = obstacle_offsets[obstacle_id];
-        int last_vertex_idx = first_vertex_idx + num_obst_verts[obstacle_id] - 1;
-
-        int curr_idx = last_vertex_idx;
-        int next_idx = first_vertex_idx;
-
-        for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
+        if (obstacle_id < unsigned(obstacles.num_polys))
         {
-            Vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
-            Vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
+            float min_dist = FLT_MAX;
 
-            Vec2 seg = sub(p1, p0);
-            Vec2 dir = normalized(seg);
-            float seg_len = len(seg);
+            int first_vertex_idx = obstacle_offsets[obstacle_id];
+            int last_vertex_idx = first_vertex_idx + num_obst_verts[obstacle_id] - 1;
 
-            float proj = dot(sub(point, p0), dir);
+            int curr_idx = last_vertex_idx;
+            int next_idx = first_vertex_idx;
 
-            Vec2 seg_closest = add(p0, scale(dir, clamp(proj, 0.f, seg_len)));
-
-            Vec2 seg_closest_dir = sub(seg_closest, point);
-            float seg_closest_dist = dot(seg_closest_dir, seg_closest_dir);
-
-            if (seg_closest_dist < min_dist)
+            for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
             {
-                min_dist = seg_closest_dist;
-                closest = seg_closest;
+                Vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
+                Vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
+
+                Segement_Closest_Point r = closest_to_segment(point, p0, p1);
+
+                if (r.dist < min_dist)
+                {
+                    min_dist = r.dist;
+                    closest = r.closest;
+                }
             }
+        }
+        else
+        {
+            Vec2 lt = { bounds.min[0], bounds.max[1] };
+            Vec2 lb = { bounds.min[0], bounds.min[1] };
+            Vec2 rt = { bounds.max[0], bounds.max[1] };
+            Vec2 rb = { bounds.max[0], bounds.min[1] };
+
+            Vec2 segments_p0[] = { lb, rb, rt, lt };
+            Vec2 segments_p1[] = { rb, rt, lt, lb };
+
+            int offset = obstacle_id - obstacles.num_polys;
+            Segement_Closest_Point r = closest_to_segment(point, segments_p0[offset], segments_p1[offset]);
+            closest = r.closest;
         }
 
         return closest;
@@ -807,7 +842,7 @@ void build_voronoi_diagram(const Footprint& obstacles, const int* obstacle_offse
         for (int j = 0; j < max_vertex_sides; ++j)
         {
             unsigned int obstacle_id = features.vert_obstacle_ids[i*4 + j];
-            Vec2 closest = compute_closest_point(obstacles, obstacle_offsets, obstacle_id, pos);
+            Vec2 closest = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id, pos);
             v->sides[j] = closest;
         }
 
@@ -839,8 +874,8 @@ void build_voronoi_diagram(const Footprint& obstacles, const int* obstacle_offse
             unsigned int obstacle_id_0 = features.edge_obstacle_ids_1[nz(edge_grid, evt_lin_idx)];
             unsigned int obstacle_id_1 = features.edge_obstacle_ids_2[nz(edge_grid, evt_lin_idx)];
 
-            e->sides[0] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_0, pos);
-            e->sides[1] = compute_closest_point(obstacles, obstacle_offsets, obstacle_id_1, pos);
+            e->sides[0] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_0, pos);
+            e->sides[1] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, pos);
         }
     }
 }
