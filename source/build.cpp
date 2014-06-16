@@ -845,8 +845,6 @@ void build_voronoi_diagram(const Footprint& obstacles, const int* obstacle_offse
             Vec2 closest = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id, pos);
             v->sides[j] = closest;
         }
-
-        v->half_edge = null_idx;
     }
 
     // 2. create edges.
