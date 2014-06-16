@@ -49,6 +49,24 @@ namespace
             nvgRestore(_vg);
         }
     };
+
+    struct Segment
+    {
+        Vec2 a;
+        Vec2 b;
+    };
+
+    Segment to_image(Vec2 a, Vec2 b, float length_decrease, const Draw_Params& params)
+    {
+        Segment s;
+        s.a = to_image(a, params);
+        s.b = to_image(b, params);
+        Vec2 d = sub(s.b, s.a);
+        float l = len(d);
+        d = normalized(d);
+        s.b = add(s.a, scale(d, (l >= length_decrease) ? l - length_decrease : 0.f));
+        return s;
+    }
 }
 
 void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
@@ -158,37 +176,70 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
         for (Edge* edge = first(params.diagram->edges); edge != 0; edge = next(params.diagram->edges, edge))
         {
             Half_Edge* e0 = edge->dir + 0;
+
+            nvgStrokeColor(vg, nvgRGB(255, 0, 0));
+            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+            {
+                Segment s = to_image(e->pos, e->sides[0], 32.f, params);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
+
+            nvgStrokeColor(vg, nvgRGB(0, 255, 0));
+            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+            {
+                Segment s = to_image(e->pos, e->sides[1], 32.f, params);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
+
             Vec2 u = to_image(source(*params.diagram, e0)->pos, params);
 
+            nvgStrokeColor(vg, nvgRGB(255, 0, 0));
             nvgBeginPath(vg);
             nvgMoveTo(vg, u.x, u.y);
 
             for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
             {
-                Vec2 diff = sub(e->sides[0], e->pos);
-                float dist = len(diff);
-                Vec2 n = normalized(diff);
-                Vec2 p = add(e->pos, scale(n, dist * 0.6f));
-                p = to_image(p, params);
-                nvgLineTo(vg, p.x, p.y);
+                Segment s = to_image(e->pos, e->sides[0], 32.f, params);
+                nvgLineTo(vg, s.b.x, s.b.y);
             }
-
             nvgStroke(vg);
 
+            nvgStrokeColor(vg, nvgRGB(0, 255, 0));
             nvgBeginPath(vg);
             nvgMoveTo(vg, u.x, u.y);
 
-            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 1))
+            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
             {
-                Vec2 diff = sub(e->sides[1], e->pos);
-                float dist = len(diff);
-                Vec2 n = normalized(diff);
-                Vec2 p = add(e->pos, scale(n, dist * 0.6f));
-                p = to_image(p, params);
-                nvgLineTo(vg, p.x, p.y);
+                Segment s = to_image(e->pos, e->sides[1], 32.f, params);
+                nvgLineTo(vg, s.b.x, s.b.y);
             }
-
             nvgStroke(vg);
+        }
+    }
+
+    // vertex sides.
+    {
+        NVG_State_Scope s(vg);
+        nvgBeginPath(vg);
+        nvgStrokeColor(vg, nvgRGB(255, 0, 255));
+        nvgStrokeWidth(vg, 2.f);
+
+        for (Vertex* v = first(params.diagram->vertices); v != 0; v = next(params.diagram->vertices, v))
+        {
+            for (int i = 0; i < max_vertex_sides; ++i)
+            {
+                Segment s = to_image(v->pos, v->sides[i], 32.f, params);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
         }
     }
 }
