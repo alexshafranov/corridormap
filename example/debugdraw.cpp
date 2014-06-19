@@ -56,7 +56,7 @@ namespace
         Vec2 b;
     };
 
-    Segment to_image(Vec2 a, Vec2 b, float length_decrease, const Draw_Params& params)
+    Segment to_image(Vec2 a, Vec2 b, float deflation, const Draw_Params& params)
     {
         Segment s;
         s.a = to_image(a, params);
@@ -64,7 +64,7 @@ namespace
         Vec2 d = sub(s.b, s.a);
         float l = len(d);
         d = normalized(d);
-        s.b = add(s.a, scale(d, (l >= length_decrease) ? l - length_decrease : 0.f));
+        s.b = add(s.a, scale(d, (l >= deflation) ? l - deflation : 0.f));
         return s;
     }
 }
