@@ -80,7 +80,7 @@ struct Event
 
 // array based free list.
 template <typename T>
-struct Free_List
+struct Pool
 {
     // head of the list of allocated objects.
     int head;
@@ -97,14 +97,14 @@ struct Free_List
 };
 
 // Generalized Voronoi Diagram where edges and vertices are annotated with the closest obstacle information.
-struct Voronoi_Diagram
+struct Walkable_Space
 {
     // pool of vertices.
-    Free_List<Vertex> vertices;
+    Pool<Vertex> vertices;
     // pool of edges.
-    Free_List<Edge> edges;
+    Pool<Edge> edges;
     // pool of edge events.
-    Free_List<Event> events;
+    Pool<Event> events;
 };
 
 }

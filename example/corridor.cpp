@@ -198,7 +198,7 @@ int main()
 
     corridormap::Voronoi_Features features;
     corridormap::Voronoi_Traced_Edges traced_edges;
-    corridormap::Voronoi_Diagram diagram;
+    corridormap::Walkable_Space space;
 
     {
         cl_int error_code;
@@ -247,13 +247,13 @@ int main()
         printf("edge_count=%d\n", traced_edges.num_edges);
         printf("event_count=%d\n", traced_edges.num_events);
 
-        diagram = corridormap::create_voronoi_diagram(&mem, features.num_vert_points, traced_edges.num_edges, traced_edges.num_events);
-        corridormap::build_voronoi_diagram(obstacles, normals.obstacle_normal_offsets, obstacle_bounds, features, edge_csr, vert_csr, traced_edges, diagram);
+        space = corridormap::create_walkable_space(&mem, features.num_vert_points, traced_edges.num_edges, traced_edges.num_events);
+        corridormap::build_walkable_space(obstacles, normals.obstacle_normal_offsets, obstacle_bounds, features, edge_csr, vert_csr, traced_edges, space);
     }
 
     corridormap::Draw_Params draw_params;
     draw_params.obstacles = &obstacles;
-    draw_params.diagram = &diagram;
+    draw_params.space = &space;
     draw_params.bounds_min = corridormap::make_vec2(obstacle_bounds.min);
     draw_params.bounds_max = corridormap::make_vec2(obstacle_bounds.max);
     draw_params.image_dimensions = corridormap::make_vec2(0, 0);
@@ -281,7 +281,7 @@ int main()
         nvgScale(vg, s, s);
 
         draw_params.image_dimensions = corridormap::make_vec2(float(screen_width), float(screen_height));
-        corridormap::draw_voronoi_diagram(vg, draw_params);
+        corridormap::draw_walkable_space(vg, draw_params);
 
         nvgEndFrame(vg);
 

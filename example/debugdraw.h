@@ -31,13 +31,13 @@ namespace corridormap {
 struct Draw_Params
 {
     Footprint* obstacles;
-    Voronoi_Diagram* diagram;
+    Walkable_Space* space;
     Vec2 bounds_min;
     Vec2 bounds_max;
     Vec2 image_dimensions;
 };
 
-void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params);
+void draw_walkable_space(NVGcontext* vg, const Draw_Params& params);
 
 }
 

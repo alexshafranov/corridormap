@@ -853,8 +853,8 @@ namespace
     }
 }
 
-void build_voronoi_diagram(const Footprint& obstacles, const int* obstacle_offsets, Bbox2 bounds, const Voronoi_Features& features,
-                           const CSR_Grid& edge_grid,  const CSR_Grid& vertex_grid, const Voronoi_Traced_Edges& traced_edges, Voronoi_Diagram& out)
+void build_walkable_space(const Footprint& obstacles, const int* obstacle_offsets, Bbox2 bounds, const Voronoi_Features& features,
+                          const CSR_Grid& edge_grid,  const CSR_Grid& vertex_grid, const Voronoi_Traced_Edges& traced_edges, Walkable_Space& out)
 {
     // 1. vertices: convert positions.
     for (int i = 0; i < features.num_vert_points; ++i)

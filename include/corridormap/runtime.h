@@ -28,26 +28,26 @@ namespace corridormap { class Memory; }
 
 namespace corridormap {
 
-// allocate and initialize voronoi diagram.
-Voronoi_Diagram create_voronoi_diagram(Memory* mem, int max_vertices, int max_edges, int max_events);
+// allocate and initialize walkable space data.
+Walkable_Space create_walkable_space(Memory* mem, int max_vertices, int max_edges, int max_events);
 // destroy voronoi diagram.
-void destroy(Memory* mem, Voronoi_Diagram& d);
+void destroy(Memory* mem, Walkable_Space& d);
 
 // creates a new vertex with the specified position.
-Vertex* create_vertex(Voronoi_Diagram& diagram, Vec2 pos);
+Vertex* create_vertex(Walkable_Space& diagram, Vec2 pos);
 
 // creates an edge between vertices u and v.
-Edge* create_edge(Voronoi_Diagram& diagram, int u, int v);
+Edge* create_edge(Walkable_Space& diagram, int u, int v);
 
 // creates a new event and appends it to the specified edge.
-Event* create_event(Voronoi_Diagram& diagram, Vec2 pos, int edge);
+Event* create_event(Walkable_Space& diagram, Vec2 pos, int edge);
 
 }
 
 namespace corridormap {
 
 template <typename T>
-void init(Free_List<T>& lst)
+void init(Pool<T>& lst)
 {
     lst.head = null_idx;
     lst.tail = null_idx;
@@ -63,7 +63,7 @@ void init(Free_List<T>& lst)
 }
 
 template <typename T>
-T* allocate(Free_List<T>& lst)
+T* allocate(Pool<T>& lst)
 {
     if (lst.head_free == null_idx)
     {
@@ -93,22 +93,22 @@ T* allocate(Free_List<T>& lst)
     return result;
 }
 
-/// Free_List
+/// Pool
 
 template <typename T>
-inline T* ptr(const Free_List<T>& lst, int offset)
+inline T* ptr(const Pool<T>& lst, int offset)
 {
     return (offset != null_idx) ? lst.items + offset : 0;
 }
 
 template <typename T>
-inline T* first(const Free_List<T>& lst)
+inline T* first(const Pool<T>& lst)
 {
     return ptr(lst, lst.head);
 }
 
 template <typename T>
-inline T* next(const Free_List<T>& lst, T* item)
+inline T* next(const Pool<T>& lst, T* item)
 {
     int next_index = lst.items[int(item - lst.items)].link;
     return ptr(lst, next_index);
@@ -116,55 +116,55 @@ inline T* next(const Free_List<T>& lst, T* item)
 
 /// Vertex
 
-inline Half_Edge* half_edge(const Voronoi_Diagram& diagram, Vertex* v)
+inline Half_Edge* half_edge(const Walkable_Space& space, Vertex* v)
 {
-    Edge* edge = ptr(diagram.edges, v->half_edge >> 1);
+    Edge* edge = ptr(space.edges, v->half_edge >> 1);
     return edge ? edge->dir + (v->half_edge & 1) : 0;
 }
 
 /// Half_Edge
 
-inline Edge* edge(const Voronoi_Diagram& diagram, Half_Edge* e)
+inline Edge* edge(const Walkable_Space& space, Half_Edge* e)
 {
-    const char* a = reinterpret_cast<const char*>(diagram.edges.items);
+    const char* a = reinterpret_cast<const char*>(space.edges.items);
     const char* b = reinterpret_cast<const char*>(e);
     int diff = int(b - a);
-    return diagram.edges.items + diff/sizeof(Edge);
+    return space.edges.items + diff/sizeof(Edge);
 }
 
-inline Half_Edge* opposite(const Voronoi_Diagram& diagram, Half_Edge* e)
+inline Half_Edge* opposite(const Walkable_Space& space, Half_Edge* e)
 {
-    Edge* p = edge(diagram, e);
+    Edge* p = edge(space, e);
     int dir = int(e - p->dir);
     return p->dir + (dir^1);
 }
 
-inline Vertex* target(const Voronoi_Diagram& diagram, Half_Edge* e)
+inline Vertex* target(const Walkable_Space& space, Half_Edge* e)
 {
-    return ptr(diagram.vertices, e->target);
+    return ptr(space.vertices, e->target);
 }
 
-inline Vertex* source(const Voronoi_Diagram& diagram, Half_Edge* e)
+inline Vertex* source(const Walkable_Space& space, Half_Edge* e)
 {
-    return target(diagram, opposite(diagram, e));
+    return target(space, opposite(space, e));
 }
 
-inline Half_Edge* next(const Voronoi_Diagram& diagram, Half_Edge* e)
+inline Half_Edge* next(const Walkable_Space& space, Half_Edge* e)
 {
-    Edge* edge = ptr(diagram.edges, e->next >> 1);
+    Edge* edge = ptr(space.edges, e->next >> 1);
     return edge ? edge->dir + (e->next & 1) : 0;
 }
 
-inline Event* event(const Voronoi_Diagram& diagram, Half_Edge* e)
+inline Event* event(const Walkable_Space& space, Half_Edge* e)
 {
-    return ptr(diagram.events, e->event);
+    return ptr(space.events, e->event);
 }
 
 /// Event
 
-inline Event* next(const Voronoi_Diagram& diagram, Event* e, int direction)
+inline Event* next(const Walkable_Space& space, Event* e, int direction)
 {
-    return ptr(diagram.events, e->next[direction]);
+    return ptr(space.events, e->next[direction]);
 }
 
 }

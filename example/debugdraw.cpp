@@ -69,7 +69,7 @@ namespace
     }
 }
 
-void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
+void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
 {
     // background.
     {
@@ -114,17 +114,17 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
         nvgStrokeColor(vg, nvgRGB(0, 0, 255));
         nvgStrokeWidth(vg, 2.f);
 
-        for (Edge* edge = first(params.diagram->edges); edge != 0; edge = next(params.diagram->edges, edge))
+        for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
             Half_Edge* e0 = edge->dir + 0;
 
-            Vec2 u = to_image(source(*params.diagram, e0)->pos, params);
-            Vec2 v = to_image(target(*params.diagram, e0)->pos, params);
+            Vec2 u = to_image(source(*params.space, e0)->pos, params);
+            Vec2 v = to_image(target(*params.space, e0)->pos, params);
 
             nvgBeginPath(vg);
             nvgMoveTo(vg, u.x, u.y);
 
-            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
             {
                 Vec2 p = to_image(e->pos, params);
                 nvgLineTo(vg, p.x, p.y);
@@ -142,7 +142,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
         nvgStrokeColor(vg, nvgRGB(0, 0, 255));
         nvgStrokeWidth(vg, 2.f);
 
-        for (Event* e = first(params.diagram->events); e != 0; e = next(params.diagram->events, e))
+        for (Event* e = first(params.space->events); e != 0; e = next(params.space->events, e))
         {
             Vec2 p = to_image(e->pos, params);
             nvgCircle(vg, p.x, p.y, 4.f);
@@ -158,7 +158,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
         nvgStrokeColor(vg, nvgRGB(0, 0, 255));
         nvgStrokeWidth(vg, 2.f);
 
-        for (Vertex* v = first(params.diagram->vertices); v != 0; v = next(params.diagram->vertices, v))
+        for (Vertex* v = first(params.space->vertices); v != 0; v = next(params.space->vertices, v))
         {
             Vec2 p = to_image(v->pos, params);
             nvgCircle(vg, p.x, p.y, 8.f);
@@ -173,7 +173,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
         nvgStrokeColor(vg, nvgRGB(255, 0, 0));
         nvgStrokeWidth(vg, 2.f);
 
-        for (Edge* edge = first(params.diagram->edges); edge != 0; edge = next(params.diagram->edges, edge))
+        for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
             Half_Edge* e0 = edge->dir + 0;
             Half_Edge* e1 = edge->dir + 1;
@@ -181,11 +181,11 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
             {
                 nvgStrokeColor(vg, nvgRGB(255, 255, 255));
                 nvgBeginPath(vg);
-                Segment s0 = to_image(target(*params.diagram, e1)->pos, e1->sides[0], 32.f, params);
-                Segment s1 = to_image(target(*params.diagram, e0)->pos, e0->sides[0], 32.f, params);
+                Segment s0 = to_image(target(*params.space, e1)->pos, e1->sides[0], 32.f, params);
+                Segment s1 = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
                 nvgMoveTo(vg, s0.b.x, s0.b.y);
 
-                for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+                for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
                 {
                     Segment s = to_image(e->pos, e->sides[0], 32.f, params);
                     nvgLineTo(vg, s.b.x, s.b.y);
@@ -198,11 +198,11 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
             {
                 nvgStrokeColor(vg, nvgRGB(255, 255, 255));
                 nvgBeginPath(vg);
-                Segment s0 = to_image(target(*params.diagram, e1)->pos, e1->sides[1], 32.f, params);
-                Segment s1 = to_image(target(*params.diagram, e0)->pos, e0->sides[1], 32.f, params);
+                Segment s0 = to_image(target(*params.space, e1)->pos, e1->sides[1], 32.f, params);
+                Segment s1 = to_image(target(*params.space, e0)->pos, e0->sides[1], 32.f, params);
                 nvgMoveTo(vg, s0.b.x, s0.b.y);
 
-                for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+                for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
                 {
                     Segment s = to_image(e->pos, e->sides[1], 32.f, params);
                     nvgLineTo(vg, s.b.x, s.b.y);
@@ -213,7 +213,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
             }
 
             nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
             {
                 Segment s = to_image(e->pos, e->sides[0], 32.f, params);
                 nvgBeginPath(vg);
@@ -223,7 +223,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
             }
 
             nvgStrokeColor(vg, nvgRGB(0, 255, 0));
-            for (Event* e = event(*params.diagram, e0); e != 0; e = next(*params.diagram, e, 0))
+            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
             {
                 Segment s = to_image(e->pos, e->sides[1], 32.f, params);
                 nvgBeginPath(vg);
@@ -237,7 +237,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
             nvgStrokeColor(vg, nvgRGB(255, 0, 255));
             {
                 nvgBeginPath(vg);
-                Segment s = to_image(target(*params.diagram, e0)->pos, e0->sides[0], 32.f, params);
+                Segment s = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);
@@ -245,7 +245,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
 
             {
                 nvgBeginPath(vg);
-                Segment s = to_image(target(*params.diagram, e0)->pos, e0->sides[1], 32.f, params);
+                Segment s = to_image(target(*params.space, e0)->pos, e0->sides[1], 32.f, params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);
@@ -253,7 +253,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
 
             {
                 nvgBeginPath(vg);
-                Segment s = to_image(target(*params.diagram, e1)->pos, e1->sides[0], 32.f, params);
+                Segment s = to_image(target(*params.space, e1)->pos, e1->sides[0], 32.f, params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);
@@ -261,7 +261,7 @@ void draw_voronoi_diagram(NVGcontext* vg, const Draw_Params& params)
 
             {
                 nvgBeginPath(vg);
-                Segment s = to_image(target(*params.diagram, e1)->pos, e1->sides[1], 32.f, params);
+                Segment s = to_image(target(*params.space, e1)->pos, e1->sides[1], 32.f, params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);

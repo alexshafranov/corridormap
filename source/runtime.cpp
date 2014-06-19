@@ -27,9 +27,9 @@
 
 namespace corridormap {
 
-Voronoi_Diagram create_voronoi_diagram(Memory* mem, int max_vertices, int max_edges, int max_events)
+Walkable_Space create_walkable_space(Memory* mem, int max_vertices, int max_edges, int max_events)
 {
-    Voronoi_Diagram result;
+    Walkable_Space result;
     memset(&result, 0, sizeof(result));
 
     result.vertices.items = allocate<Vertex>(mem, max_vertices);
@@ -47,7 +47,7 @@ Voronoi_Diagram create_voronoi_diagram(Memory* mem, int max_vertices, int max_ed
     return result;
 }
 
-void destroy(Memory* mem, Voronoi_Diagram& d)
+void destroy(Memory* mem, Walkable_Space& d)
 {
     mem->deallocate(d.vertices.items);
     mem->deallocate(d.edges.items);
@@ -165,36 +165,36 @@ namespace
     }
 }
 
-Vertex* create_vertex(Voronoi_Diagram& diagram, Vec2 pos)
+Vertex* create_vertex(Walkable_Space& space, Vec2 pos)
 {
-    Vertex* new_vertex = allocate(diagram.vertices);
+    Vertex* new_vertex = allocate(space.vertices);
     new_vertex->half_edge = null_idx;
     new_vertex->pos = pos;
     return new_vertex;
 }
 
-Edge* create_edge(Voronoi_Diagram& diagram, int u, int v)
+Edge* create_edge(Walkable_Space& space, int u, int v)
 {
-    Edge* new_edge = allocate(diagram.edges);
+    Edge* new_edge = allocate(space.edges);
     new_edge->dir[0].target = v;
     new_edge->dir[1].target = u;
     new_edge->dir[0].event = null_idx;
     new_edge->dir[1].event = null_idx;
-    int new_edge_idx = int(new_edge - diagram.edges.items);
-    add_half_edge(diagram.vertices.items, diagram.edges.items, u, new_edge_idx*2 + 0);
-    add_half_edge(diagram.vertices.items, diagram.edges.items, v, new_edge_idx*2 + 1);
+    int new_edge_idx = int(new_edge - space.edges.items);
+    add_half_edge(space.vertices.items, space.edges.items, u, new_edge_idx*2 + 0);
+    add_half_edge(space.vertices.items, space.edges.items, v, new_edge_idx*2 + 1);
     return new_edge;
 }
 
-Event* create_event(Voronoi_Diagram& diagram, Vec2 pos, int edge)
+Event* create_event(Walkable_Space& space, Vec2 pos, int edge)
 {
-    Event* new_event = allocate(diagram.events);
+    Event* new_event = allocate(space.events);
     new_event->pos = pos;
     new_event->next[0] = null_idx;
     new_event->next[1] = null_idx;
-    int new_event_idx = int(new_event - diagram.events.items);
-    append_event(diagram.edges.items, diagram.events.items, edge*2 + 0, new_event_idx);
-    prepend_event(diagram.edges.items, diagram.events.items, edge*2 + 1, new_event_idx);
+    int new_event_idx = int(new_event - space.events.items);
+    append_event(space.edges.items, space.events.items, edge*2 + 0, new_event_idx);
+    prepend_event(space.edges.items, space.events.items, edge*2 + 1, new_event_idx);
     return new_event;
 }
 
