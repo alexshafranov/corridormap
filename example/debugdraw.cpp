@@ -56,7 +56,7 @@ namespace
         Vec2 b;
     };
 
-    Segment to_image(Vec2 a, Vec2 b, float deflation, const Draw_Params& params)
+    Segment to_image(Vec2 a, Vec2 b, const Draw_Params& params)
     {
         Segment s;
         s.a = to_image(a, params);
@@ -64,11 +64,11 @@ namespace
         Vec2 d = sub(s.b, s.a);
         float l = len(d);
         d = normalized(d);
-        s.b = add(s.a, scale(d, (l >= deflation) ? l - deflation : 0.f));
+        s.b = add(s.a, scale(d, (l >= params.agent_radius) ? l - params.agent_radius : 0.f));
         return s;
     }
 
-    void circle_corner(NVGcontext* vg, Vec2 corner, Vec2 a, Vec2 b)
+    void circle_corner(NVGcontext* vg, Vec2 corner, Vec2 a, Vec2 b, const Draw_Params& params)
     {
         if (len(sub(b, a)) < 4.f)
         {
@@ -77,22 +77,22 @@ namespace
         }
 
         Vec2 n = normalized(sub(scale(add(a, b), 0.5f), corner));
-        Vec2 c = add(corner, scale(n, 32.f));
-        circle_corner(vg, corner, a, c);
-        circle_corner(vg, corner, c, b);
+        Vec2 c = add(corner, scale(n, params.agent_radius));
+        circle_corner(vg, corner, a, c, params);
+        circle_corner(vg, corner, c, b, params);
     }
 
     void connect_sides(NVGcontext* vg, Vec2 curr_pos, Vec2 curr_side, Vec2 prev_pos, Vec2 prev_side, const Draw_Params& params)
     {
-        Segment prev_seg = to_image(prev_pos, prev_side, 32.f, params);
-        Segment curr_seg = to_image(curr_pos, curr_side, 32.f, params);
+        Segment prev_seg = to_image(prev_pos, prev_side, params);
+        Segment curr_seg = to_image(curr_pos, curr_side, params);
 
         if (abs(prev_side.x - curr_side.x) < 0.1f && abs(prev_side.y - curr_side.y) < 0.1f)
         {
             Vec2 corner = to_image(curr_side, params);
             Vec2 a = prev_seg.b;
             Vec2 b = curr_seg.b;
-            circle_corner(vg, corner, a, b);
+            circle_corner(vg, corner, a, b, params);
         }
         else
         {
@@ -113,7 +113,7 @@ namespace
             Half_Edge* e1 = edge->dir + 1;
 
             nvgBeginPath(vg);
-            Segment seg = to_image(target(*params.space, e1)->pos, e1->sides[1], 32.f, params);
+            Segment seg = to_image(target(*params.space, e1)->pos, e1->sides[1], params);
             nvgMoveTo(vg, seg.b.x, seg.b.y);
 
             Vec2 prev_pos = target(*params.space, e1)->pos;
@@ -130,7 +130,7 @@ namespace
             {
                 Vec2 v = to_image(target(*params.space, e0)->pos, params);
                 nvgLineTo(vg, v.x, v.y);
-                seg = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
+                seg = to_image(target(*params.space, e0)->pos, e0->sides[0], params);
                 nvgLineTo(vg, seg.b.x, seg.b.y);
             }
 
@@ -271,7 +271,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
             nvgStrokeColor(vg, nvgRGB(255, 0, 0));
             for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
             {
-                Segment s = to_image(e->pos, e->sides[0], 32.f, params);
+                Segment s = to_image(e->pos, e->sides[0], params);
                 nvgBeginPath(vg);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
@@ -281,7 +281,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
             nvgStrokeColor(vg, nvgRGB(0, 255, 0));
             for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
             {
-                Segment s = to_image(e->pos, e->sides[1], 32.f, params);
+                Segment s = to_image(e->pos, e->sides[1], params);
                 nvgBeginPath(vg);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
@@ -293,7 +293,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
             nvgStrokeColor(vg, nvgRGB(255, 0, 255));
             {
                 nvgBeginPath(vg);
-                Segment s = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
+                Segment s = to_image(target(*params.space, e0)->pos, e0->sides[0], params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);
@@ -301,7 +301,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
 
             {
                 nvgBeginPath(vg);
-                Segment s = to_image(target(*params.space, e0)->pos, e0->sides[1], 32.f, params);
+                Segment s = to_image(target(*params.space, e0)->pos, e0->sides[1], params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);
@@ -309,7 +309,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
 
             {
                 nvgBeginPath(vg);
-                Segment s = to_image(target(*params.space, e1)->pos, e1->sides[0], 32.f, params);
+                Segment s = to_image(target(*params.space, e1)->pos, e1->sides[0], params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);
@@ -317,7 +317,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
 
             {
                 nvgBeginPath(vg);
-                Segment s = to_image(target(*params.space, e1)->pos, e1->sides[1], 32.f, params);
+                Segment s = to_image(target(*params.space, e1)->pos, e1->sides[1], params);
                 nvgMoveTo(vg, s.a.x, s.a.y);
                 nvgLineTo(vg, s.b.x, s.b.y);
                 nvgStroke(vg);

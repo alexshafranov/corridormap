@@ -252,11 +252,12 @@ int main()
     }
 
     corridormap::Draw_Params draw_params;
-    draw_params.obstacles = &obstacles;
-    draw_params.space = &space;
+    draw_params.agent_radius = 16.f;
     draw_params.bounds_min = corridormap::make_vec2(obstacle_bounds.min);
     draw_params.bounds_max = corridormap::make_vec2(obstacle_bounds.max);
     draw_params.image_dimensions = corridormap::make_vec2(0, 0);
+    draw_params.obstacles = &obstacles;
+    draw_params.space = &space;
 
     while (!glfwWindowShouldClose(window))
     {

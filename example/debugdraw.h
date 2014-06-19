@@ -30,11 +30,12 @@ namespace corridormap {
 
 struct Draw_Params
 {
-    Footprint* obstacles;
-    Walkable_Space* space;
+    float agent_radius;
     Vec2 bounds_min;
     Vec2 bounds_max;
     Vec2 image_dimensions;
+    Footprint* obstacles;
+    Walkable_Space* space;
 };
 
 void draw_walkable_space(NVGcontext* vg, const Draw_Params& params);
