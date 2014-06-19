@@ -66,6 +66,7 @@ enum NVGlineCap {
 };
 
 enum NVGpatternRepeat {
+	NVG_NOREPEAT = 0,
 	NVG_REPEATX = 0x01,		// Repeat image pattern in X direction
 	NVG_REPEATY = 0x02,		// Repeat image pattern in Y direction
 };
@@ -80,11 +81,6 @@ enum NVGalign {
 	NVG_ALIGN_MIDDLE	= 1<<4,	// Align text vertically to middle.
 	NVG_ALIGN_BOTTOM	= 1<<5,	// Align text vertically to bottom. 
 	NVG_ALIGN_BASELINE	= 1<<6, // Default, align text vertically to baseline. 
-};
-
-enum NVGalpha {
-	NVG_STRAIGHT_ALPHA,
-	NVG_PREMULTIPLIED_ALPHA,
 };
 
 struct NVGglyphPosition {
@@ -110,11 +106,7 @@ struct NVGtextRow {
 // For example, GLFW returns two dimension for an opened window: window size and
 // frame buffer size. In that case you would set windowWidth/Height to the window size
 // devicePixelRatio to: frameBufferWidth / windowWidth.
-// AlphaBlend controls if drawing the shapes to the render target should be done using straight or
-// premultiplied alpha. If rendering directly to framebuffer you probably want to use NVG_STRAIGHT_ALPHA,
-// if rendering to texture which should contain transparent regions NVG_PREMULTIPLIED_ALPHA is the
-// right choice.
-void nvgBeginFrame(struct NVGcontext* ctx, int windowWidth, int windowHeight, float devicePixelRatio, int alphaBlend);
+void nvgBeginFrame(struct NVGcontext* ctx, int windowWidth, int windowHeight, float devicePixelRatio);
 
 // Ends drawing flushing remaining render state.
 void nvgEndFrame(struct NVGcontext* ctx);
@@ -207,6 +199,10 @@ void nvgLineCap(struct NVGcontext* ctx, int cap);
 // Sets how sharp path corners are drawn.
 // Can be one of NVG_MITER (default), NVG_ROUND, NVG_BEVEL.
 void nvgLineJoin(struct NVGcontext* ctx, int join);
+
+// Sets the transparency applied to all rendered shapes.
+// Alreade transparent paths will get proportionally more transparent as well.
+void nvgGlobalAlpha(struct NVGcontext* ctx, float alpha);
 
 //
 // Transforms
@@ -354,7 +350,7 @@ struct NVGpaint nvgRadialGradient(struct NVGcontext* ctx, float cx, float cy, fl
 // and repeat is combination of NVG_REPEATX and NVG_REPEATY which tells if the image should be repeated across x or y.
 // The gradient is transformed by the current transform when it is passed to nvgFillPaint() or nvgStrokePaint().
 struct NVGpaint nvgImagePattern(struct NVGcontext* ctx, float ox, float oy, float ex, float ey,
-								float angle, int image, int repeat);
+								float angle, int image, int repeat, float alpha);
 
 //
 // Scissoring
@@ -395,8 +391,11 @@ void nvgMoveTo(struct NVGcontext* ctx, float x, float y);
 // Adds line segment from the last point in the path to the specified point.
 void nvgLineTo(struct NVGcontext* ctx, float x, float y);
 
-// Adds bezier segment from last point in the path via two control points to the specified point.
+// Adds cubic bezier segment from last point in the path via two control points to the specified point.
 void nvgBezierTo(struct NVGcontext* ctx, float c1x, float c1y, float c2x, float c2y, float x, float y);
+
+// Adds quadratic bezier segment from last point in the path via a control point to the specified point.
+void nvgQuadTo(struct NVGcontext* ctx, float cx, float cy, float x, float y);
 
 // Adds an arc segment at the corner defined by the last path point, and two specified points.
 void nvgArcTo(struct NVGcontext* ctx, float x1, float y1, float x2, float y2, float radius);
@@ -407,7 +406,9 @@ void nvgClosePath(struct NVGcontext* ctx);
 // Sets the current sub-path winding, see NVGwinding and NVGsolidity. 
 void nvgPathWinding(struct NVGcontext* ctx, int dir);
 
-// Creates new arc shaped sub-path.
+// Creates new circle arc shaped sub-path. The arc center is at cx,cy, the arc radius is r,
+// and the arc is drawn from angle a0 to a1, and swept in direction dir (NVG_CCW, or NVG_CW).
+// Angles are specified in radians.
 void nvgArc(struct NVGcontext* ctx, float cx, float cy, float r, float a0, float a1, int dir);
 
 // Creates new rectangle shaped sub-path.
@@ -566,8 +567,8 @@ struct NVGparams {
 	int (*renderDeleteTexture)(void* uptr, int image);
 	int (*renderUpdateTexture)(void* uptr, int image, int x, int y, int w, int h, const unsigned char* data);
 	int (*renderGetTextureSize)(void* uptr, int image, int* w, int* h);
-	void (*renderViewport)(void* uptr, int width, int height, int alphaBlend);
-	void (*renderFlush)(void* uptr, int alphaBlend);
+	void (*renderViewport)(void* uptr, int width, int height);
+	void (*renderFlush)(void* uptr);
 	void (*renderFill)(void* uptr, struct NVGpaint* paint, struct NVGscissor* scissor, float fringe, const float* bounds, const struct NVGpath* paths, int npaths);
 	void (*renderStroke)(void* uptr, struct NVGpaint* paint, struct NVGscissor* scissor, float fringe, float strokeWidth, const struct NVGpath* paths, int npaths);
 	void (*renderTriangles)(void* uptr, struct NVGpaint* paint, struct NVGscissor* scissor, const struct NVGvertex* verts, int nverts);
@@ -578,10 +579,12 @@ struct NVGparams {
 struct NVGcontext* nvgCreateInternal(struct NVGparams* params);
 void nvgDeleteInternal(struct NVGcontext* ctx);
 
+struct NVGparams* nvgInternalParams(struct NVGcontext* ctx);
+
 // Debug function to dump cached path data.
 void nvgDebugDumpPathCache(struct NVGcontext* ctx);
 
-#define NVG_NOTUSED(v) do { (void)(1 ? (void)0 : ( (void)(v) ) ); } while(0)
+#define NVG_NOTUSED(v) for (;;) { (void)(1 ? (void)0 : ( (void)(v) ) ); break; }
 
 #ifdef __cplusplus
 }
