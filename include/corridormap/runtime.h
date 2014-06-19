@@ -30,17 +30,20 @@ namespace corridormap {
 
 // allocate and initialize walkable space data.
 Walkable_Space create_walkable_space(Memory* mem, int max_vertices, int max_edges, int max_events);
-// destroy voronoi diagram.
+// destroy voronoi space.
 void destroy(Memory* mem, Walkable_Space& d);
 
 // creates a new vertex with the specified position.
-Vertex* create_vertex(Walkable_Space& diagram, Vec2 pos);
+Vertex* create_vertex(Walkable_Space& space, Vec2 pos);
 
 // creates an edge between vertices u and v.
-Edge* create_edge(Walkable_Space& diagram, int u, int v);
+Edge* create_edge(Walkable_Space& space, int u, int v);
 
 // creates a new event and appends it to the specified edge.
-Event* create_event(Walkable_Space& diagram, Vec2 pos, int edge);
+Event* create_event(Walkable_Space& space, Vec2 pos, int edge);
+
+// returns a number of incident edges.
+int degree(const Walkable_Space& space, const Vertex* vertex);
 
 }
 
@@ -116,7 +119,7 @@ inline T* next(const Pool<T>& lst, T* item)
 
 /// Vertex
 
-inline Half_Edge* half_edge(const Walkable_Space& space, Vertex* v)
+inline Half_Edge* half_edge(const Walkable_Space& space, const Vertex* v)
 {
     Edge* edge = ptr(space.edges, v->half_edge >> 1);
     return edge ? edge->dir + (v->half_edge & 1) : 0;
@@ -124,7 +127,7 @@ inline Half_Edge* half_edge(const Walkable_Space& space, Vertex* v)
 
 /// Half_Edge
 
-inline Edge* edge(const Walkable_Space& space, Half_Edge* e)
+inline Edge* edge(const Walkable_Space& space, const Half_Edge* e)
 {
     const char* a = reinterpret_cast<const char*>(space.edges.items);
     const char* b = reinterpret_cast<const char*>(e);
@@ -132,30 +135,30 @@ inline Edge* edge(const Walkable_Space& space, Half_Edge* e)
     return space.edges.items + diff/sizeof(Edge);
 }
 
-inline Half_Edge* opposite(const Walkable_Space& space, Half_Edge* e)
+inline Half_Edge* opposite(const Walkable_Space& space, const Half_Edge* e)
 {
     Edge* p = edge(space, e);
     int dir = int(e - p->dir);
     return p->dir + (dir^1);
 }
 
-inline Vertex* target(const Walkable_Space& space, Half_Edge* e)
+inline Vertex* target(const Walkable_Space& space, const Half_Edge* e)
 {
     return ptr(space.vertices, e->target);
 }
 
-inline Vertex* source(const Walkable_Space& space, Half_Edge* e)
+inline Vertex* source(const Walkable_Space& space, const Half_Edge* e)
 {
     return target(space, opposite(space, e));
 }
 
-inline Half_Edge* next(const Walkable_Space& space, Half_Edge* e)
+inline Half_Edge* next(const Walkable_Space& space, const Half_Edge* e)
 {
     Edge* edge = ptr(space.edges, e->next >> 1);
     return edge ? edge->dir + (e->next & 1) : 0;
 }
 
-inline Event* event(const Walkable_Space& space, Half_Edge* e)
+inline Event* event(const Walkable_Space& space, const Half_Edge* e)
 {
     return ptr(space.events, e->event);
 }

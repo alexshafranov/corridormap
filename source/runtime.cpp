@@ -198,4 +198,22 @@ Event* create_event(Walkable_Space& space, Vec2 pos, int edge)
     return new_event;
 }
 
+int degree(const Walkable_Space& space, const Vertex* vertex)
+{
+    int result = 0;
+    Half_Edge* head = half_edge(space, vertex);
+
+    for (Half_Edge* edge = head; ; edge = next(space, edge))
+    {
+        result++;
+
+        if (next(space, edge) == head)
+        {
+            break;
+        }
+    }
+
+    return result;
+}
+
 }
