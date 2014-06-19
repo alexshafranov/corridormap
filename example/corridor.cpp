@@ -102,7 +102,7 @@ int main()
         return 1;
     }
 
-    glfw_window_context glfw_window_ctx(screen_width, screen_height, "Voronoi");
+    glfw_window_context glfw_window_ctx(screen_width, screen_height, "corridormap");
     GLFWwindow* window = glfw_window_ctx.window;
 
     if (!window)
@@ -273,7 +273,7 @@ int main()
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
-        nvgBeginFrame(vg, window_width, window_height, pxRatio, NVG_PREMULTIPLIED_ALPHA);
+        nvgBeginFrame(vg, window_width, window_height, pxRatio);
 
         float sx = (float)window_width/render_target_width;
         float sy = (float)window_height/render_target_height;

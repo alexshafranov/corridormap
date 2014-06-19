@@ -68,12 +68,44 @@ namespace
         return s;
     }
 
+    void circle_corner(NVGcontext* vg, Vec2 corner, Vec2 a, Vec2 b)
+    {
+        if (len(sub(b, a)) < 4.f)
+        {
+            nvgLineTo(vg, b.x, b.y);
+            return;
+        }
+
+        Vec2 n = normalized(sub(scale(add(a, b), 0.5f), corner));
+        Vec2 c = add(corner, scale(n, 32.f));
+        circle_corner(vg, corner, a, c);
+        circle_corner(vg, corner, c, b);
+    }
+
+    void connect_sides(NVGcontext* vg, Vec2 curr_pos, Vec2 curr_side, Vec2 prev_pos, Vec2 prev_side, const Draw_Params& params)
+    {
+        Segment prev_seg = to_image(prev_pos, prev_side, 32.f, params);
+        Segment curr_seg = to_image(curr_pos, curr_side, 32.f, params);
+
+        if (abs(prev_side.x - curr_side.x) < 0.1f && abs(prev_side.y - curr_side.y) < 0.1f)
+        {
+            Vec2 corner = to_image(curr_side, params);
+            Vec2 a = prev_seg.b;
+            Vec2 b = curr_seg.b;
+            circle_corner(vg, corner, a, b);
+        }
+        else
+        {
+            nvgLineTo(vg, curr_seg.b.x, curr_seg.b.y);
+        }
+    }
+
     void fill_edges(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
-        // nvgFillColor(vg, nvgRGBA(0, 255, 0, 50));
-        nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-        nvgStrokeWidth(vg, 1.f);
+        nvgFillColor(vg, nvgRGBA(0, 255, 0, 50));
+        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        nvgStrokeWidth(vg, 2.f);
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
@@ -88,99 +120,38 @@ namespace
             Vec2 prev_side = e1->sides[1];
             for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
             {
-                Vec2 curr_pos = e->pos;
-                Vec2 curr_side = e->sides[1];
-                Segment prev_seg = to_image(prev_pos, prev_side, 32.f, params);
-                Segment curr_seg = to_image(curr_pos, curr_side, 32.f, params);
-
-                if (abs(prev_side.x - curr_side.x) < 0.1f && abs(prev_side.y - curr_side.y) < 0.1f)
-                {
-                    Vec2 corner = to_image(curr_side, params);
-                    Vec2 a = prev_seg.b;
-                    Vec2 b = curr_seg.b;
-                    Vec2 leg1 = normalized(sub(a, corner));
-                    Vec2 leg2 = normalized(sub(b, corner));
-                    float angle = acosf(dot(leg1, leg2)*0.5f);
-                    Vec2 n = normalized(sub(scale(add(a, b), 0.5f), corner));
-                    Vec2 c = add(corner, scale(n, 32.f));
-                    nvgArcTo(vg, c.x, c.y, b.x, b.y, 32.f);
-                }
-                else
-                {
-                    nvgLineTo(vg, curr_seg.b.x, curr_seg.b.y);
-                }
-
-                prev_pos = curr_pos;
-                prev_side = curr_side;
+                connect_sides(vg, e->pos, e->sides[1], prev_pos, prev_side, params);
+                prev_pos = e->pos;
+                prev_side = e->sides[1];
             }
 
-            seg = to_image(target(*params.space, e0)->pos, e0->sides[1], 32.f, params);
-            nvgLineTo(vg, seg.b.x, seg.b.y);
-            Vec2 v = to_image(target(*params.space, e0)->pos, params);
-            nvgLineTo(vg, v.x, v.y);
-            seg = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
-            nvgLineTo(vg, seg.b.x, seg.b.y);
+            connect_sides(vg, target(*params.space, e0)->pos, e0->sides[1], prev_pos, prev_side, params);
+
+            {
+                Vec2 v = to_image(target(*params.space, e0)->pos, params);
+                nvgLineTo(vg, v.x, v.y);
+                seg = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
+                nvgLineTo(vg, seg.b.x, seg.b.y);
+            }
 
             prev_pos = target(*params.space, e0)->pos;
             prev_side = e0->sides[0];
             for (Event* e = event(*params.space, e1); e != 0; e = next(*params.space, e, 1))
             {
-                Vec2 curr_pos = e->pos;
-                Vec2 curr_side = e->sides[0];
-                Segment prev_seg = to_image(prev_pos, prev_side, 32.f, params);
-                Segment curr_seg = to_image(curr_pos, curr_side, 32.f, params);
-
-                if (abs(prev_side.x - curr_side.x) < 0.1f && abs(prev_side.y - curr_side.y) < 0.1f)
-                {
-                    Vec2 corner = to_image(curr_side, params);
-                    Vec2 a = prev_seg.b;
-                    Vec2 b = curr_seg.b;
-                    Vec2 leg1 = normalized(sub(a, corner));
-                    Vec2 leg2 = normalized(sub(b, corner));
-                    float angle = acosf(dot(leg1, leg2)*0.5f);
-                    Vec2 n = normalized(sub(scale(add(a, b), 0.5f), corner));
-                    Vec2 c = add(corner, scale(n, 32.f));
-                    nvgArcTo(vg, c.x, c.y, b.x, b.y, 32.f);
-                }
-                else
-                {
-                    nvgLineTo(vg, curr_seg.b.x, curr_seg.b.y);
-                }
-
-                prev_pos = curr_pos;
-                prev_side = curr_side;
+                connect_sides(vg, e->pos, e->sides[0], prev_pos, prev_side, params);
+                prev_pos = e->pos;
+                prev_side = e->sides[0];
             }
+
+            connect_sides(vg, target(*params.space, e1)->pos, e1->sides[0], prev_pos, prev_side, params);
 
             {
-                Vec2 curr_pos = target(*params.space, e1)->pos;
-                Vec2 curr_side = e1->sides[0];
-
-                Segment prev_seg = to_image(prev_pos, prev_side, 32.f, params);
-                Segment curr_seg = to_image(curr_pos, curr_side, 32.f, params);
-
-                if (abs(prev_side.x - curr_side.x) < 0.1f && abs(prev_side.y - curr_side.y) < 0.1f)
-                {
-                    Vec2 corner = to_image(curr_side, params);
-                    Vec2 a = prev_seg.b;
-                    Vec2 b = curr_seg.b;
-                    Vec2 leg1 = normalized(sub(a, corner));
-                    Vec2 leg2 = normalized(sub(b, corner));
-                    float angle = acosf(dot(leg1, leg2)*0.5f);
-                    Vec2 n = normalized(sub(scale(add(a, b), 0.5f), corner));
-                    Vec2 c = add(corner, scale(n, 32.f));
-                    nvgArcTo(vg, c.x, c.y, b.x, b.y, 32.f);
-                }
-                else
-                {
-                    nvgLineTo(vg, curr_seg.b.x, curr_seg.b.y);
-                }
-
-                v = to_image(target(*params.space, e1)->pos, params);
+                Vec2 v = to_image(target(*params.space, e1)->pos, params);
                 nvgLineTo(vg, v.x, v.y);
+                nvgClosePath(vg);
             }
 
-            nvgClosePath(vg);
-            // nvgFill(vg);
+            nvgFill(vg);
             nvgStroke(vg);
         }
     }
@@ -287,106 +258,72 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
     }
 
     // corridor bounds.
-    // {
-    //     NVG_State_Scope s(vg);
-    //     nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-    //     nvgStrokeWidth(vg, 2.f);
+    {
+        NVG_State_Scope s(vg);
+        nvgStrokeColor(vg, nvgRGB(255, 0, 0));
+        nvgStrokeWidth(vg, 2.f);
 
-    //     for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
-    //     {
-    //         Half_Edge* e0 = edge->dir + 0;
-    //         Half_Edge* e1 = edge->dir + 1;
+        for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
+        {
+            Half_Edge* e0 = edge->dir + 0;
+            Half_Edge* e1 = edge->dir + 1;
 
-    //         {
-    //             nvgStrokeColor(vg, nvgRGB(255, 255, 255));
-    //             nvgBeginPath(vg);
-    //             Segment s0 = to_image(target(*params.space, e1)->pos, e1->sides[0], 32.f, params);
-    //             Segment s1 = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
-    //             nvgMoveTo(vg, s0.b.x, s0.b.y);
+            nvgStrokeColor(vg, nvgRGB(255, 0, 0));
+            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
+            {
+                Segment s = to_image(e->pos, e->sides[0], 32.f, params);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
 
-    //             for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
-    //             {
-    //                 Segment s = to_image(e->pos, e->sides[0], 32.f, params);
-    //                 nvgLineTo(vg, s.b.x, s.b.y);
-    //             }
+            nvgStrokeColor(vg, nvgRGB(0, 255, 0));
+            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
+            {
+                Segment s = to_image(e->pos, e->sides[1], 32.f, params);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
 
-    //             nvgLineTo(vg, s1.b.x, s1.b.y);
-    //             nvgStroke(vg);
-    //         }
+            // vertex closest points.
 
-    //         {
-    //             nvgStrokeColor(vg, nvgRGB(255, 255, 255));
-    //             nvgBeginPath(vg);
-    //             Segment s0 = to_image(target(*params.space, e1)->pos, e1->sides[1], 32.f, params);
-    //             Segment s1 = to_image(target(*params.space, e0)->pos, e0->sides[1], 32.f, params);
-    //             nvgMoveTo(vg, s0.b.x, s0.b.y);
+            nvgStrokeColor(vg, nvgRGB(255, 0, 255));
+            {
+                nvgBeginPath(vg);
+                Segment s = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
 
-    //             for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
-    //             {
-    //                 Segment s = to_image(e->pos, e->sides[1], 32.f, params);
-    //                 nvgLineTo(vg, s.b.x, s.b.y);
-    //             }
+            {
+                nvgBeginPath(vg);
+                Segment s = to_image(target(*params.space, e0)->pos, e0->sides[1], 32.f, params);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
 
-    //             nvgLineTo(vg, s1.b.x, s1.b.y);
-    //             nvgStroke(vg);
-    //         }
+            {
+                nvgBeginPath(vg);
+                Segment s = to_image(target(*params.space, e1)->pos, e1->sides[0], 32.f, params);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
 
-    //         nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-    //         for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
-    //         {
-    //             Segment s = to_image(e->pos, e->sides[0], 32.f, params);
-    //             nvgBeginPath(vg);
-    //             nvgMoveTo(vg, s.a.x, s.a.y);
-    //             nvgLineTo(vg, s.b.x, s.b.y);
-    //             nvgStroke(vg);
-    //         }
-
-    //         nvgStrokeColor(vg, nvgRGB(0, 255, 0));
-    //         for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
-    //         {
-    //             Segment s = to_image(e->pos, e->sides[1], 32.f, params);
-    //             nvgBeginPath(vg);
-    //             nvgMoveTo(vg, s.a.x, s.a.y);
-    //             nvgLineTo(vg, s.b.x, s.b.y);
-    //             nvgStroke(vg);
-    //         }
-
-    //         // vertex closest points.
-
-    //         nvgStrokeColor(vg, nvgRGB(255, 0, 255));
-    //         {
-    //             nvgBeginPath(vg);
-    //             Segment s = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
-    //             nvgMoveTo(vg, s.a.x, s.a.y);
-    //             nvgLineTo(vg, s.b.x, s.b.y);
-    //             nvgStroke(vg);
-    //         }
-
-    //         {
-    //             nvgBeginPath(vg);
-    //             Segment s = to_image(target(*params.space, e0)->pos, e0->sides[1], 32.f, params);
-    //             nvgMoveTo(vg, s.a.x, s.a.y);
-    //             nvgLineTo(vg, s.b.x, s.b.y);
-    //             nvgStroke(vg);
-    //         }
-
-    //         {
-    //             nvgBeginPath(vg);
-    //             Segment s = to_image(target(*params.space, e1)->pos, e1->sides[0], 32.f, params);
-    //             nvgMoveTo(vg, s.a.x, s.a.y);
-    //             nvgLineTo(vg, s.b.x, s.b.y);
-    //             nvgStroke(vg);
-    //         }
-
-    //         {
-    //             nvgBeginPath(vg);
-    //             Segment s = to_image(target(*params.space, e1)->pos, e1->sides[1], 32.f, params);
-    //             nvgMoveTo(vg, s.a.x, s.a.y);
-    //             nvgLineTo(vg, s.b.x, s.b.y);
-    //             nvgStroke(vg);
-    //         }
-    //     }
-    // }
+            {
+                nvgBeginPath(vg);
+                Segment s = to_image(target(*params.space, e1)->pos, e1->sides[1], 32.f, params);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
+        }
+    }
 }
 
 }

@@ -107,7 +107,7 @@ int main()
         return 1;
     }
 
-    glfw_window_context glfw_window_ctx(screen_width, screen_height, "Voronoi");
+    glfw_window_context glfw_window_ctx(screen_width, screen_height, "voronoi");
     GLFWwindow* window = glfw_window_ctx.window;
 
     if (!window)
