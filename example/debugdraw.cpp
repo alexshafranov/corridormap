@@ -67,6 +67,49 @@ namespace
         s.b = add(s.a, scale(d, (l >= deflation) ? l - deflation : 0.f));
         return s;
     }
+
+    void fill_edges(NVGcontext* vg, const Draw_Params& params)
+    {
+        NVG_State_Scope s(vg);
+        nvgFillColor(vg, nvgRGBA(0, 255, 0, 50));
+
+        for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
+        {
+            Half_Edge* e0 = edge->dir + 0;
+            Half_Edge* e1 = edge->dir + 1;
+
+            nvgBeginPath(vg);
+            Segment seg = to_image(target(*params.space, e1)->pos, e1->sides[1], 32.f, params);
+            nvgMoveTo(vg, seg.b.x, seg.b.y);
+
+            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
+            {
+                Segment seg = to_image(e->pos, e->sides[1], 32.f, params);
+                nvgLineTo(vg, seg.b.x, seg.b.y);
+            }
+
+            seg = to_image(target(*params.space, e0)->pos, e0->sides[1], 32.f, params);
+            nvgLineTo(vg, seg.b.x, seg.b.y);
+            Vec2 v = to_image(target(*params.space, e0)->pos, params);
+            nvgLineTo(vg, v.x, v.y);
+            seg = to_image(target(*params.space, e0)->pos, e0->sides[0], 32.f, params);
+            nvgLineTo(vg, seg.b.x, seg.b.y);
+
+            for (Event* e = event(*params.space, e1); e != 0; e = next(*params.space, e, 1))
+            {
+                Segment seg = to_image(e->pos, e->sides[0], 32.f, params);
+                nvgLineTo(vg, seg.b.x, seg.b.y);
+            }
+
+            seg = to_image(target(*params.space, e1)->pos, e1->sides[0], 32.f, params);
+            nvgLineTo(vg, seg.b.x, seg.b.y);
+            v = to_image(target(*params.space, e1)->pos, params);
+            nvgLineTo(vg, v.x, v.y);
+
+            nvgClosePath(vg);
+            nvgFill(vg);
+        }
+    }
 }
 
 void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
@@ -107,6 +150,8 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
             offset += params.obstacles->num_poly_verts[i];
         }
     }
+
+    fill_edges(vg, params);
 
     // edges.
     {
