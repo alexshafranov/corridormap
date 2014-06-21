@@ -68,9 +68,9 @@ namespace
         return s;
     }
 
-    void circle_corner(NVGcontext* vg, Vec2 corner, Vec2 a, Vec2 b, const Draw_Params& params)
+    void circle_corner(NVGcontext* vg, Vec2 corner, Vec2 a, Vec2 b, const Draw_Params& params, int max_steps=100, int step=0)
     {
-        if (len(sub(b, a)) < 4.f)
+        if (step == max_steps || len(sub(b, a)) < 8.f)
         {
             nvgLineTo(vg, b.x, b.y);
             return;
@@ -78,8 +78,8 @@ namespace
 
         Vec2 n = normalized(sub(scale(add(a, b), 0.5f), corner));
         Vec2 c = add(corner, scale(n, params.agent_radius));
-        circle_corner(vg, corner, a, c, params);
-        circle_corner(vg, corner, c, b, params);
+        circle_corner(vg, corner, a, c, params, max_steps, step + 1);
+        circle_corner(vg, corner, c, b, params, max_steps, step + 1);
     }
 
     void connect_sides(NVGcontext* vg, Vec2 curr_pos, Vec2 curr_side, Vec2 prev_pos, Vec2 prev_side, const Draw_Params& params)
