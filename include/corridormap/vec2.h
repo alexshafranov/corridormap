@@ -74,6 +74,11 @@ inline float len(Vec2 a)
     return sqrt(dot(a, a));
 }
 
+inline bool equal(Vec2 a, Vec2 b, float epsilon)
+{
+    return abs(a.x - b.x) < epsilon && abs(a.y - b.y) < epsilon;
+}
+
 inline float clamp(float val, float a, float b)
 {
     return (val < a) ? a : (val > b ? b : val);

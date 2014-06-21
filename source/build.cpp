@@ -851,6 +851,13 @@ namespace
         vy = vy / grid_height * bounds_height + bounds.min[1];
         return make_vec2(vx, vy);
     }
+
+    bool is_left(Vec2 prev, Vec2 curr, Vec2 side_pos)
+    {
+        Vec2 dir1 = sub(curr, prev);
+        Vec2 dir2 = sub(side_pos, prev);
+        return dir1.x*dir2.y - dir1.y*dir2.x > 0.f;
+    }
 }
 
 void build_walkable_space(const Footprint& obstacles, const int* obstacle_offsets, Bbox2 bounds, const Voronoi_Features& features,
@@ -866,28 +873,62 @@ void build_walkable_space(const Footprint& obstacles, const int* obstacle_offset
     // 2. create edges.
     for (int i = 0; i < traced_edges.num_edges; ++i)
     {
-        int u = nz(vertex_grid, traced_edges.u[i]);
-        int v = nz(vertex_grid, traced_edges.v[i]);
+        int u_nz = nz(vertex_grid, traced_edges.u[i]);
+        int v_nz = nz(vertex_grid, traced_edges.v[i]);
 
-        Edge* edge = create_edge(out, u, v);
+        Edge* edge = create_edge(out, u_nz, v_nz);
         Half_Edge* e0 = edge->dir + 0;
         Half_Edge* e1 = edge->dir + 1;
+
+        Vec2 u = source(out, edge)->pos;
+        Vec2 v = target(out, edge)->pos;
 
         unsigned int obstacle_id_1 = traced_edges.obstacle_ids_1[i];
         unsigned int obstacle_id_2 = traced_edges.obstacle_ids_2[i];
 
-        e0->sides[0] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
-        e0->sides[1] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
+        {
+            Vec2 cp0 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
+            Vec2 cp1 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
 
-        e1->sides[0] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
-        e1->sides[1] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
+            if (is_left(u, v, cp0))
+            {
+                e0->sides[0] = cp0;
+                e0->sides[1] = cp1;
+            }
+            else
+            {
+                e0->sides[0] = cp1;
+                e0->sides[1] = cp0;
+            }
+        }
+
+        {
+            Vec2 cp0 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
+            Vec2 cp1 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
+
+            if (is_left(v, u, cp0))
+            {
+                e1->sides[0] = cp0;
+                e1->sides[1] = cp1;
+            }
+            else
+            {
+                e1->sides[0] = cp1;
+                e1->sides[1] = cp0;
+            }
+        }
     }
 
     // 3. events: convert positions and compute sides.
     for (int i = 0; i < traced_edges.num_edges; ++i)
     {
+        Edge* edge = out.edges.items + i;
+        Vec2 u = source(out, edge)->pos;
+
         int event_offset = traced_edges.edge_event_offset[i];
         int num_events = traced_edges.edge_num_events[i];
+
+        Vec2 prev = u;
 
         for (int j = event_offset; j < event_offset + num_events; ++j)
         {
@@ -896,11 +937,24 @@ void build_walkable_space(const Footprint& obstacles, const int* obstacle_offset
 
             Event* e = create_event(out, pos, i);
 
-            unsigned int obstacle_id_0 = features.edge_obstacle_ids_1[nz(edge_grid, evt_lin_idx)];
-            unsigned int obstacle_id_1 = features.edge_obstacle_ids_2[nz(edge_grid, evt_lin_idx)];
+            unsigned int obstacle_id_1 = features.edge_obstacle_ids_1[nz(edge_grid, evt_lin_idx)];
+            unsigned int obstacle_id_2 = features.edge_obstacle_ids_2[nz(edge_grid, evt_lin_idx)];
 
-            e->sides[0] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_0, pos);
-            e->sides[1] = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, pos);
+            Vec2 cp0 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, pos);
+            Vec2 cp1 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, pos);
+
+            if (is_left(prev, pos, cp0))
+            {
+                e->sides[0] = cp0;
+                e->sides[1] = cp1;
+            }
+            else
+            {
+                e->sides[0] = cp1;
+                e->sides[1] = cp0;
+            }
+
+            prev = pos;
         }
     }
 }

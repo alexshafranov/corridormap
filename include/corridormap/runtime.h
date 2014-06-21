@@ -163,6 +163,18 @@ inline Event* event(const Walkable_Space& space, const Half_Edge* e)
     return ptr(space.events, e->event);
 }
 
+/// Edge
+
+inline Vertex* target(const Walkable_Space& space, const Edge* e)
+{
+    return space.vertices.items + e->dir[0].target;
+}
+
+inline Vertex* source(const Walkable_Space& space, const Edge* e)
+{
+    return space.vertices.items + e->dir[1].target;
+}
+
 /// Event
 
 inline Event* next(const Walkable_Space& space, Event* e, int direction)
