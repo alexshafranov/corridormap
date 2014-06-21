@@ -103,9 +103,7 @@ namespace
     void fill_edges(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
-        nvgFillColor(vg, nvgRGBA(0, 255, 0, 50));
-        nvgStrokeColor(vg, nvgRGB(120, 0, 0));
-        nvgStrokeWidth(vg, 2.f);
+        nvgFillColor(vg, nvgRGBA(255, 127, 0, 200));
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
@@ -205,7 +203,7 @@ namespace
     {
         NVG_State_Scope s(vg);
         nvgStrokeColor(vg, nvgRGB(120, 0, 0));
-        nvgStrokeWidth(vg, 2.f);
+        nvgStrokeWidth(vg, 4.f);
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
@@ -295,7 +293,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
     // background.
     {
         NVG_State_Scope s(vg);
-        nvgFillColor(vg, nvgRGB(120, 120, 120));
+        nvgFillColor(vg, nvgRGB(80, 80, 80));
         nvgBeginPath(vg);
         nvgRect(vg, 0, 0, params.image_dimensions.x, params.image_dimensions.y);
         nvgFill(vg);
@@ -330,13 +328,12 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
     }
 
     fill_edges(vg, params);
-    stroke_borders(vg, params);
 
     // edges.
     {
         NVG_State_Scope s(vg);
-        nvgStrokeColor(vg, nvgRGB(0, 0, 255));
-        nvgStrokeWidth(vg, 2.f);
+        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        nvgStrokeWidth(vg, 2.5f);
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
@@ -363,8 +360,8 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGB(0, 0, 255));
-        nvgStrokeWidth(vg, 2.f);
+        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        nvgStrokeWidth(vg, 2.5f);
 
         for (Event* e = first(params.space->events); e != 0; e = next(params.space->events, e))
         {
@@ -379,8 +376,8 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGB(0, 0, 255));
-        nvgStrokeWidth(vg, 2.f);
+        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        nvgStrokeWidth(vg, 2.5f);
 
         for (Vertex* v = first(params.space->vertices); v != 0; v = next(params.space->vertices, v))
         {
@@ -395,69 +392,36 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-        nvgStrokeWidth(vg, 2.f);
+        nvgStrokeWidth(vg, 1.0f);
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
             Half_Edge* e0 = edge->dir + 0;
             Half_Edge* e1 = edge->dir + 1;
 
-            // nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-            // for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
-            // {
-            //     Segment s = to_image(e->pos, e->sides[0], params);
-            //     nvgBeginPath(vg);
-            //     nvgMoveTo(vg, s.a.x, s.a.y);
-            //     nvgLineTo(vg, s.b.x, s.b.y);
-            //     nvgStroke(vg);
-            // }
+            nvgStrokeColor(vg, nvgRGB(255, 0, 0));
+            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
+            {
+                Segment s = to_image(e->pos, e->sides[0], params);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
 
-            // nvgStrokeColor(vg, nvgRGB(0, 255, 0));
-            // for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
-            // {
-            //     Segment s = to_image(e->pos, e->sides[1], params);
-            //     nvgBeginPath(vg);
-            //     nvgMoveTo(vg, s.a.x, s.a.y);
-            //     nvgLineTo(vg, s.b.x, s.b.y);
-            //     nvgStroke(vg);
-            // }
-
-            // vertex closest points.
-
-            // nvgStrokeColor(vg, nvgRGB(255, 0, 255));
-            // {
-            //     nvgBeginPath(vg);
-            //     Segment s = to_image(target(*params.space, e0)->pos, e0->sides[0], params);
-            //     nvgMoveTo(vg, s.a.x, s.a.y);
-            //     nvgLineTo(vg, s.b.x, s.b.y);
-            //     nvgStroke(vg);
-            // }
-
-            // {
-            //     nvgBeginPath(vg);
-            //     Segment s = to_image(target(*params.space, e0)->pos, e0->sides[1], params);
-            //     nvgMoveTo(vg, s.a.x, s.a.y);
-            //     nvgLineTo(vg, s.b.x, s.b.y);
-            //     nvgStroke(vg);
-            // }
-
-            // {
-            //     nvgBeginPath(vg);
-            //     Segment s = to_image(target(*params.space, e1)->pos, e1->sides[0], params);
-            //     nvgMoveTo(vg, s.a.x, s.a.y);
-            //     nvgLineTo(vg, s.b.x, s.b.y);
-            //     nvgStroke(vg);
-            // }
-
-            // {
-            //     nvgBeginPath(vg);
-            //     Segment s = to_image(target(*params.space, e1)->pos, e1->sides[1], params);
-            //     nvgMoveTo(vg, s.a.x, s.a.y);
-            //     nvgLineTo(vg, s.b.x, s.b.y);
-            //     nvgStroke(vg);
-            // }
+            nvgStrokeColor(vg, nvgRGB(0, 255, 0));
+            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
+            {
+                Segment s = to_image(e->pos, e->sides[1], params);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, s.a.x, s.a.y);
+                nvgLineTo(vg, s.b.x, s.b.y);
+                nvgStroke(vg);
+            }
         }
     }
+
+    stroke_borders(vg, params);
 }
 
 }
