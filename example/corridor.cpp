@@ -136,9 +136,21 @@ int main()
 
     corridormap::Memory_Malloc mem;
 
-    float obstacle_verts_x[] = { 10.f, 50.f, 30.f,  70.f, 80.f, 90.f, 90.f, 80.f, 70.f, 60.f, 60.f,  10.f, 40.f, 40.f, 10.f,  50.f, 80.f, 70.f, };
-    float obstacle_verts_y[] = { 20.f, 20.f, 50.f,  20.f, 20.f, 30.f, 40.f, 50.f, 50.f, 40.f, 30.f,  70.f, 70.f, 90.f, 90.f,  70.f, 70.f, 80.f, };
-    int num_poly_verts[] = { 3, 8, 4, 3 };
+    float obstacle_verts_x[] = { 
+        546.04233f, 586.87983f, 586.87983f, 546.04233f, 484.7861f, 443.9486f, 443.9486f, 484.7861f, 219.27517f, 299.49779f, 367.03349f, 286.81087f, 461.04229f, 567.87837f, 549.26637f, 442.43029f, 655.31886f,
+        757.95437f, 790.9898f, 688.35429f, 103.76307f, 307.49818f, 332.23693f, 128.50182f, 482.48372f, 665.65059f, 633.51629f, 450.34941f, 862.14993f, 778.93614f, 719.02164f, 802.23542f, 87.27517f, 167.49779f,
+        235.03349f, 154.81087f, 359.17335f, 439.50653f, 507.13531f, 426.80213f, 886.58172f, 791.09332f, 761.96796f, 792.52284f, 828.33099f, 845.80621f, 952.58172f, 857.09332f, 827.96796f, 858.52284f, 894.33099f,
+        911.80621f, 83.84732f, 221.04656f, 272.15267f, 134.95344f, 159.50583f, 175.66538f, 165.88157f, 130.15439f, 91.23934f, 75.07979f, 84.8636f, 120.59078f,
+    };
+
+    float obstacle_verts_y[] = {
+        366.49453f, 413.80088f, 461.10723f, 508.41357f, 508.41357f, 461.10723f, 413.80088f, 366.49453f, 276.47356f, 203.07432f, 276.8883f, 350.28754f, 135.41626f, 155.64419f, 253.9456f, 233.71767f, 259.41453f,
+        223.51093f, 317.94733f, 353.85093f, 639.66596f, 563.66847f, 622.46545f, 698.46295f, 602.91856f, 720.10861f, 775.21285f, 658.02281f, 470.77478f, 673.8586f, 651.35665f, 448.27281f, 432.47356f, 359.07432f,
+        432.8883f, 506.28754f, 868.83723f, 823.54104f, 869.09317f, 914.38936f, 901.90592f, 949.29104f, 890.59889f, 802.29103f, 784.52161f, 819.73691f, 219.90592f, 267.29104f, 208.59889f, 120.29103f, 102.52161f,
+        137.73691f, 914.32913f, 745.62826f, 783.80228f, 952.5032f, 122.51486f, 161.9206f, 193.21563f, 216.39993f, 204.23386f, 164.82812f, 133.53309f, 110.34879f,
+    };
+
+    int num_poly_verts[] = { 8, 4, 4, 4, 4, 4, 4, 4, 4, 6, 6, 4, 8, };
 
     corridormap::Footprint obstacles;
     obstacles.x = obstacle_verts_x;
@@ -147,7 +159,7 @@ int main()
     obstacles.num_verts = sizeof(obstacle_verts_x)/sizeof(obstacle_verts_x[0]);
     obstacles.num_poly_verts = num_poly_verts;
 
-    const float border = 10.f;
+    const float border = 60.f;
     corridormap::Bbox2 obstacle_bounds = corridormap::bounds(obstacles, border);
 
     const float max_dist = corridormap::max_distance(obstacle_bounds);
@@ -252,7 +264,7 @@ int main()
     }
 
     corridormap::Draw_Params draw_params;
-    draw_params.agent_radius = 40.f;
+    draw_params.agent_radius = 15.f;
     draw_params.bounds_min = corridormap::make_vec2(obstacle_bounds.min);
     draw_params.bounds_max = corridormap::make_vec2(obstacle_bounds.max);
     draw_params.image_dimensions = corridormap::make_vec2(0, 0);
