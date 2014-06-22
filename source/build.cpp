@@ -684,7 +684,15 @@ namespace
 
             if (p_n1 != c_n1 || p_n2 != c_n2)
             {
-                events[num_events] = curr;
+                if (p_n1 > 0 || p_n2 > 0)
+                {
+                    events[num_events] = prev;
+                }
+                else
+                {
+                    events[num_events] = curr;
+                }
+
                 num_events++;
             }
 

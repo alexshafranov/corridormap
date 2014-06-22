@@ -87,7 +87,7 @@ namespace
         Segment prev_seg = to_image(prev_pos, prev_side, params);
         Segment curr_seg = to_image(curr_pos, curr_side, params);
 
-        if (equal(prev_side, curr_side, 0.1f))
+        if (equal(prev_side, curr_side, 1e-6f))
         {
             Vec2 corner = to_image(curr_side, params);
             Vec2 a = prev_seg.b;
