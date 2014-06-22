@@ -143,7 +143,7 @@ int main()
     corridormap::Footprint obstacles;
     obstacles.x = obstacle_verts_x;
     obstacles.y = obstacle_verts_y;
-    obstacles.num_polys = 4;
+    obstacles.num_polys = sizeof(num_poly_verts)/sizeof(num_poly_verts[0]);
     obstacles.num_verts = sizeof(obstacle_verts_x)/sizeof(obstacle_verts_x[0]);
     obstacles.num_poly_verts = num_poly_verts;
 
