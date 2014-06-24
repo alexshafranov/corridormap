@@ -28,7 +28,7 @@
 
 namespace corridormap {
 
-// obstacles represented as a set of 2d convex polygons. polys are stored in CCW order.
+// obstacles represented as a set of 2d convex polygons. polys are expected to be in CCW order.
 struct Footprint
 {
     // the number of polygons.
