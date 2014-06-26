@@ -33,9 +33,9 @@ Distance_Mesh allocate_distance_mesh(Memory* mem, int num_obstacle_polys, int ma
     result.num_segments = 0;
     result.num_verts = 0;
     result.verts = allocate<Render_Vertex>(mem, max_verts);
-    // 4 segments for border and num_obstacle_polys segments for obstacles.
-    result.num_segment_verts = allocate<int>(mem, num_border_segments + num_obstacle_polys);
-    result.segment_colors = allocate<unsigned int>(mem, num_border_segments + num_obstacle_polys);
+    // 4 segments for border and num_obstacle_polys segments for obstacles + 1 segement for areas inside obstacles.
+    result.num_segment_verts = allocate<int>(mem, 1 + num_border_segments + num_obstacle_polys);
+    result.segment_colors = allocate<unsigned int>(mem, 1 + num_border_segments + num_obstacle_polys);
     return result;
 }
 

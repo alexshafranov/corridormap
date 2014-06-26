@@ -157,9 +157,6 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
     const int cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI/cone_half_angle));
     const float cone_angle = 2.f*CORRIDORMAP_PI/cone_triangle_count;
 
-    // input
-    const float* poly_x = in.x;
-    const float* poly_y = in.y;
     const int* num_poly_verts = in.num_poly_verts;
     const int num_polys = in.num_polys;
 
@@ -167,6 +164,29 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
     Render_Vertex* verts = out.verts;
     unsigned int* segment_colors = out.segment_colors;
     int* num_segment_verts = out.num_segment_verts;
+
+    int next_seg_color = 0;
+
+    // 1. segment 0 is area inside obstacles.
+    {
+        const float* poly_x = in.x;
+        const float* poly_y = in.y;
+        int nsegverts = 0;
+
+        for (int i = 0; i < num_polys; ++i)
+        {
+            int npverts = num_poly_verts[i];
+            nsegverts += build_poly_cap(verts, poly_x, poly_y, npverts);
+            poly_x += npverts;
+            poly_y += npverts;
+        }
+
+        *segment_colors++ = next_seg_color++;
+        *num_segment_verts++ = nsegverts;
+    }
+
+    const float* poly_x = in.x;
+    const float* poly_y = in.y;
 
     for (int i = 0; i < num_polys; ++i)
     {
@@ -196,20 +216,17 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
             float angle_cone_sector_step = angle_cone_sector/angle_cone_sector_steps;
             float angle_start = atan2(e0.y, e0.x);
 
-            // 1. generate cone sector for the current vertex.
+            // 2. generate cone sector for the current vertex.
             nsegverts += build_cone_sector(verts, curr, angle_cone_sector_steps, angle_cone_sector_step, angle_start, max_dist);
 
-            // 2. generate tent for (curr, next) edge.
+            // 3. generate tent for (curr, next) edge.
             nsegverts += build_tent_side(verts, next, curr, len_e1, max_dist);
         }
-
-        // 3. generate polygon caps (i.e. obstacle polygons themselves, to make the distance 0 inside polygons)
-        nsegverts += build_poly_cap(verts, poly_x, poly_y, npverts);
 
         poly_x += npverts;
         poly_y += npverts;
 
-        *segment_colors++    = i;
+        *segment_colors++    = next_seg_color++;
         *num_segment_verts++ = nsegverts;
     }
 
@@ -229,11 +246,11 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
 
         for (int i = 0; i < num_border_segments; ++i)
         {
-            *segment_colors++ = num_polys + i;
+            *segment_colors++ = next_seg_color++;
         }
     }
 
-    out.num_segments = num_border_segments + in.num_polys;
+    out.num_segments = 1 + num_border_segments + in.num_polys;
     out.num_verts = static_cast<int>(verts - out.verts);
 }
 
@@ -340,7 +357,12 @@ namespace
         const int obstacle_id,
         const Vec2 edge_point)
     {
-        int oid = obstacle_id;
+        int oid = obstacle_id - 1;
+
+        if (oid < 0)
+        {
+            return 0;
+        }
 
         int num_normals = num_obstacle_normals[oid];
 
@@ -821,37 +843,14 @@ namespace
 
     Vec2 compute_closest_point(const Footprint& obstacles, const Bbox2& bounds, const int* obstacle_offsets, unsigned int obstacle_id, const Vec2& point)
     {
-        const float* obst_x = obstacles.x;
-        const float* obst_y = obstacles.y;
-        const int* num_obst_verts = obstacles.num_poly_verts;
+        int oid = obstacle_id - 1;
 
-        Vec2 closest = { FLT_MAX, FLT_MAX };
-
-        if (obstacle_id < unsigned(obstacles.num_polys))
+        if (oid < 0)
         {
-            float min_dist = FLT_MAX;
-
-            int first_vertex_idx = obstacle_offsets[obstacle_id];
-            int last_vertex_idx = first_vertex_idx + num_obst_verts[obstacle_id] - 1;
-
-            int curr_idx = last_vertex_idx;
-            int next_idx = first_vertex_idx;
-
-            for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
-            {
-                Vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
-                Vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
-
-                Segement_Closest_Point r = closest_to_segment(point, p0, p1);
-
-                if (r.dist < min_dist)
-                {
-                    min_dist = r.dist;
-                    closest = r.closest;
-                }
-            }
+            return point;
         }
-        else
+
+        if (oid >= obstacles.num_polys)
         {
             Vec2 lt = { bounds.min[0], bounds.max[1] };
             Vec2 lb = { bounds.min[0], bounds.min[1] };
@@ -861,9 +860,36 @@ namespace
             Vec2 segments_p0[] = { lb, rb, rt, lt };
             Vec2 segments_p1[] = { rb, rt, lt, lb };
 
-            int offset = obstacle_id - obstacles.num_polys;
+            int offset = oid - obstacles.num_polys;
             Segement_Closest_Point r = closest_to_segment(point, segments_p0[offset], segments_p1[offset]);
-            closest = r.closest;
+            return r.closest;
+        }
+
+        const float* obst_x = obstacles.x;
+        const float* obst_y = obstacles.y;
+        const int* num_obst_verts = obstacles.num_poly_verts;
+
+        Vec2 closest = { FLT_MAX, FLT_MAX };
+        float min_dist = FLT_MAX;
+
+        int first_vertex_idx = obstacle_offsets[oid];
+        int last_vertex_idx = first_vertex_idx + num_obst_verts[oid] - 1;
+
+        int curr_idx = last_vertex_idx;
+        int next_idx = first_vertex_idx;
+
+        for (; next_idx <= last_vertex_idx; curr_idx = next_idx++)
+        {
+            Vec2 p0 = { obst_x[curr_idx], obst_y[curr_idx] };
+            Vec2 p1 = { obst_x[next_idx], obst_y[next_idx] };
+
+            Segement_Closest_Point r = closest_to_segment(point, p0, p1);
+
+            if (r.dist < min_dist)
+            {
+                min_dist = r.dist;
+                closest = r.closest;
+            }
         }
 
         return closest;
