@@ -113,7 +113,7 @@ const char* kernel_store_edge_obstacle_ids_source = \
 "                                                                                                        \n"
 "    if (a == c)                                                                                         \n"
 "    {                                                                                                   \n"
-"        side_1_ids[gid]  = a;                                                                           \n"
+"        side_1_ids[gid] = a;                                                                            \n"
 "        side_2_ids[gid] = b;                                                                            \n"
 "        return;                                                                                         \n"
 "    }                                                                                                   \n"
