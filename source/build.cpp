@@ -82,8 +82,8 @@ int distance_mesh_tris_for_point(float max_dist, float max_error)
 int max_distance_mesh_verts(const Footprint& f, float max_dist, float max_error)
 {
     int point_tris = distance_mesh_tris_for_point(max_dist, max_error);
-    // point_tris triangles per vertex plus 4 triangles per edge plus four border planes.
-    return point_tris*f.num_verts*3 + f.num_verts*4*3 + 6*4;
+    // point_tris triangles per vertex, 2 triangles per edge, four border planes, obstacle polygons.
+    return point_tris*f.num_verts*3 + f.num_verts*2*3 + (f.num_verts - f.num_polys*2)*3 + 6*4;
 }
 
 namespace
@@ -128,6 +128,24 @@ namespace
         *output++ = p2; *output++ = p1; *output++ = p3;
 
         return 6;
+    }
+
+    inline int build_poly_cap(Render_Vertex*& output, const float* poly_x, const float* poly_y, int num_verts)
+    {
+        corridormap_assert(num_verts >= 3);
+        Render_Vertex p0 = { poly_x[0], poly_y[0], 0.f };
+        Render_Vertex p1 = { poly_x[1], poly_y[1], 0.f };
+
+        for (int i = 2; i < num_verts; ++i)
+        {
+            Render_Vertex p2 = { poly_x[i], poly_y[i], 0.f };
+            *output++ = p0;
+            *output++ = p1;
+            *output++ = p2;
+            p1 = p2;
+        }
+
+        return (num_verts - 2)*3;
     }
 }
 
@@ -182,9 +200,11 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
             nsegverts += build_cone_sector(verts, curr, angle_cone_sector_steps, angle_cone_sector_step, angle_start, max_dist);
 
             // 2. generate tent for (curr, next) edge.
-            nsegverts += build_tent_side(verts, curr, next, len_e1, max_dist);
             nsegverts += build_tent_side(verts, next, curr, len_e1, max_dist);
         }
+
+        // 3. generate polygon caps (i.e. obstacle polygons themselves, to make the distance 0 inside polygons)
+        nsegverts += build_poly_cap(verts, poly_x, poly_y, npverts);
 
         poly_x += npverts;
         poly_y += npverts;
@@ -193,7 +213,7 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
         *num_segment_verts++ = nsegverts;
     }
 
-    // 3. generate borders.
+    // 4. generate borders.
     {
         Vec2 lt = { bounds.min[0], bounds.max[1] };
         Vec2 lb = { bounds.min[0], bounds.min[1] };
