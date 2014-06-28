@@ -286,11 +286,8 @@ namespace
             }
         }
     }
-}
 
-void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
-{
-    // background.
+    void draw_background(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgFillColor(vg, nvgRGB(80, 80, 80));
@@ -299,7 +296,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
         nvgFill(vg);
     }
 
-    // obstacles.
+    void draw_obstacles(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgFillColor(vg, nvgRGB(255, 255, 255));
@@ -327,9 +324,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
         }
     }
 
-    fill_edges(vg, params);
-
-    // edges.
+    void draw_edges(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgStrokeColor(vg, nvgRGB(0, 0, 0));
@@ -356,7 +351,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
         }
     }
 
-    // events.
+    void draw_events(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgBeginPath(vg);
@@ -372,7 +367,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
         nvgStroke(vg);
     }
 
-    // vertices.
+    void draw_vertices(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgBeginPath(vg);
@@ -388,7 +383,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
         nvgStroke(vg);
     }
 
-    // corridor bounds.
+    void draw_closest_points(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgStrokeColor(vg, nvgRGB(255, 0, 0));
@@ -420,7 +415,17 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
             }
         }
     }
+}
 
+void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
+{
+    draw_background(vg, params);
+    draw_obstacles(vg, params);
+    fill_edges(vg, params);
+    draw_edges(vg, params);
+    draw_events(vg, params);
+    draw_vertices(vg, params);
+    draw_closest_points(vg, params);
     stroke_borders(vg, params);
 }
 
