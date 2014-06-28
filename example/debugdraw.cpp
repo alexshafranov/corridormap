@@ -100,6 +100,83 @@ namespace
         }
     }
 
+    void walk_side(NVGcontext* vg, Edge* edge, int dir, const Draw_Params& params)
+    {
+        Half_Edge* dir_edge = edge->dir + (dir^0);
+        Half_Edge* opp_edge = edge->dir + (dir^1);
+
+        Vec2 u = target(*params.space, opp_edge)->pos;
+        Vec2 v = target(*params.space, dir_edge)->pos;
+
+        Vec2 prev_pos = u;
+        Vec2 prev_side = opp_edge->sides[0];
+
+        for (Event* e = event(*params.space, dir_edge); e != 0; e = next(*params.space, e, dir))
+        {
+            connect_sides(vg, e->pos, e->sides[dir^1], prev_pos, prev_side, params);
+            prev_pos = e->pos;
+            prev_side = e->sides[dir^1];
+        }
+
+        connect_sides(vg, v, dir_edge->sides[1], prev_pos, prev_side, params);
+    }
+
+    void fill_edge(NVGcontext* vg, Edge* edge, const Draw_Params& params)
+    {
+        Half_Edge* e0 = edge->dir + 0;
+        Half_Edge* e1 = edge->dir + 1;
+
+        Vec2 u = source(*params.space, edge)->pos;
+        Vec2 v = target(*params.space, edge)->pos;
+
+        nvgBeginPath(vg);
+        Segment seg = to_image(u, e1->sides[0], params);
+        nvgMoveTo(vg, seg.b.x, seg.b.y);
+
+        walk_side(vg, edge, 0, params);
+
+        {
+            Vec2 p = to_image(v, params);
+            nvgLineTo(vg, p.x, p.y);
+            seg = to_image(v, e0->sides[0], params);
+            nvgLineTo(vg, seg.b.x, seg.b.y);
+        }
+
+        walk_side(vg, edge, 1, params);
+
+        {
+            Vec2 p = to_image(u, params);
+            nvgLineTo(vg, p.x, p.y);
+        }
+
+        nvgClosePath(vg);
+        nvgFill(vg);
+    }
+
+    void stroke_edge(NVGcontext* vg, Edge* edge, const Draw_Params& params)
+    {
+        Half_Edge* e0 = edge->dir + 0;
+        Half_Edge* e1 = edge->dir + 1;
+
+        Vec2 u = source(*params.space, edge)->pos;
+        Vec2 v = target(*params.space, edge)->pos;
+
+        nvgBeginPath(vg);
+        Segment seg = to_image(u, e1->sides[0], params);
+        nvgMoveTo(vg, seg.b.x, seg.b.y);
+
+        walk_side(vg, edge, 0, params);
+
+        {
+            Segment seg = to_image(v, e0->sides[0], params);
+            nvgMoveTo(vg, seg.b.x, seg.b.y);
+        }
+
+        walk_side(vg, edge, 1, params);
+
+        nvgStroke(vg);
+    }
+
     void fill_edges(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
@@ -107,52 +184,17 @@ namespace
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
-            Half_Edge* e0 = edge->dir + 0;
-            Half_Edge* e1 = edge->dir + 1;
-
-            Vec2 u = source(*params.space, edge)->pos;
-            Vec2 v = target(*params.space, edge)->pos;
-
-            nvgBeginPath(vg);
-            Segment seg = to_image(u, e1->sides[0], params);
-            nvgMoveTo(vg, seg.b.x, seg.b.y);
-
-            Vec2 prev_pos = u;
-            Vec2 prev_side = e1->sides[0];
-            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
+            if (degree(*params.space, source(*params.space, edge)) == 1)
             {
-                connect_sides(vg, e->pos, e->sides[1], prev_pos, prev_side, params);
-                prev_pos = e->pos;
-                prev_side = e->sides[1];
+                continue;
             }
 
-            connect_sides(vg, v, e0->sides[1], prev_pos, prev_side, params);
-
+            if (degree(*params.space, target(*params.space, edge)) == 1)
             {
-                Vec2 p = to_image(v, params);
-                nvgLineTo(vg, p.x, p.y);
-                seg = to_image(v, e0->sides[0], params);
-                nvgLineTo(vg, seg.b.x, seg.b.y);
+                continue;
             }
 
-            prev_pos = v;
-            prev_side = e0->sides[0];
-            for (Event* e = event(*params.space, e1); e != 0; e = next(*params.space, e, 1))
-            {
-                connect_sides(vg, e->pos, e->sides[0], prev_pos, prev_side, params);
-                prev_pos = e->pos;
-                prev_side = e->sides[0];
-            }
-
-            connect_sides(vg, u, e1->sides[1], prev_pos, prev_side, params);
-
-            {
-                Vec2 p = to_image(u, params);
-                nvgLineTo(vg, p.x, p.y);
-            }
-
-            nvgClosePath(vg);
-            nvgFill(vg);
+            fill_edge(vg, edge, params);
         }
 
         for (Vertex* vertex = first(params.space->vertices); vertex != 0; vertex = next(params.space->vertices, vertex))
@@ -207,44 +249,17 @@ namespace
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
-            Half_Edge* e0 = edge->dir + 0;
-            Half_Edge* e1 = edge->dir + 1;
-
-            Vec2 u = source(*params.space, edge)->pos;
-            Vec2 v = target(*params.space, edge)->pos;
-
-            nvgBeginPath(vg);
-            Segment seg = to_image(u, e1->sides[0], params);
-            nvgMoveTo(vg, seg.b.x, seg.b.y);
-
-            Vec2 prev_pos = u;
-            Vec2 prev_side = e1->sides[0];
-            for (Event* e = event(*params.space, e0); e != 0; e = next(*params.space, e, 0))
+            if (degree(*params.space, source(*params.space, edge)) == 1)
             {
-                connect_sides(vg, e->pos, e->sides[1], prev_pos, prev_side, params);
-                prev_pos = e->pos;
-                prev_side = e->sides[1];
+                continue;
             }
 
-            connect_sides(vg, v, e0->sides[1], prev_pos, prev_side, params);
-
+            if (degree(*params.space, target(*params.space, edge)) == 1)
             {
-                seg = to_image(v, e0->sides[0], params);
-                nvgMoveTo(vg, seg.b.x, seg.b.y);
+                continue;
             }
 
-            prev_pos = v;
-            prev_side = e0->sides[0];
-            for (Event* e = event(*params.space, e1); e != 0; e = next(*params.space, e, 1))
-            {
-                connect_sides(vg, e->pos, e->sides[0], prev_pos, prev_side, params);
-                prev_pos = e->pos;
-                prev_side = e->sides[0];
-            }
-
-            connect_sides(vg, u, e1->sides[1], prev_pos, prev_side, params);
-
-            nvgStroke(vg);
+            stroke_edge(vg, edge, params);
         }
 
         for (Vertex* vertex = first(params.space->vertices); vertex != 0; vertex = next(params.space->vertices, vertex))
