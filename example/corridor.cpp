@@ -137,7 +137,7 @@ int main()
     corridormap::Memory_Malloc mem;
 
     float obstacle_verts_x[] = { 10.f, 50.f, 50.f, 10.f,  50.f, 100.f, 100.f, 50.f };
-    float obstacle_verts_y[] = { 10.f, 10.f, 60.f, 60.f,  5.f,  5.f,   65.f,  65.f };
+    float obstacle_verts_y[] = { 10.f, 10.f, 60.f, 60.f, -20.f, -20.f, 90.f,  90.f };
     int num_poly_verts[] = { 4, 4 };
 
     corridormap::Footprint obstacles;
