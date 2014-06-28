@@ -177,6 +177,69 @@ namespace
         nvgStroke(vg);
     }
 
+    void stroke_edge_concave(NVGcontext* vg, Edge* edge, int dir, const Draw_Params& params)
+    {
+        NVG_State_Scope s(vg);
+
+        Half_Edge* dir_edge = edge->dir + (dir^0);
+        Half_Edge* opp_edge = edge->dir + (dir^1);
+
+        Vec2 u = target(*params.space, opp_edge)->pos;
+        Vec2 v = target(*params.space, dir_edge)->pos;
+
+        nvgBeginPath(vg);
+        {
+            Segment seg = to_image(u, opp_edge->sides[0], params);
+            nvgMoveTo(vg, seg.b.x, seg.b.y);
+        }
+
+        Vec2 prev_pos = u;
+        Vec2 prev_side_l = opp_edge->sides[0];
+        Vec2 prev_side_r = opp_edge->sides[1];
+
+        for (Event* e = event(*params.space, dir_edge); e != 0; e = next(*params.space, e, dir))
+        {
+            connect_sides(vg, e->pos, e->sides[dir^1], prev_pos, prev_side_l, params);
+            prev_pos = e->pos;
+            prev_side_l = e->sides[dir^1];
+        }
+
+        nvgStroke(vg);
+
+        nvgBeginPath(vg);
+        {
+            Segment seg = to_image(u, opp_edge->sides[1], params);
+            nvgMoveTo(vg, seg.b.x, seg.b.y);
+        }
+
+        prev_pos = u;
+
+        for (Event* e = event(*params.space, dir_edge); e != 0; e = next(*params.space, e, dir))
+        {
+            connect_sides(vg, e->pos, e->sides[dir], prev_pos, prev_side_r, params);
+            prev_pos = e->pos;
+            prev_side_r = e->sides[dir];
+        }
+
+        nvgStroke(vg);
+
+        {
+            Segment seg_l = to_image(prev_pos, prev_side_l, params);
+            Segment seg_r = to_image(prev_pos, prev_side_r, params);
+            Vec2 c = add(seg_l.a, add(sub(seg_l.b, seg_l.a), sub(seg_r.b, seg_r.a)));
+
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, seg_l.b.x, seg_l.b.y);
+            nvgLineTo(vg, c.x, c.y);
+            nvgStroke(vg);
+
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, seg_r.b.x, seg_r.b.y);
+            nvgLineTo(vg, c.x, c.y);
+            nvgStroke(vg);
+        }
+    }
+
     void fill_edges(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
@@ -251,11 +314,13 @@ namespace
         {
             if (degree(*params.space, source(*params.space, edge)) == 1)
             {
+                stroke_edge_concave(vg, edge, 1, params);
                 continue;
             }
 
             if (degree(*params.space, target(*params.space, edge)) == 1)
             {
+                stroke_edge_concave(vg, edge, 0, params);
                 continue;
             }
 
@@ -434,6 +499,7 @@ namespace
 
 void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
 {
+    nvgLineCap(vg, NVG_ROUND);
     draw_background(vg, params);
     draw_obstacles(vg, params);
     fill_edges(vg, params);
