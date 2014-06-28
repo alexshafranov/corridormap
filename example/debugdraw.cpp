@@ -219,6 +219,11 @@ namespace
             }
         }
 
+        {
+            Segment seg = to_image(u, opp_edge->sides[0], params);
+            nvgLineTo(vg, seg.b.x, seg.b.y);
+        }
+
         nvgClosePath(vg);
         nvgFill(vg);
     }
