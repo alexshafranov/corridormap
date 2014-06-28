@@ -311,7 +311,7 @@ namespace
     void fill_edges(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
-        nvgFillColor(vg, nvgRGBA(255, 127, 0, 200));
+        nvgFillColor(vg, nvgRGB(0xff, 0x57, 0x22));
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
         {
@@ -440,7 +440,7 @@ namespace
     void draw_background(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
-        nvgFillColor(vg, nvgRGB(80, 80, 80));
+        nvgFillColor(vg, nvgRGB(0x79, 0x55, 0x48));
         nvgBeginPath(vg);
         nvgRect(vg, 0, 0, params.image_dimensions.x, params.image_dimensions.y);
         nvgFill(vg);
@@ -449,7 +449,7 @@ namespace
     void draw_obstacles(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
-        nvgFillColor(vg, nvgRGB(255, 255, 255));
+        nvgFillColor(vg, nvgRGB(0x18, 0xff, 0xff));
 
         int offset = 0;
         for (int i = 0; i < params.obstacles->num_polys; ++i)
@@ -477,7 +477,7 @@ namespace
     void draw_edges(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
-        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        nvgStrokeColor(vg, nvgRGB(0xff, 0xeb, 0x3b));
         nvgStrokeWidth(vg, 2.5f);
 
         for (Edge* edge = first(params.space->edges); edge != 0; edge = next(params.space->edges, edge))
@@ -505,7 +505,7 @@ namespace
     {
         NVG_State_Scope s(vg);
         nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        nvgStrokeColor(vg, nvgRGB(0xff, 0xeb, 0x3b));
         nvgStrokeWidth(vg, 2.5f);
 
         for (Event* e = first(params.space->events); e != 0; e = next(params.space->events, e))
@@ -521,7 +521,7 @@ namespace
     {
         NVG_State_Scope s(vg);
         nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+        nvgStrokeColor(vg, nvgRGB(0xff, 0xeb, 0x3b));
         nvgStrokeWidth(vg, 2.5f);
 
         for (Vertex* v = first(params.space->vertices); v != 0; v = next(params.space->vertices, v))
