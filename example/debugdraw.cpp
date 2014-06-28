@@ -34,6 +34,12 @@ namespace
         return mul(mul(sub(v, params.bounds_min), inv_dim), params.image_dimensions);
     }
 
+    Vec2 from_image(Vec2 v, const Draw_Params& params)
+    {
+        Vec2 inv_dim = make_vec2(1.f/params.image_dimensions.x, 1.f/params.image_dimensions.y);
+        return add(params.bounds_min, mul(mul(v, inv_dim), sub(params.bounds_max, params.bounds_min)));
+    }
+
     struct NVG_State_Scope
     {
         NVGcontext* _vg;
@@ -153,6 +159,70 @@ namespace
         nvgFill(vg);
     }
 
+    void fill_edge_concave(NVGcontext* vg, Edge* edge, int dir, const Draw_Params& params)
+    {
+        Half_Edge* dir_edge = edge->dir + (dir^0);
+        Half_Edge* opp_edge = edge->dir + (dir^1);
+
+        Vec2 u = target(*params.space, opp_edge)->pos;
+        Vec2 v = target(*params.space, dir_edge)->pos;
+
+        Vec2 pos = u;
+        Vec2 side_l = opp_edge->sides[0];
+        Vec2 side_r = opp_edge->sides[1];
+
+        if (event(*params.space, opp_edge) != 0)
+        {
+            pos = event(*params.space, opp_edge)->pos;
+            side_l = event(*params.space, opp_edge)->sides[dir^0];
+            side_r = event(*params.space, opp_edge)->sides[dir^1];
+        }
+
+        Vec2 c;
+        {
+            Segment seg_l = to_image(pos, side_l, params);
+            Segment seg_r = to_image(pos, side_r, params);
+            c = add(seg_l.a, add(sub(seg_l.b, seg_l.a), sub(seg_r.b, seg_l.a)));
+        }
+
+        nvgBeginPath(vg);
+
+        {
+            Segment seg = to_image(u, opp_edge->sides[1], params);
+            nvgMoveTo(vg, seg.a.x, seg.a.y);
+            nvgLineTo(vg, seg.b.x, seg.b.y);
+        }
+
+        {
+            Vec2 prev_pos = from_image(c, params);
+            Vec2 prev_side = prev_pos;
+
+            for (Event* e = event(*params.space, dir_edge); e != 0; e = next(*params.space, e, dir^0))
+            {
+                connect_sides(vg, e->pos, e->sides[dir^0], prev_pos, prev_side, params);
+                prev_pos = e->pos;
+                prev_side = e->sides[dir^0];
+            }
+        }
+
+        nvgLineTo(vg, c.x, c.y);
+
+        {
+            Vec2 prev_pos = pos;
+            Vec2 prev_side = side_l;
+
+            for (Event* e = event(*params.space, opp_edge); e != 0; e = next(*params.space, e, dir^1))
+            {
+                connect_sides(vg, e->pos, e->sides[dir^1], prev_pos, prev_side, params);
+                prev_pos = e->pos;
+                prev_side = e->sides[dir^1];
+            }
+        }
+
+        nvgClosePath(vg);
+        nvgFill(vg);
+    }
+
     void stroke_edge(NVGcontext* vg, Edge* edge, const Draw_Params& params)
     {
         Half_Edge* e0 = edge->dir + 0;
@@ -179,8 +249,6 @@ namespace
 
     void stroke_edge_concave(NVGcontext* vg, Edge* edge, int dir, const Draw_Params& params)
     {
-        NVG_State_Scope s(vg);
-
         Half_Edge* dir_edge = edge->dir + (dir^0);
         Half_Edge* opp_edge = edge->dir + (dir^1);
 
@@ -249,11 +317,13 @@ namespace
         {
             if (degree(*params.space, source(*params.space, edge)) == 1)
             {
+                fill_edge_concave(vg, edge, 1, params);
                 continue;
             }
 
             if (degree(*params.space, target(*params.space, edge)) == 1)
             {
+                fill_edge_concave(vg, edge, 0, params);
                 continue;
             }
 
@@ -503,11 +573,11 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
     draw_background(vg, params);
     draw_obstacles(vg, params);
     fill_edges(vg, params);
+    draw_sides(vg, params);
+    stroke_borders(vg, params);
     draw_edges(vg, params);
     draw_events(vg, params);
     draw_vertices(vg, params);
-    draw_sides(vg, params);
-    stroke_borders(vg, params);
 }
 
 }
