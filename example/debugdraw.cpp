@@ -383,7 +383,7 @@ namespace
         nvgStroke(vg);
     }
 
-    void draw_closest_points(NVGcontext* vg, const Draw_Params& params)
+    void draw_sides(NVGcontext* vg, const Draw_Params& params)
     {
         NVG_State_Scope s(vg);
         nvgStrokeColor(vg, nvgRGB(255, 0, 0));
@@ -425,7 +425,7 @@ void draw_walkable_space(NVGcontext* vg, const Draw_Params& params)
     draw_edges(vg, params);
     draw_events(vg, params);
     draw_vertices(vg, params);
-    draw_closest_points(vg, params);
+    draw_sides(vg, params);
     stroke_borders(vg, params);
 }
 
