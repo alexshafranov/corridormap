@@ -67,7 +67,7 @@ namespace
     Segment moveTo(Draw_State& state, Vec2 vertex, Vec2 side)
     {
         Segment seg = to_image(vertex, side, state);
-        moveTo(state, seg.b);
+        nvgMoveTo(state.vg, seg.b.x, seg.b.y);
         return seg;
     }
 
@@ -80,7 +80,7 @@ namespace
     Segment lineTo(Draw_State& state, Vec2 vertex, Vec2 side)
     {
         Segment seg = to_image(vertex, side, state);
-        lineTo(state, seg.b);
+        nvgLineTo(state.vg, seg.b.x, seg.b.y);
         return seg;
     }
 
