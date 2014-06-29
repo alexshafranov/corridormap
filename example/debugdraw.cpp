@@ -40,34 +40,6 @@ namespace
         return add(state.bounds_min, mul(mul(v, inv_dim), sub(state.bounds_max, state.bounds_min)));
     }
 
-    void moveTo(Draw_State& state, Vec2 pos)
-    {
-        Vec2 pos_img = to_image(pos, state);
-        nvgMoveTo(state.vg, pos_img.x, pos_img.y);
-    }
-
-    void lineTo(Draw_State& state, Vec2 pos)
-    {
-        Vec2 pos_img = to_image(pos, state);
-        nvgLineTo(state.vg, pos_img.x, pos_img.y);
-    }
-
-    struct NVG_State_Scope
-    {
-        NVGcontext* _vg;
-
-        NVG_State_Scope(NVGcontext* vg)
-            : _vg(vg)
-        {
-            nvgSave(_vg);
-        }
-
-        ~NVG_State_Scope()
-        {
-            nvgRestore(_vg);
-        }
-    };
-
     struct Segment
     {
         Vec2 a;
@@ -85,6 +57,48 @@ namespace
         s.b = add(s.a, scale(d, (l >= state.agent_radius) ? l - state.agent_radius : 0.f));
         return s;
     }
+
+    void moveTo(Draw_State& state, Vec2 pos)
+    {
+        Vec2 pos_img = to_image(pos, state);
+        nvgMoveTo(state.vg, pos_img.x, pos_img.y);
+    }
+
+    Segment moveTo(Draw_State& state, Vec2 vertex, Vec2 side)
+    {
+        Segment seg = to_image(vertex, side, state);
+        moveTo(state, seg.b);
+        return seg;
+    }
+
+    void lineTo(Draw_State& state, Vec2 pos)
+    {
+        Vec2 pos_img = to_image(pos, state);
+        nvgLineTo(state.vg, pos_img.x, pos_img.y);
+    }
+
+    Segment lineTo(Draw_State& state, Vec2 vertex, Vec2 side)
+    {
+        Segment seg = to_image(vertex, side, state);
+        lineTo(state, seg.b);
+        return seg;
+    }
+
+    struct NVG_State_Scope
+    {
+        NVGcontext* _vg;
+
+        NVG_State_Scope(NVGcontext* vg)
+            : _vg(vg)
+        {
+            nvgSave(_vg);
+        }
+
+        ~NVG_State_Scope()
+        {
+            nvgRestore(_vg);
+        }
+    };
 
     void circle_corner(NVGcontext* vg, Vec2 corner, Vec2 a, Vec2 b, const Draw_State& state, int max_steps=100, int step=0)
     {
@@ -139,7 +153,7 @@ namespace
         connect_sides(vg, v, dir_edge->sides[1], prev_pos, prev_side, state);
     }
 
-    void fill_edge(NVGcontext* vg, Edge* edge, const Draw_State& state)
+    void fill_edge(NVGcontext* vg, Edge* edge, Draw_State& state)
     {
         Half_Edge* e0 = edge->dir + 0;
         Half_Edge* e1 = edge->dir + 1;
@@ -148,24 +162,13 @@ namespace
         Vec2 v = target(*state.space, edge)->pos;
 
         nvgBeginPath(vg);
-        Segment seg = to_image(u, e1->sides[0], state);
-        nvgMoveTo(vg, seg.b.x, seg.b.y);
 
+        moveTo(state, u, e1->sides[0]);
         walk_side(vg, edge, 0, state);
-
-        {
-            Vec2 p = to_image(v, state);
-            nvgLineTo(vg, p.x, p.y);
-            seg = to_image(v, e0->sides[0], state);
-            nvgLineTo(vg, seg.b.x, seg.b.y);
-        }
-
+        lineTo(state, v);
+        lineTo(state, v, e0->sides[0]);
         walk_side(vg, edge, 1, state);
-
-        {
-            Vec2 p = to_image(u, state);
-            nvgLineTo(vg, p.x, p.y);
-        }
+        lineTo(state, u);
 
         nvgClosePath(vg);
         nvgFill(vg);
@@ -325,7 +328,7 @@ namespace
         }
     }
 
-    void fill_edges(NVGcontext* vg, const Draw_State& state)
+    void fill_edges(NVGcontext* vg, Draw_State& state)
     {
         NVG_State_Scope s(vg);
         nvgFillColor(vg, nvgRGB(0xff, 0x57, 0x22));
