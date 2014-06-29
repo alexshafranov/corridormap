@@ -82,4 +82,6 @@ Vertex* source(const Walkable_Space& space, const Edge* e);
 
 }
 
+#include "corridormap/runtime.inl"
+
 #endif
