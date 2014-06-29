@@ -73,10 +73,15 @@ namespace
         Segment s;
         s.a = to_image(a, state);
         s.b = to_image(b, state);
+
         Vec2 d = sub(s.b, s.a);
         float l = len(d);
-        d = normalized(d);
-        s.b = add(s.a, scale(d, (l >= state.agent_radius) ? l - state.agent_radius : 0.f));
+        if (l > 0.f)
+        {
+            d = normalized(d);
+            s.b = add(s.a, scale(d, (l >= state.agent_radius) ? l - state.agent_radius : 0.f));
+        }
+
         return s;
     }
 
@@ -235,128 +240,69 @@ namespace
         nvgStroke(state.vg);
     }
 
-    void fill_edge_concave(NVGcontext* vg, Edge* edge, int dir, Draw_State& state)
+    Vec2 concave_corner(Draw_State& state, Half_Edge* dir_edge)
     {
-        Half_Edge* dir_edge = edge->dir + (dir^0);
-        Half_Edge* opp_edge = edge->dir + (dir^1);
+        Half_Edge* opp_edge = opposite(*state.space, dir_edge);
 
-        Vec2 u = target(*state.space, opp_edge)->pos;
-        Vec2 v = target(*state.space, dir_edge)->pos;
+        Vec2 pos = target(*state.space, opp_edge)->pos;
+        Vec2 side_l = left_side(*state.space, opp_edge);
+        Vec2 side_r = right_side(*state.space, opp_edge);
 
-        Vec2 pos = u;
-        Vec2 side_l = opp_edge->sides[0];
-        Vec2 side_r = opp_edge->sides[1];
-
-        if (event(*state.space, opp_edge) != 0)
+        Event* first_event = event(*state.space, opp_edge);
+        if (first_event != 0)
         {
-            pos = event(*state.space, opp_edge)->pos;
-            side_l = event(*state.space, opp_edge)->sides[dir^0];
-            side_r = event(*state.space, opp_edge)->sides[dir^1];
+            pos = first_event->pos;
+            side_l = left_side(*state.space, opp_edge, first_event);
+            side_r = right_side(*state.space, opp_edge, first_event);
         }
 
-        Vec2 c;
-        {
-            Segment seg_l = to_image(pos, side_l, state);
-            Segment seg_r = to_image(pos, side_r, state);
-            c = add(seg_l.a, add(sub(seg_l.b, seg_l.a), sub(seg_r.b, seg_l.a)));
-        }
+        Segment seg_l = to_image(pos, side_l, state);
+        Segment seg_r = to_image(pos, side_r, state);
 
-        nvgBeginPath(vg);
-
-        moveTo(state, u);
-        lineTo(state, u, opp_edge->sides[1]);
-
-        {
-            Vec2 prev_pos = from_image(c, state);
-            Vec2 prev_side = prev_pos;
-
-            for (Event* e = event(*state.space, dir_edge); e != 0; e = next(*state.space, dir_edge, e))
-            {
-                connect_sides(vg, e->pos, e->sides[dir^0], prev_pos, prev_side, state);
-                prev_pos = e->pos;
-                prev_side = e->sides[dir^0];
-            }
-        }
-
-        nvgLineTo(vg, c.x, c.y);
-
-        {
-            Vec2 prev_pos = pos;
-            Vec2 prev_side = side_l;
-
-            for (Event* e = event(*state.space, opp_edge); e != 0; e = next(*state.space, opp_edge, e))
-            {
-                connect_sides(vg, e->pos, e->sides[dir^1], prev_pos, prev_side, state);
-                prev_pos = e->pos;
-                prev_side = e->sides[dir^1];
-            }
-        }
-
-        lineTo(state, u, opp_edge->sides[0]);
-
-        nvgClosePath(vg);
-        nvgFill(vg);
+        Vec2 v_corner = add(seg_l.a, add(sub(seg_l.b, seg_l.a), sub(seg_r.b, seg_l.a)));
+        return from_image(v_corner, state);
     }
 
-    void stroke_edge_concave(NVGcontext* vg, Edge* edge, int dir, const Draw_State& state)
+    void fill_edge_concave(Draw_State& state, Half_Edge* dir_edge)
     {
-        Half_Edge* dir_edge = edge->dir + (dir^0);
-        Half_Edge* opp_edge = edge->dir + (dir^1);
-
-        Vec2 u = target(*state.space, opp_edge)->pos;
+        Half_Edge* opp_edge = opposite(*state.space, dir_edge);
+        Vec2 corner = concave_corner(state, dir_edge);
+        Vec2 u = source(*state.space, dir_edge)->pos;
         Vec2 v = target(*state.space, dir_edge)->pos;
 
-        nvgBeginPath(vg);
-        {
-            Segment seg = to_image(u, opp_edge->sides[0], state);
-            nvgMoveTo(vg, seg.b.x, seg.b.y);
-        }
+        nvgBeginPath(state.vg);
 
-        Vec2 prev_pos = u;
-        Vec2 prev_side_l = opp_edge->sides[0];
-        Vec2 prev_side_r = opp_edge->sides[1];
+        Border_Line_State left_border = begin_border(state, u, left_side(*state.space, opp_edge), true);
+        walk_events_right_side(state, left_border, dir_edge);
+        next_border_point(state, left_border, corner, corner);
 
-        for (Event* e = event(*state.space, dir_edge); e != 0; e = next(*state.space, dir_edge, e))
-        {
-            connect_sides(vg, e->pos, e->sides[dir^1], prev_pos, prev_side_l, state);
-            prev_pos = e->pos;
-            prev_side_l = e->sides[dir^1];
-        }
+        Border_Line_State right_border = begin_border(state, corner, corner, false);
+        walk_events_right_side(state, right_border, opp_edge);
+        next_border_point(state, right_border, u, right_side(*state.space, opp_edge));
+        lineTo(state, u);
 
-        nvgStroke(vg);
+        nvgClosePath(state.vg);
+        nvgFill(state.vg);
+    }
 
-        nvgBeginPath(vg);
-        {
-            Segment seg = to_image(u, opp_edge->sides[1], state);
-            nvgMoveTo(vg, seg.b.x, seg.b.y);
-        }
+    void stroke_edge_concave(Draw_State& state, Half_Edge* dir_edge)
+    {
+        Half_Edge* opp_edge = opposite(*state.space, dir_edge);
+        Vec2 corner = concave_corner(state, dir_edge);
+        Vec2 u = source(*state.space, dir_edge)->pos;
+        Vec2 v = target(*state.space, dir_edge)->pos;
 
-        prev_pos = u;
+        nvgBeginPath(state.vg);
+        Border_Line_State left_border = begin_border(state, u, left_side(*state.space, opp_edge));
+        walk_events_right_side(state, left_border, dir_edge);
+        next_border_point(state, left_border, corner, corner);
+        nvgStroke(state.vg);
 
-        for (Event* e = event(*state.space, dir_edge); e != 0; e = next(*state.space, dir_edge, e))
-        {
-            connect_sides(vg, e->pos, e->sides[dir], prev_pos, prev_side_r, state);
-            prev_pos = e->pos;
-            prev_side_r = e->sides[dir];
-        }
-
-        nvgStroke(vg);
-
-        {
-            Segment seg_l = to_image(prev_pos, prev_side_l, state);
-            Segment seg_r = to_image(prev_pos, prev_side_r, state);
-            Vec2 c = add(seg_l.a, add(sub(seg_l.b, seg_l.a), sub(seg_r.b, seg_r.a)));
-
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, seg_l.b.x, seg_l.b.y);
-            nvgLineTo(vg, c.x, c.y);
-            nvgStroke(vg);
-
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, seg_r.b.x, seg_r.b.y);
-            nvgLineTo(vg, c.x, c.y);
-            nvgStroke(vg);
-        }
+        nvgBeginPath(state.vg);
+        Border_Line_State right_border = begin_border(state, corner, corner);
+        walk_events_right_side(state, right_border, opp_edge);
+        next_border_point(state, right_border, u, right_side(*state.space, opp_edge));
+        nvgStroke(state.vg);
     }
 
     void fill_edges(NVGcontext* vg, Draw_State& state)
@@ -368,13 +314,13 @@ namespace
         {
             if (degree(*state.space, source(*state.space, edge)) == 1)
             {
-                fill_edge_concave(vg, edge, 1, state);
+                fill_edge_concave(state, edge->dir + 1);
                 continue;
             }
 
             if (degree(*state.space, target(*state.space, edge)) == 1)
             {
-                fill_edge_concave(vg, edge, 0, state);
+                fill_edge_concave(state, edge->dir + 0);
                 continue;
             }
 
@@ -435,13 +381,13 @@ namespace
         {
             if (degree(*state.space, source(*state.space, edge)) == 1)
             {
-                stroke_edge_concave(vg, edge, 1, state);
+                stroke_edge_concave(state, edge->dir + 1);
                 continue;
             }
 
             if (degree(*state.space, target(*state.space, edge)) == 1)
             {
-                stroke_edge_concave(vg, edge, 0, state);
+                stroke_edge_concave(state, edge->dir + 0);
                 continue;
             }
 
@@ -590,13 +536,13 @@ namespace
                 nvgStrokeColor(state.vg, nvgRGB(255, 0, 0));
                 nvgBeginPath(state.vg);
                 moveTo(state, e->pos);
-                lineTo(state, e->pos, e->sides[0]);
+                lineTo(state, e->pos, left_side(*state.space, edge->dir, e));
                 nvgStroke(state.vg);
 
                 nvgStrokeColor(state.vg, nvgRGB(0, 255, 0));
                 nvgBeginPath(state.vg);
                 moveTo(state, e->pos);
-                lineTo(state, e->pos, e->sides[1]);
+                lineTo(state, e->pos, right_side(*state.space, edge->dir, e));
                 nvgStroke(state.vg);
             }
         }
