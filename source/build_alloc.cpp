@@ -104,15 +104,15 @@ Voronoi_Edge_Normals allocate_voronoi_edge_normals(Memory* mem, int num_edge_poi
 {
     Voronoi_Edge_Normals result;
     memset(&result, 0, sizeof(result));
-    result.edge_normal_indices_1 = allocate<int>(mem, num_edge_points);
-    result.edge_normal_indices_2 = allocate<int>(mem, num_edge_points);
+    result.indices_1 = allocate<int>(mem, num_edge_points);
+    result.indices_2 = allocate<int>(mem, num_edge_points);
     return result;
 }
 
 void deallocate(Memory* mem, Voronoi_Edge_Normals& result)
 {
-    mem->deallocate(result.edge_normal_indices_1);
-    mem->deallocate(result.edge_normal_indices_2);
+    mem->deallocate(result.indices_1);
+    mem->deallocate(result.indices_2);
     memset(&result, 0, sizeof(result));
 }
 

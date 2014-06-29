@@ -411,8 +411,8 @@ void build_edge_point_normal_indices(const Voronoi_Features& features, const Foo
     const int* num_obstacle_normals = normals.num_obstacle_normals;
     const int* obstacle_normal_offsets = normals.obstacle_normal_offsets;
 
-    int* normal_indices_1 = out.edge_normal_indices_1;
-    int* normal_indices_2 = out.edge_normal_indices_2;
+    int* normal_indices_1 = out.indices_1;
+    int* normal_indices_2 = out.indices_2;
 
     float bounds_width = bounds.max[0] - bounds.min[0];
     float bounds_height = bounds.max[1] - bounds.min[1];
@@ -641,8 +641,8 @@ namespace
         unsigned int cs1 = features.edge_obstacle_ids_1[curr_point_nz];
         unsigned int cs2 = features.edge_obstacle_ids_2[curr_point_nz];
 
-        int ncs1 = normals.edge_normal_indices_1[curr_point_nz];
-        int ncs2 = normals.edge_normal_indices_2[curr_point_nz];
+        int ncs1 = normals.indices_1[curr_point_nz];
+        int ncs2 = normals.indices_2[curr_point_nz];
 
         if (ps1 != cs1)
         {
@@ -653,8 +653,8 @@ namespace
         features.edge_obstacle_ids_1[curr_point_nz] = cs1;
         features.edge_obstacle_ids_2[curr_point_nz] = cs2;
 
-        normals.edge_normal_indices_1[curr_point_nz] = ncs1;
-        normals.edge_normal_indices_2[curr_point_nz] = ncs2;
+        normals.indices_1[curr_point_nz] = ncs1;
+        normals.indices_2[curr_point_nz] = ncs2;
     }
 
     struct Traced_Incident_Edge
@@ -719,10 +719,10 @@ namespace
                 break;
             }
 
-            int p_n1 = normals.edge_normal_indices_1[nz(edges, prev)];
-            int p_n2 = normals.edge_normal_indices_2[nz(edges, prev)];
-            int c_n1 = normals.edge_normal_indices_1[nz(edges, curr)];
-            int c_n2 = normals.edge_normal_indices_2[nz(edges, curr)];
+            int p_n1 = normals.indices_1[nz(edges, prev)];
+            int p_n2 = normals.indices_2[nz(edges, prev)];
+            int c_n1 = normals.indices_1[nz(edges, curr)];
+            int c_n2 = normals.indices_2[nz(edges, curr)];
 
             if (p_n1 != c_n1 || p_n2 != c_n2)
             {

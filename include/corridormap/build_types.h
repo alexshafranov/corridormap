@@ -124,11 +124,11 @@ struct Voronoi_Edge_Normals
     // normal index on one side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
     // [0..num_edge_points]
-    int* edge_normal_indices_1;
+    int* indices_1;
     // normal index on another side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
     // [0..num_edge_points]
-    int* edge_normal_indices_2;
+    int* indices_2;
 };
 
 // Compressed-Sparse-Row format for boolean grid,
