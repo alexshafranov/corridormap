@@ -476,30 +476,29 @@ namespace
         }
     }
 
-    void draw_edges(NVGcontext* vg, const Draw_State& state)
+    void draw_edges(Draw_State& state)
     {
-        NVG_State_Scope s(vg);
-        nvgStrokeColor(vg, nvgRGB(0xff, 0xeb, 0x3b));
-        nvgStrokeWidth(vg, 2.5f);
+        NVG_State_Scope s(state.vg);
+        nvgStrokeColor(state.vg, nvgRGB(0xff, 0xeb, 0x3b));
+        nvgStrokeWidth(state.vg, 2.5f);
 
         for (Edge* edge = first(state.space->edges); edge != 0; edge = next(state.space->edges, edge))
         {
             Half_Edge* e0 = edge->dir + 0;
 
-            Vec2 u = to_image(source(*state.space, e0)->pos, state);
-            Vec2 v = to_image(target(*state.space, e0)->pos, state);
+            Vec2 u = source(*state.space, e0)->pos;
+            Vec2 v = target(*state.space, e0)->pos;
 
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, u.x, u.y);
+            nvgBeginPath(state.vg);
+            moveTo(state, u);
 
             for (Event* e = event(*state.space, e0); e != 0; e = next(*state.space, e, 0))
             {
-                Vec2 p = to_image(e->pos, state);
-                nvgLineTo(vg, p.x, p.y);
+                lineTo(state, e->pos);
             }
 
-            nvgLineTo(vg, v.x, v.y);
-            nvgStroke(vg);
+            lineTo(state, v);
+            nvgStroke(state.vg);
         }
     }
 
@@ -575,7 +574,7 @@ void draw_walkable_space(Draw_State& state)
     fill_edges(state.vg, state);
     draw_sides(state);
     stroke_borders(state.vg, state);
-    draw_edges(state.vg, state);
+    draw_edges(state);
     draw_events(state.vg, state);
     draw_vertices(state.vg, state);
 }
