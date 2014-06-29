@@ -84,6 +84,12 @@ namespace
         return seg;
     }
 
+    void circle(Draw_State& state, Vec2 origin, float radius)
+    {
+        Vec2 o = to_image(origin, state);
+        nvgCircle(state.vg, o.x, o.y, radius);
+    }
+
     struct NVG_State_Scope
     {
         NVGcontext* _vg;
@@ -502,36 +508,34 @@ namespace
         }
     }
 
-    void draw_events(NVGcontext* vg, const Draw_State& state)
+    void draw_events(Draw_State& state)
     {
-        NVG_State_Scope s(vg);
-        nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGB(0xff, 0xeb, 0x3b));
-        nvgStrokeWidth(vg, 2.5f);
+        NVG_State_Scope s(state.vg);
+        nvgBeginPath(state.vg);
+        nvgStrokeColor(state.vg, nvgRGB(0xff, 0xeb, 0x3b));
+        nvgStrokeWidth(state.vg, 2.5f);
 
         for (Event* e = first(state.space->events); e != 0; e = next(state.space->events, e))
         {
-            Vec2 p = to_image(e->pos, state);
-            nvgCircle(vg, p.x, p.y, 4.f);
+            circle(state, e->pos, 4.f);
         }
 
-        nvgStroke(vg);
+        nvgStroke(state.vg);
     }
 
-    void draw_vertices(NVGcontext* vg, const Draw_State& state)
+    void draw_vertices(Draw_State& state)
     {
-        NVG_State_Scope s(vg);
-        nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGB(0xff, 0xeb, 0x3b));
-        nvgStrokeWidth(vg, 2.5f);
+        NVG_State_Scope s(state.vg);
+        nvgBeginPath(state.vg);
+        nvgStrokeColor(state.vg, nvgRGB(0xff, 0xeb, 0x3b));
+        nvgStrokeWidth(state.vg, 2.5f);
 
         for (Vertex* v = first(state.space->vertices); v != 0; v = next(state.space->vertices, v))
         {
-            Vec2 p = to_image(v->pos, state);
-            nvgCircle(vg, p.x, p.y, 8.f);
+            circle(state, v->pos, 8.f);
         }
 
-        nvgStroke(vg);
+        nvgStroke(state.vg);
     }
 
     void draw_sides(Draw_State& state)
@@ -568,15 +572,17 @@ namespace
 
 void draw_walkable_space(Draw_State& state)
 {
+    NVG_State_Scope s(state.vg);
     nvgLineCap(state.vg, NVG_ROUND);
+
     draw_background(state);
     draw_obstacles(state);
     fill_edges(state.vg, state);
     draw_sides(state);
     stroke_borders(state.vg, state);
     draw_edges(state);
-    draw_events(state.vg, state);
-    draw_vertices(state.vg, state);
+    draw_events(state);
+    draw_vertices(state);
 }
 
 }
