@@ -198,6 +198,71 @@ Event* create_event(Walkable_Space& space, Vec2 pos, int edge)
     return new_event;
 }
 
+/// vertex
+
+Half_Edge* half_edge(const Walkable_Space& space, const Vertex* v)
+{
+    Edge* edge = ptr(space.edges, v->half_edge >> 1);
+    return edge ? edge->dir + (v->half_edge & 1) : 0;
+}
+
+/// half-edge
+
+Edge* edge(const Walkable_Space& space, const Half_Edge* e)
+{
+    const char* a = reinterpret_cast<const char*>(space.edges.items);
+    const char* b = reinterpret_cast<const char*>(e);
+    int diff = int(b - a);
+    return space.edges.items + diff/sizeof(Edge);
+}
+
+Half_Edge* opposite(const Walkable_Space& space, const Half_Edge* e)
+{
+    Edge* p = edge(space, e);
+    int dir = int(e - p->dir);
+    return p->dir + (dir^1);
+}
+
+Vertex* target(const Walkable_Space& space, const Half_Edge* e)
+{
+    return ptr(space.vertices, e->target);
+}
+
+Vertex* source(const Walkable_Space& space, const Half_Edge* e)
+{
+    return target(space, opposite(space, e));
+}
+
+Half_Edge* next(const Walkable_Space& space, const Half_Edge* e)
+{
+    Edge* edge = ptr(space.edges, e->next >> 1);
+    return edge ? edge->dir + (e->next & 1) : 0;
+}
+
+Event* event(const Walkable_Space& space, const Half_Edge* e)
+{
+    return ptr(space.events, e->event);
+}
+
+/// edge
+
+Vertex* target(const Walkable_Space& space, const Edge* e)
+{
+    return space.vertices.items + e->dir[0].target;
+}
+
+Vertex* source(const Walkable_Space& space, const Edge* e)
+{
+    return space.vertices.items + e->dir[1].target;
+}
+
+/// event
+
+Event* next(const Walkable_Space& space, Event* e, int direction)
+{
+    return ptr(space.events, e->next[direction]);
+}
+
 int degree(const Walkable_Space& space, const Vertex* vertex)
 {
     int result = 0;
