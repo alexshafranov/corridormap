@@ -263,13 +263,14 @@ int main()
         corridormap::build_walkable_space(obstacles, normals.obstacle_normal_offsets, obstacle_bounds, features, edge_csr, vert_csr, traced_edges, space);
     }
 
-    corridormap::Draw_Params draw_params;
-    draw_params.agent_radius = 15.f;
-    draw_params.bounds_min = corridormap::make_vec2(obstacle_bounds.min);
-    draw_params.bounds_max = corridormap::make_vec2(obstacle_bounds.max);
-    draw_params.image_dimensions = corridormap::make_vec2(0, 0);
-    draw_params.obstacles = &obstacles;
-    draw_params.space = &space;
+    corridormap::Draw_State draw_state;
+    draw_state.agent_radius = 15.f;
+    draw_state.bounds_min = corridormap::make_vec2(obstacle_bounds.min);
+    draw_state.bounds_max = corridormap::make_vec2(obstacle_bounds.max);
+    draw_state.image_dimensions = corridormap::make_vec2(0, 0);
+    draw_state.obstacles = &obstacles;
+    draw_state.space = &space;
+    draw_state.vg = vg;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -293,8 +294,8 @@ int main()
         float s = sx > sy ? sx : sy;
         nvgScale(vg, s, s);
 
-        draw_params.image_dimensions = corridormap::make_vec2(float(screen_width), float(screen_height));
-        corridormap::draw_walkable_space(vg, draw_params);
+        draw_state.image_dimensions = corridormap::make_vec2(float(screen_width), float(screen_height));
+        corridormap::draw_walkable_space(draw_state);
 
         nvgEndFrame(vg);
 

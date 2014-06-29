@@ -28,7 +28,7 @@
 
 namespace corridormap {
 
-struct Draw_Params
+struct Draw_State
 {
     float agent_radius;
     Vec2 bounds_min;
@@ -36,9 +36,10 @@ struct Draw_Params
     Vec2 image_dimensions;
     Footprint* obstacles;
     Walkable_Space* space;
+    NVGcontext* vg;
 };
 
-void draw_walkable_space(NVGcontext* vg, const Draw_Params& params);
+void draw_walkable_space(Draw_State& state);
 
 }
 
