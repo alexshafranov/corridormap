@@ -259,8 +259,18 @@ int main()
         printf("edge_count=%d\n", traced_edges.num_edges);
         printf("event_count=%d\n", traced_edges.num_events);
 
+        corridormap::Walkable_Space_Build_Params params;
+        params.bounds = obstacle_bounds;
+        params.obstacles = &obstacles;
+        params.obstacle_normals = &normals;
+        params.features = &features;
+        params.traced_edges = &traced_edges;
+        params.edge_normals = &edge_normal_indices;
+        params.edge_grid = &edge_csr;
+        params.vertex_grid = &vert_csr;
+
         space = corridormap::create_walkable_space(&mem, features.num_vert_points, traced_edges.num_edges, traced_edges.num_events);
-        corridormap::build_walkable_space(obstacles, normals.obstacle_normal_offsets, obstacle_bounds, features, edge_csr, vert_csr, traced_edges, space);
+        corridormap::build_walkable_space(params, space);
     }
 
     corridormap::Draw_State draw_state;

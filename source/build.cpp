@@ -914,21 +914,22 @@ namespace
     }
 }
 
-void build_walkable_space(const Footprint& obstacles, const int* obstacle_offsets, Bbox2 bounds, const Voronoi_Features& features,
-                          const CSR_Grid& edge_grid,  const CSR_Grid& vertex_grid, const Voronoi_Traced_Edges& traced_edges, Walkable_Space& out)
+void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space& out)
 {
+    int* obstacle_offsets = in.obstacle_normals->obstacle_normal_offsets;
+
     // 1. vertices: convert positions.
-    for (int i = 0; i < features.num_vert_points; ++i)
+    for (int i = 0; i < in.features->num_vert_points; ++i)
     {
-        Vec2 pos = convert_from_image(features.verts[i], features.grid_width, features.grid_height, bounds);
+        Vec2 pos = convert_from_image(in.features->verts[i], in.features->grid_width, in.features->grid_height, in.bounds);
         create_vertex(out, pos);
     }
 
     // 2. create edges.
-    for (int i = 0; i < traced_edges.num_edges; ++i)
+    for (int i = 0; i < in.traced_edges->num_edges; ++i)
     {
-        int u_nz = nz(vertex_grid, traced_edges.u[i]);
-        int v_nz = nz(vertex_grid, traced_edges.v[i]);
+        int u_nz = nz(*in.vertex_grid, in.traced_edges->u[i]);
+        int v_nz = nz(*in.vertex_grid, in.traced_edges->v[i]);
 
         Edge* edge = create_edge(out, u_nz, v_nz);
         Half_Edge* e0 = edge->dir + 0;
@@ -937,12 +938,12 @@ void build_walkable_space(const Footprint& obstacles, const int* obstacle_offset
         Vec2 u = source(out, edge)->pos;
         Vec2 v = target(out, edge)->pos;
 
-        unsigned int obstacle_id_1 = traced_edges.obstacle_ids_1[i];
-        unsigned int obstacle_id_2 = traced_edges.obstacle_ids_2[i];
+        unsigned int obstacle_id_1 = in.traced_edges->obstacle_ids_1[i];
+        unsigned int obstacle_id_2 = in.traced_edges->obstacle_ids_2[i];
 
         {
-            Vec2 cp0 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
-            Vec2 cp1 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
+            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
+            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
 
             if (is_left(u, v, cp0))
             {
@@ -957,8 +958,8 @@ void build_walkable_space(const Footprint& obstacles, const int* obstacle_offset
         }
 
         {
-            Vec2 cp0 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
-            Vec2 cp1 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
+            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
+            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
 
             if (is_left(v, u, cp0))
             {
@@ -974,28 +975,28 @@ void build_walkable_space(const Footprint& obstacles, const int* obstacle_offset
     }
 
     // 3. events: convert positions and compute sides.
-    for (int i = 0; i < traced_edges.num_edges; ++i)
+    for (int i = 0; i < in.traced_edges->num_edges; ++i)
     {
         Edge* edge = out.edges.items + i;
         Vec2 u = source(out, edge)->pos;
 
-        int event_offset = traced_edges.edge_event_offset[i];
-        int num_events = traced_edges.edge_num_events[i];
+        int event_offset = in.traced_edges->edge_event_offset[i];
+        int num_events = in.traced_edges->edge_num_events[i];
 
         Vec2 prev = u;
 
         for (int j = event_offset; j < event_offset + num_events; ++j)
         {
-            int evt_lin_idx = traced_edges.events[j];
-            Vec2 pos = convert_from_image(evt_lin_idx, features.grid_width, features.grid_height, bounds);
+            int evt_lin_idx = in.traced_edges->events[j];
+            Vec2 pos = convert_from_image(evt_lin_idx, in.features->grid_width, in.features->grid_height, in.bounds);
 
             Event* e = create_event(out, pos, i);
 
-            unsigned int obstacle_id_1 = features.edge_obstacle_ids_1[nz(edge_grid, evt_lin_idx)];
-            unsigned int obstacle_id_2 = features.edge_obstacle_ids_2[nz(edge_grid, evt_lin_idx)];
+            unsigned int obstacle_id_1 = in.features->edge_obstacle_ids_1[nz(*in.edge_grid, evt_lin_idx)];
+            unsigned int obstacle_id_2 = in.features->edge_obstacle_ids_2[nz(*in.edge_grid, evt_lin_idx)];
 
-            Vec2 cp0 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_1, pos);
-            Vec2 cp1 = compute_closest_point(obstacles, bounds, obstacle_offsets, obstacle_id_2, pos);
+            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, pos);
+            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, pos);
 
             if (is_left(prev, pos, cp0))
             {

@@ -188,6 +188,19 @@ struct Voronoi_Traced_Edges
     int* events;
 };
 
+// helper struct to pass input data to the final assembly of the walkable space structure.
+struct Walkable_Space_Build_Params
+{
+    Bbox2 bounds;
+    Footprint* obstacles;
+    Footprint_Normals* obstacle_normals;
+    Voronoi_Features* features;
+    Voronoi_Traced_Edges* traced_edges;
+    Voronoi_Edge_Normals* edge_normals;
+    CSR_Grid* edge_grid;
+    CSR_Grid* vertex_grid;
+};
+
 }
 
 #endif

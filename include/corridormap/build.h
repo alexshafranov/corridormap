@@ -81,8 +81,7 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
                  Voronoi_Edge_Normals& edge_normal_indices, Voronoi_Features& features, Voronoi_Traced_Edges& out);
 
 // builds annotated voronoi diagram (i.e. Explicit Corridor Map) represented as a half-edge mesh.
-void build_walkable_space(const Footprint& obstacles, const int* obstacle_offsets, Bbox2 bounds, const Voronoi_Features& features,
-                          const CSR_Grid& edge_grid,  const CSR_Grid& vertex_grid, const Voronoi_Traced_Edges& traced_edges, Walkable_Space& out);
+void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space& out);
 
 }
 
