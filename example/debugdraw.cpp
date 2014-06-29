@@ -153,7 +153,7 @@ namespace
         connect_sides(vg, v, dir_edge->sides[1], prev_pos, prev_side, state);
     }
 
-    void fill_edge(NVGcontext* vg, Edge* edge, Draw_State& state)
+    void fill_edge(Draw_State& state, Edge* edge)
     {
         Half_Edge* e0 = edge->dir + 0;
         Half_Edge* e1 = edge->dir + 1;
@@ -161,20 +161,20 @@ namespace
         Vec2 u = source(*state.space, edge)->pos;
         Vec2 v = target(*state.space, edge)->pos;
 
-        nvgBeginPath(vg);
+        nvgBeginPath(state.vg);
 
         moveTo(state, u, e1->sides[0]);
-        walk_side(vg, edge, 0, state);
+        walk_side(state.vg, edge, 0, state);
         lineTo(state, v);
         lineTo(state, v, e0->sides[0]);
-        walk_side(vg, edge, 1, state);
+        walk_side(state.vg, edge, 1, state);
         lineTo(state, u);
 
-        nvgClosePath(vg);
-        nvgFill(vg);
+        nvgClosePath(state.vg);
+        nvgFill(state.vg);
     }
 
-    void fill_edge_concave(NVGcontext* vg, Edge* edge, int dir, const Draw_State& state)
+    void fill_edge_concave(NVGcontext* vg, Edge* edge, int dir, Draw_State& state)
     {
         Half_Edge* dir_edge = edge->dir + (dir^0);
         Half_Edge* opp_edge = edge->dir + (dir^1);
@@ -202,11 +202,8 @@ namespace
 
         nvgBeginPath(vg);
 
-        {
-            Segment seg = to_image(u, opp_edge->sides[1], state);
-            nvgMoveTo(vg, seg.a.x, seg.a.y);
-            nvgLineTo(vg, seg.b.x, seg.b.y);
-        }
+        moveTo(state, u);
+        lineTo(state, u, opp_edge->sides[1]);
 
         {
             Vec2 prev_pos = from_image(c, state);
@@ -234,16 +231,13 @@ namespace
             }
         }
 
-        {
-            Segment seg = to_image(u, opp_edge->sides[0], state);
-            nvgLineTo(vg, seg.b.x, seg.b.y);
-        }
+        lineTo(state, u, opp_edge->sides[0]);
 
         nvgClosePath(vg);
         nvgFill(vg);
     }
 
-    void stroke_edge(NVGcontext* vg, Edge* edge, const Draw_State& state)
+    void stroke_edge(NVGcontext* vg, Edge* edge, Draw_State& state)
     {
         Half_Edge* e0 = edge->dir + 0;
         Half_Edge* e1 = edge->dir + 1;
@@ -252,18 +246,10 @@ namespace
         Vec2 v = target(*state.space, edge)->pos;
 
         nvgBeginPath(vg);
-        Segment seg = to_image(u, e1->sides[0], state);
-        nvgMoveTo(vg, seg.b.x, seg.b.y);
-
+        moveTo(state, u, e1->sides[0]);
         walk_side(vg, edge, 0, state);
-
-        {
-            Segment seg = to_image(v, e0->sides[0], state);
-            nvgMoveTo(vg, seg.b.x, seg.b.y);
-        }
-
+        moveTo(state, v, e0->sides[0]);
         walk_side(vg, edge, 1, state);
-
         nvgStroke(vg);
     }
 
@@ -347,7 +333,7 @@ namespace
                 continue;
             }
 
-            fill_edge(vg, edge, state);
+            fill_edge(state, edge);
         }
 
         for (Vertex* vertex = first(state.space->vertices); vertex != 0; vertex = next(state.space->vertices, vertex))
@@ -394,7 +380,7 @@ namespace
         }
     }
 
-    void stroke_borders(NVGcontext* vg, const Draw_State& state)
+    void stroke_borders(NVGcontext* vg, Draw_State& state)
     {
         NVG_State_Scope s(vg);
         nvgStrokeColor(vg, nvgRGB(120, 0, 0));
@@ -549,35 +535,33 @@ namespace
         nvgStroke(vg);
     }
 
-    void draw_sides(NVGcontext* vg, const Draw_State& state)
+    void draw_sides(Draw_State& state)
     {
-        NVG_State_Scope s(vg);
-        nvgStrokeColor(vg, nvgRGB(255, 0, 0));
-        nvgStrokeWidth(vg, 1.0f);
+        NVG_State_Scope s(state.vg);
+        nvgStrokeColor(state.vg, nvgRGB(255, 0, 0));
+        nvgStrokeWidth(state.vg, 1.0f);
 
         for (Edge* edge = first(state.space->edges); edge != 0; edge = next(state.space->edges, edge))
         {
             Half_Edge* e0 = edge->dir + 0;
             Half_Edge* e1 = edge->dir + 1;
 
-            nvgStrokeColor(vg, nvgRGB(255, 0, 0));
+            nvgStrokeColor(state.vg, nvgRGB(255, 0, 0));
             for (Event* e = event(*state.space, e0); e != 0; e = next(*state.space, e, 0))
             {
-                Segment s = to_image(e->pos, e->sides[0], state);
-                nvgBeginPath(vg);
-                nvgMoveTo(vg, s.a.x, s.a.y);
-                nvgLineTo(vg, s.b.x, s.b.y);
-                nvgStroke(vg);
+                nvgBeginPath(state.vg);
+                moveTo(state, e->pos);
+                lineTo(state, e->pos, e->sides[0]);
+                nvgStroke(state.vg);
             }
 
-            nvgStrokeColor(vg, nvgRGB(0, 255, 0));
+            nvgStrokeColor(state.vg, nvgRGB(0, 255, 0));
             for (Event* e = event(*state.space, e0); e != 0; e = next(*state.space, e, 0))
             {
-                Segment s = to_image(e->pos, e->sides[1], state);
-                nvgBeginPath(vg);
-                nvgMoveTo(vg, s.a.x, s.a.y);
-                nvgLineTo(vg, s.b.x, s.b.y);
-                nvgStroke(vg);
+                nvgBeginPath(state.vg);
+                moveTo(state, e->pos);
+                lineTo(state, e->pos, e->sides[1]);
+                nvgStroke(state.vg);
             }
         }
     }
@@ -589,7 +573,7 @@ void draw_walkable_space(Draw_State& state)
     draw_background(state);
     draw_obstacles(state);
     fill_edges(state.vg, state);
-    draw_sides(state.vg, state);
+    draw_sides(state);
     stroke_borders(state.vg, state);
     draw_edges(state.vg, state);
     draw_events(state.vg, state);
