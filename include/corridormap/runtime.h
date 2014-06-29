@@ -36,37 +36,49 @@ void destroy(Memory* mem, Walkable_Space& d);
 
 // creates a new vertex with the specified position.
 Vertex* create_vertex(Walkable_Space& space, Vec2 pos);
-
 // creates an edge between vertices u and v.
 Edge* create_edge(Walkable_Space& space, int u, int v);
-
 // creates a new event and appends it to the specified edge.
 Event* create_event(Walkable_Space& space, Vec2 pos, int edge);
 
 /// vertex
 
+// first half-edge which has this vertex as a source.
 Half_Edge* half_edge(const Walkable_Space& space, const Vertex* v);
+// number of edges incident to this vertex.
+int degree(const Walkable_Space& space, const Vertex* vertex);
 
 /// half-edge
 
+// the edge that owns this half-edge.
 Edge* edge(const Walkable_Space& space, const Half_Edge* e);
+// the opposite direction half-edge.
 Half_Edge* opposite(const Walkable_Space& space, const Half_Edge* e);
+// target vertex of this half-edge.
 Vertex* target(const Walkable_Space& space, const Half_Edge* e);
+// source vertex of this half-edge.
 Vertex* source(const Walkable_Space& space, const Half_Edge* e);
+// next half-edge in CCW order around source vertex of this half-edge.
 Half_Edge* next(const Walkable_Space& space, const Half_Edge* e);
+// first event in the direction of this half-edge.
 Event* event(const Walkable_Space& space, const Half_Edge* e);
+// next event in the direction of this half-edge.
+Event* next(const Walkable_Space& space, Half_Edge* half_edge, Event* e);
+// left side at the specified event point along this half-edge direction.
+Vec2 left_side(const Walkable_Space& space, Half_Edge* half_edge, Event* e);
+// right side at the specified event point along this half-edge direction.
+Vec2 right_side(const Walkable_Space& space, Half_Edge* half_edge, Event* e);
+// left side at the target vertex along this half-edge direction.
+Vec2 left_side(const Walkable_Space& space, Half_Edge* half_edge);
+// right side at the target vertex along this half-edge direction.
+Vec2 right_side(const Walkable_Space& space, Half_Edge* half_edge);
 
 /// edge
 
+// target vertex in the default direction of this edge (i.e. first half-edge).
 Vertex* target(const Walkable_Space& space, const Edge* e);
+// source vertex in the default direction of this edge (i.e. first half-edge).
 Vertex* source(const Walkable_Space& space, const Edge* e);
-
-/// event
-
-Event* next(const Walkable_Space& space, Event* e, int direction);
-
-// returns a number of incident edges.
-int degree(const Walkable_Space& space, const Vertex* vertex);
 
 }
 

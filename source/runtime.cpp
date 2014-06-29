@@ -244,6 +244,37 @@ Event* event(const Walkable_Space& space, const Half_Edge* e)
     return ptr(space.events, e->event);
 }
 
+Event* next(const Walkable_Space& space, Half_Edge* half_edge, Event* e)
+{
+    Edge* p = edge(space, half_edge);
+    int dir = int(half_edge - p->dir);
+    return ptr(space.events, e->next[dir]);
+}
+
+Vec2 left_side(const Walkable_Space& space, Half_Edge* half_edge, Event* e)
+{
+    Edge* p = edge(space, half_edge);
+    int dir = int(half_edge - p->dir);
+    return e->sides[dir^0];
+}
+
+Vec2 right_side(const Walkable_Space& space, Half_Edge* half_edge, Event* e)
+{
+    Edge* p = edge(space, half_edge);
+    int dir = int(half_edge - p->dir);
+    return e->sides[dir^1];
+}
+
+Vec2 left_side(const Walkable_Space&, Half_Edge* half_edge)
+{
+    return half_edge->sides[0];
+}
+
+Vec2 right_side(const Walkable_Space&, Half_Edge* half_edge)
+{
+    return half_edge->sides[1];
+}
+
 /// edge
 
 Vertex* target(const Walkable_Space& space, const Edge* e)
@@ -254,13 +285,6 @@ Vertex* target(const Walkable_Space& space, const Edge* e)
 Vertex* source(const Walkable_Space& space, const Edge* e)
 {
     return space.vertices.items + e->dir[1].target;
-}
-
-/// event
-
-Event* next(const Walkable_Space& space, Event* e, int direction)
-{
-    return ptr(space.events, e->next[direction]);
 }
 
 int degree(const Walkable_Space& space, const Vertex* vertex)
