@@ -95,9 +95,9 @@ struct Voronoi_Features
     unsigned int* edges;
     // IDs (colors) of obstacles surrounding each vertex. [0..4*num_vert_points).
     unsigned int* vert_obstacle_ids;
-    // First IDs (colors) of obstacles of each edge point. [0..num_edge_points).
+    // side 1 IDs (colors) of obstacles of each edge point. [0..num_edge_points).
     unsigned int* edge_obstacle_ids_1;
-    // Second IDs (colors) of obstacles of each edge point. [0..num_edge_points).
+    // side 2 IDs (colors) of obstacles of each edge point. [0..num_edge_points).
     unsigned int* edge_obstacle_ids_2;
 };
 
@@ -176,15 +176,15 @@ struct Voronoi_Traced_Edges
     int* u;
     // u linear index (y*num_rows + x). range [0 .. num_edges).
     int* v;
-    // First IDs (colors) of obstacles of each edge. [0..num_edges).
+    // side 1 IDs (colors) of obstacles of each edge. [0..num_edges).
     unsigned int* obstacle_ids_1;
-    // Second IDs (colors) of obstacles of each edge. [0..num_edges).
+    // side 2 IDs (colors) of obstacles of each edge. [0..num_edges).
     unsigned int* obstacle_ids_2;
     // for each edge [0 .. num_edges) stores the offset to events array.
     int* edge_event_offset;
     // number of event points for each edge [0 .. num_edges).
     int* edge_num_events;
-    // linear indices of event points. [0 .. num_events)
+    // absolute values are event point linear indices. (> 0 = side 1 event, < 0 = side 2 event). [0 .. num_events).
     int* events;
 };
 

@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <float.h>
 #include <string.h>
+#include <stdlib.h>
 #include "corridormap/assert.h"
 #include "corridormap/memory.h"
 #include "corridormap/render_interface.h"
@@ -724,18 +725,15 @@ namespace
             int c_n1 = normals.indices_1[nz(edges, curr)];
             int c_n2 = normals.indices_2[nz(edges, curr)];
 
-            if (p_n1 != c_n1 || p_n2 != c_n2)
+            // side 1 event.
+            if (p_n1 != c_n1)
             {
-                if (p_n1 > 0 || p_n2 > 0)
-                {
-                    events[num_events] = prev;
-                }
-                else
-                {
-                    events[num_events] = curr;
-                }
-
-                num_events++;
+                events[num_events++] = c_n1 > 0 ? curr : prev;
+            }
+            // side 2 event.
+            else if (p_n2 != c_n2)
+            {
+                events[num_events++] = c_n2 > 0 ? -curr : -prev;
             }
 
             int next = get_next_point(edges, features, curr, prev);
@@ -912,6 +910,67 @@ namespace
         Vec2 dir2 = sub(side_pos, prev);
         return dir1.x*dir2.y - dir1.y*dir2.x > 0.f;
     }
+
+    struct Event_Closest_Points
+    {
+        Vec2 pos;
+        Vec2 cp1;
+        Vec2 cp2;
+    };
+
+    // correct sampled event position so that the point lies on the corresponding obstacle vertex normal.
+    Event_Closest_Points correct_pos_and_compute_closest(int event, int event_nz_index, Vec2 sampled_pos, Bbox2 bounds,
+                                                      const Footprint* obstacles, const Footprint_Normals* obstacle_normals,
+                                                      const Voronoi_Edge_Normals* edge_normals, const Voronoi_Features* features)
+    {
+        Event_Closest_Points result;
+        int* obstacle_offsets = obstacle_normals->obstacle_normal_offsets;
+
+        int vertex_index_1 = edge_normals->indices_1[event_nz_index];
+        int vertex_index_2 = edge_normals->indices_2[event_nz_index];
+        int obstacle_id_1 = features->edge_obstacle_ids_1[event_nz_index];
+        int obstacle_id_2 = features->edge_obstacle_ids_2[event_nz_index];
+
+        int vertex_index = event > 0 ? vertex_index_1 : vertex_index_2;
+        int obstacle_id = event > 0 ? obstacle_id_1 : obstacle_id_2;
+
+        corridormap_assert(vertex_index > 0);
+        vertex_index = vertex_index - 1;
+
+        if (vertex_index >= obstacles->num_verts)
+        {
+            result.pos = sampled_pos;
+            result.cp1 = compute_closest_point(*obstacles, bounds, obstacle_offsets, obstacle_id_1, sampled_pos);
+            result.cp2 = compute_closest_point(*obstacles, bounds, obstacle_offsets, obstacle_id_2, sampled_pos);
+            return result;
+        }
+
+        // get two normals associated with vertex and project event point to the closest normal.
+        int num_normals = obstacle_normals->num_obstacle_normals[obstacle_id - 1];
+        int first_normal_idx = obstacle_normals->obstacle_normal_offsets[obstacle_id - 1];
+        int curr = vertex_index;
+        int next = first_normal_idx + (curr - first_normal_idx + 1) % num_normals;
+        Vec2 v = { obstacles->x[vertex_index], obstacles->y[vertex_index] };
+        Vec2 n1 = { obstacle_normals->x[curr], obstacle_normals->y[curr] };
+        Vec2 n2 = { obstacle_normals->x[next], obstacle_normals->y[next] };
+        Vec2 dir = sub(sampled_pos, v);
+        float p1 = dot(dir, n1);
+        float p2 = dot(dir, n2);
+        result.pos = add(v, (p1 > p2) ? scale(n1, p1) : scale(n2, p2));
+
+        if (event > 0)
+        {
+            result.cp1 = v;
+            result.cp2 = compute_closest_point(*obstacles, bounds, obstacle_offsets, obstacle_id_2, result.pos);
+        }
+        else
+        {
+            result.cp2 = v;
+            result.cp1 = compute_closest_point(*obstacles, bounds, obstacle_offsets, obstacle_id_1, result.pos);
+        }
+
+        return result;
+    }
 }
 
 void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space& out)
@@ -987,29 +1046,28 @@ void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space&
 
         for (int j = event_offset; j < event_offset + num_events; ++j)
         {
-            int evt_lin_idx = in.traced_edges->events[j];
-            Vec2 pos = convert_from_image(evt_lin_idx, in.features->grid_width, in.features->grid_height, in.bounds);
+            int evt = in.traced_edges->events[j];
+            int evt_lin_idx = ::abs(evt);
+            int evt_nz_index = nz(*in.edge_grid, evt_lin_idx);
 
-            Event* e = create_event(out, pos, i);
+            Vec2 sampled_pos = convert_from_image(evt_lin_idx, in.features->grid_width, in.features->grid_height, in.bounds);
+            Event_Closest_Points r = correct_pos_and_compute_closest(evt, evt_nz_index, sampled_pos, in.bounds,
+                                                                     in.obstacles, in.obstacle_normals, in.edge_normals, in.features);
 
-            unsigned int obstacle_id_1 = in.features->edge_obstacle_ids_1[nz(*in.edge_grid, evt_lin_idx)];
-            unsigned int obstacle_id_2 = in.features->edge_obstacle_ids_2[nz(*in.edge_grid, evt_lin_idx)];
+            Event* e = create_event(out, r.pos, i);
 
-            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, pos);
-            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, pos);
-
-            if (is_left(prev, pos, cp0))
+            if (is_left(prev, r.pos, r.cp1))
             {
-                e->sides[0] = cp0;
-                e->sides[1] = cp1;
+                e->sides[0] = r.cp1;
+                e->sides[1] = r.cp2;
             }
             else
             {
-                e->sides[0] = cp1;
-                e->sides[1] = cp0;
+                e->sides[0] = r.cp2;
+                e->sides[1] = r.cp1;
             }
 
-            prev = pos;
+            prev = r.pos;
         }
     }
 }
