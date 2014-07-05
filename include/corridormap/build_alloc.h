@@ -33,7 +33,7 @@ namespace corridormap {
 Distance_Mesh allocate_distance_mesh(Memory* mem, int num_obstacle_polys, int max_verts);
 Voronoi_Features allocate_voronoi_features(Memory* mem, int grid_width, int grid_height, int num_vert_points, int num_edge_points);
 Footprint_Normals allocate_foorprint_normals(Memory* mem, int num_polygons, int num_poly_verts);
-Voronoi_Edge_Spans allocate_voronoi_edge_normals(Memory* mem, int num_edge_points);
+Voronoi_Edge_Spans allocate_voronoi_edge_spans(Memory* mem, int num_edge_points);
 CSR_Grid allocate_csr_grid(Memory* mem, int num_rows, int num_cols, int num_non_zero);
 Voronoi_Traced_Edges allocate_voronoi_traced_edges(Memory* mem, int num_voronoi_verts, int num_footprint_verts);
 

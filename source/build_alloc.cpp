@@ -100,7 +100,7 @@ void deallocate(Memory* mem, Footprint_Normals& normals)
     memset(&normals, 0, sizeof(normals));
 }
 
-Voronoi_Edge_Spans allocate_voronoi_edge_normals(Memory* mem, int num_edge_points)
+Voronoi_Edge_Spans allocate_voronoi_edge_spans(Memory* mem, int num_edge_points)
 {
     Voronoi_Edge_Spans result;
     memset(&result, 0, sizeof(result));
