@@ -920,8 +920,8 @@ namespace
 
     // correct sampled event position so that the point lies on the corresponding obstacle vertex normal.
     Event_Closest_Points correct_pos_and_compute_closest(int event, int event_nz_index, Vec2 sampled_pos, Bbox2 bounds,
-                                                      const Footprint* obstacles, const Footprint_Normals* obstacle_normals,
-                                                      const Voronoi_Edge_Spans* spans, const Voronoi_Features* features)
+                                                         const Footprint* obstacles, const Footprint_Normals* obstacle_normals,
+                                                         const Voronoi_Edge_Spans* spans, const Voronoi_Features* features)
     {
         Event_Closest_Points result;
         int* obstacle_offsets = obstacle_normals->obstacle_normal_offsets;
