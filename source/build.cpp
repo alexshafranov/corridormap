@@ -635,15 +635,15 @@ namespace
         return -1;
     }
 
-    void fix_sides(Voronoi_Features& features, Voronoi_Edge_Spans& normals, int prev_point_nz, int curr_point_nz)
+    void fix_sides(Voronoi_Features& features, Voronoi_Edge_Spans& spans, int prev_point_nz, int curr_point_nz)
     {
         unsigned int ps1 = features.edge_obstacle_ids_1[prev_point_nz];
 
         unsigned int cs1 = features.edge_obstacle_ids_1[curr_point_nz];
         unsigned int cs2 = features.edge_obstacle_ids_2[curr_point_nz];
 
-        int ncs1 = normals.indices_1[curr_point_nz];
-        int ncs2 = normals.indices_2[curr_point_nz];
+        int ncs1 = spans.indices_1[curr_point_nz];
+        int ncs2 = spans.indices_2[curr_point_nz];
 
         if (ps1 != cs1)
         {
@@ -654,8 +654,8 @@ namespace
         features.edge_obstacle_ids_1[curr_point_nz] = cs1;
         features.edge_obstacle_ids_2[curr_point_nz] = cs2;
 
-        normals.indices_1[curr_point_nz] = ncs1;
-        normals.indices_2[curr_point_nz] = ncs2;
+        spans.indices_1[curr_point_nz] = ncs1;
+        spans.indices_2[curr_point_nz] = ncs2;
     }
 
     struct Traced_Incident_Edge
@@ -665,7 +665,7 @@ namespace
         unsigned int color2;
     };
 
-    Traced_Incident_Edge trace_incident_edge(const CSR_Grid& vertices, const CSR_Grid& edges, Voronoi_Features& features, Voronoi_Edge_Spans& normals,
+    Traced_Incident_Edge trace_incident_edge(const CSR_Grid& vertices, const CSR_Grid& edges, Voronoi_Features& features, Voronoi_Edge_Spans& spans,
                                              char* visited_edges, int start_vert, int edge_point)
     {
         Traced_Incident_Edge result;
@@ -687,7 +687,7 @@ namespace
 
             visited_edges[curr_nz] = 1;
 
-            fix_sides(features, normals, prev_nz, curr_nz);
+            fix_sides(features, spans, prev_nz, curr_nz);
 
             int vert = get_neigbour_vertex(vertices, curr, start_vert);
 
@@ -707,7 +707,7 @@ namespace
         return result;
     }
 
-    int trace_event_points(const CSR_Grid& vertices, const CSR_Grid& edges, const Voronoi_Features& features, const Voronoi_Edge_Spans& normals,
+    int trace_event_points(const CSR_Grid& vertices, const CSR_Grid& edges, const Voronoi_Features& features, const Voronoi_Edge_Spans& spans,
                            int start_vert, int edge_point, int* events)
     {
         int num_events = 0;
@@ -720,10 +720,10 @@ namespace
                 break;
             }
 
-            int p_n1 = normals.indices_1[nz(edges, prev)];
-            int p_n2 = normals.indices_2[nz(edges, prev)];
-            int c_n1 = normals.indices_1[nz(edges, curr)];
-            int c_n2 = normals.indices_2[nz(edges, curr)];
+            int p_n1 = spans.indices_1[nz(edges, prev)];
+            int p_n2 = spans.indices_2[nz(edges, prev)];
+            int c_n1 = spans.indices_1[nz(edges, curr)];
+            int c_n2 = spans.indices_2[nz(edges, curr)];
 
             // side 1 event.
             if (p_n1 != c_n1)
@@ -746,7 +746,7 @@ namespace
 }
 
 void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edges,
-                 Voronoi_Edge_Spans& edge_normal_indices, Voronoi_Features& features, Voronoi_Traced_Edges& out)
+                 Voronoi_Edge_Spans& spans, Voronoi_Features& features, Voronoi_Traced_Edges& out)
 {
     Queue<int> queue_vert(scratch, vertices.num_nz);
     Alloc_Scope<char> visited_vert(scratch, vertices.num_nz);
@@ -779,7 +779,7 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
 
         for (int i = 0; i < neis.num; ++i)
         {
-            Traced_Incident_Edge e = trace_incident_edge(vertices, edges, features, edge_normal_indices, visited_edge, u, neis.lin_idx[i]);
+            Traced_Incident_Edge e = trace_incident_edge(vertices, edges, features, spans, visited_edge, u, neis.lin_idx[i]);
 
             if (e.vert < 0)
             {
@@ -787,7 +787,7 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
             }
 
             int v = e.vert;
-            int num_edge_events = trace_event_points(vertices, edges, features, edge_normal_indices, u, neis.lin_idx[i], out_events + num_events);
+            int num_edge_events = trace_event_points(vertices, edges, features, spans, u, neis.lin_idx[i], out_events + num_events);
 
             out_u[num_edges] = u;
             out_v[num_edges] = v;
@@ -921,13 +921,13 @@ namespace
     // correct sampled event position so that the point lies on the corresponding obstacle vertex normal.
     Event_Closest_Points correct_pos_and_compute_closest(int event, int event_nz_index, Vec2 sampled_pos, Bbox2 bounds,
                                                       const Footprint* obstacles, const Footprint_Normals* obstacle_normals,
-                                                      const Voronoi_Edge_Spans* edge_normals, const Voronoi_Features* features)
+                                                      const Voronoi_Edge_Spans* spans, const Voronoi_Features* features)
     {
         Event_Closest_Points result;
         int* obstacle_offsets = obstacle_normals->obstacle_normal_offsets;
 
-        int vertex_index_1 = edge_normals->indices_1[event_nz_index];
-        int vertex_index_2 = edge_normals->indices_2[event_nz_index];
+        int vertex_index_1 = spans->indices_1[event_nz_index];
+        int vertex_index_2 = spans->indices_2[event_nz_index];
         int obstacle_id_1 = features->edge_obstacle_ids_1[event_nz_index];
         int obstacle_id_2 = features->edge_obstacle_ids_2[event_nz_index];
 
@@ -1052,7 +1052,7 @@ void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space&
 
             Vec2 sampled_pos = convert_from_image(evt_lin_idx, in.features->grid_width, in.features->grid_height, in.bounds);
             Event_Closest_Points r = correct_pos_and_compute_closest(evt, evt_nz_index, sampled_pos, in.bounds,
-                                                                     in.obstacles, in.obstacle_normals, in.edge_normals, in.features);
+                                                                     in.obstacles, in.obstacle_normals, in.spans, in.features);
 
             Event* e = create_event(out, r.pos, i);
 

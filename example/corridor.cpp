@@ -244,8 +244,8 @@ int main()
         printf("voronoi vertices: %d\n", cl_runtime.voronoi_vertex_mark_count);
         printf("voronoi edge marks: %d\n", cl_runtime.voronoi_edge_mark_count);
 
-        corridormap::Voronoi_Edge_Spans edge_normal_indices = corridormap::allocate_voronoi_edge_spans(&mem, features.num_edge_points);
-        corridormap::build_edge_spans(features, obstacles, normals, obstacle_bounds, edge_normal_indices);
+        corridormap::Voronoi_Edge_Spans edge_spans = corridormap::allocate_voronoi_edge_spans(&mem, features.num_edge_points);
+        corridormap::build_edge_spans(features, obstacles, normals, obstacle_bounds, edge_spans);
 
         corridormap::CSR_Grid vert_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_vert_points);
         corridormap::build_csr(features.verts, vert_csr);
@@ -255,7 +255,7 @@ int main()
 
         traced_edges = corridormap::allocate_voronoi_traced_edges(&mem, features.num_vert_points, obstacles.num_verts);
 
-        corridormap::trace_edges(&mem, vert_csr, edge_csr, edge_normal_indices, features, traced_edges);
+        corridormap::trace_edges(&mem, vert_csr, edge_csr, edge_spans, features, traced_edges);
         printf("edge_count=%d\n", traced_edges.num_edges);
         printf("event_count=%d\n", traced_edges.num_events);
 
@@ -265,7 +265,7 @@ int main()
         params.obstacle_normals = &normals;
         params.features = &features;
         params.traced_edges = &traced_edges;
-        params.edge_normals = &edge_normal_indices;
+        params.spans = &edge_spans;
         params.edge_grid = &edge_csr;
         params.vertex_grid = &vert_csr;
 

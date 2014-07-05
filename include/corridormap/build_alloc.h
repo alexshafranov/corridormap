@@ -40,7 +40,7 @@ Voronoi_Traced_Edges allocate_voronoi_traced_edges(Memory* mem, int num_voronoi_
 void deallocate(Memory* mem, Distance_Mesh& mesh);
 void deallocate(Memory* mem, Voronoi_Features& features);
 void deallocate(Memory* mem, Footprint_Normals& normals);
-void deallocate(Memory* mem, Voronoi_Edge_Spans& normals);
+void deallocate(Memory* mem, Voronoi_Edge_Spans& spans);
 void deallocate(Memory* mem, CSR_Grid& grid);
 void deallocate(Memory* mem, Voronoi_Traced_Edges& edges);
 

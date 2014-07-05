@@ -197,7 +197,7 @@ struct Walkable_Space_Build_Params
     Footprint_Normals* obstacle_normals;
     Voronoi_Features* features;
     Voronoi_Traced_Edges* traced_edges;
-    Voronoi_Edge_Spans* edge_normals;
+    Voronoi_Edge_Spans* spans;
     CSR_Grid* edge_grid;
     CSR_Grid* vertex_grid;
 };
