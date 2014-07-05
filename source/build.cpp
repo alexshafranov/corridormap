@@ -395,7 +395,7 @@ namespace
     }
 }
 
-void build_edge_point_normal_indices(const Voronoi_Features& features, const Footprint& obstacles, const Footprint_Normals& normals, Bbox2 bounds, Voronoi_Edge_Spans& out)
+void build_edge_spans(const Voronoi_Features& features, const Footprint& obstacles, const Footprint_Normals& normals, Bbox2 bounds, Voronoi_Edge_Spans& out)
 {
     const int grid_width = features.grid_width;
     const int grid_height = features.grid_height;

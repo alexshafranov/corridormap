@@ -245,7 +245,7 @@ int main()
         printf("voronoi edge marks: %d\n", cl_runtime.voronoi_edge_mark_count);
 
         corridormap::Voronoi_Edge_Spans edge_normal_indices = corridormap::allocate_voronoi_edge_spans(&mem, features.num_edge_points);
-        corridormap::build_edge_point_normal_indices(features, obstacles, normals, obstacle_bounds, edge_normal_indices);
+        corridormap::build_edge_spans(features, obstacles, normals, obstacle_bounds, edge_normal_indices);
 
         corridormap::CSR_Grid vert_csr = corridormap::allocate_csr_grid(&mem, render_target_height, render_target_width, features.num_vert_points);
         corridormap::build_csr(features.verts, vert_csr);
