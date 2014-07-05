@@ -395,7 +395,7 @@ namespace
     }
 }
 
-void build_edge_point_normal_indices(const Voronoi_Features& features, const Footprint& obstacles, const Footprint_Normals& normals, Bbox2 bounds, Voronoi_Edge_Normals& out)
+void build_edge_point_normal_indices(const Voronoi_Features& features, const Footprint& obstacles, const Footprint_Normals& normals, Bbox2 bounds, Voronoi_Edge_Spans& out)
 {
     const int grid_width = features.grid_width;
     const int grid_height = features.grid_height;
@@ -635,7 +635,7 @@ namespace
         return -1;
     }
 
-    void fix_sides(Voronoi_Features& features, Voronoi_Edge_Normals& normals, int prev_point_nz, int curr_point_nz)
+    void fix_sides(Voronoi_Features& features, Voronoi_Edge_Spans& normals, int prev_point_nz, int curr_point_nz)
     {
         unsigned int ps1 = features.edge_obstacle_ids_1[prev_point_nz];
 
@@ -665,7 +665,7 @@ namespace
         unsigned int color2;
     };
 
-    Traced_Incident_Edge trace_incident_edge(const CSR_Grid& vertices, const CSR_Grid& edges, Voronoi_Features& features, Voronoi_Edge_Normals& normals,
+    Traced_Incident_Edge trace_incident_edge(const CSR_Grid& vertices, const CSR_Grid& edges, Voronoi_Features& features, Voronoi_Edge_Spans& normals,
                                              char* visited_edges, int start_vert, int edge_point)
     {
         Traced_Incident_Edge result;
@@ -707,7 +707,7 @@ namespace
         return result;
     }
 
-    int trace_event_points(const CSR_Grid& vertices, const CSR_Grid& edges, const Voronoi_Features& features, const Voronoi_Edge_Normals& normals,
+    int trace_event_points(const CSR_Grid& vertices, const CSR_Grid& edges, const Voronoi_Features& features, const Voronoi_Edge_Spans& normals,
                            int start_vert, int edge_point, int* events)
     {
         int num_events = 0;
@@ -746,7 +746,7 @@ namespace
 }
 
 void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edges,
-                 Voronoi_Edge_Normals& edge_normal_indices, Voronoi_Features& features, Voronoi_Traced_Edges& out)
+                 Voronoi_Edge_Spans& edge_normal_indices, Voronoi_Features& features, Voronoi_Traced_Edges& out)
 {
     Queue<int> queue_vert(scratch, vertices.num_nz);
     Alloc_Scope<char> visited_vert(scratch, vertices.num_nz);
@@ -921,7 +921,7 @@ namespace
     // correct sampled event position so that the point lies on the corresponding obstacle vertex normal.
     Event_Closest_Points correct_pos_and_compute_closest(int event, int event_nz_index, Vec2 sampled_pos, Bbox2 bounds,
                                                       const Footprint* obstacles, const Footprint_Normals* obstacle_normals,
-                                                      const Voronoi_Edge_Normals* edge_normals, const Voronoi_Features* features)
+                                                      const Voronoi_Edge_Spans* edge_normals, const Voronoi_Features* features)
     {
         Event_Closest_Points result;
         int* obstacle_offsets = obstacle_normals->obstacle_normal_offsets;

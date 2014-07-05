@@ -100,16 +100,16 @@ void deallocate(Memory* mem, Footprint_Normals& normals)
     memset(&normals, 0, sizeof(normals));
 }
 
-Voronoi_Edge_Normals allocate_voronoi_edge_normals(Memory* mem, int num_edge_points)
+Voronoi_Edge_Spans allocate_voronoi_edge_normals(Memory* mem, int num_edge_points)
 {
-    Voronoi_Edge_Normals result;
+    Voronoi_Edge_Spans result;
     memset(&result, 0, sizeof(result));
     result.indices_1 = allocate<int>(mem, num_edge_points);
     result.indices_2 = allocate<int>(mem, num_edge_points);
     return result;
 }
 
-void deallocate(Memory* mem, Voronoi_Edge_Normals& result)
+void deallocate(Memory* mem, Voronoi_Edge_Spans& result)
 {
     mem->deallocate(result.indices_1);
     mem->deallocate(result.indices_2);

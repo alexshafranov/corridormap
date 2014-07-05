@@ -118,14 +118,15 @@ struct Footprint_Normals
     int* obstacle_normal_offsets;
 };
 
-// indices of obstacle normals associated with voronoi edge points.
-struct Voronoi_Edge_Normals
+// for each edge point and each side stores vertex_index+1 if the edge point is in the space spanned
+// by vertex and its two normals, or 0 if edge point is not part of any span.
+struct Voronoi_Edge_Spans
 {
-    // normal index on one side.
+    // vertex index on one side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
     // [0..num_edge_points]
     int* indices_1;
-    // normal index on another side.
+    // vertex index on another side.
     // equals i+1 if edge point lies in normals[i], normals[i+1] span. 0 otherwise.
     // [0..num_edge_points]
     int* indices_2;
@@ -196,7 +197,7 @@ struct Walkable_Space_Build_Params
     Footprint_Normals* obstacle_normals;
     Voronoi_Features* features;
     Voronoi_Traced_Edges* traced_edges;
-    Voronoi_Edge_Normals* edge_normals;
+    Voronoi_Edge_Spans* edge_normals;
     CSR_Grid* edge_grid;
     CSR_Grid* vertex_grid;
 };

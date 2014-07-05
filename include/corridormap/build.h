@@ -57,7 +57,7 @@ void build_footprint_normals(const Footprint& in, Bbox2 bounds, Footprint_Normal
 
 // if edge point lies in vector space spanned by two consecutive normals assign first normal's index. otherwise keep zero.
 void build_edge_point_normal_indices(const Voronoi_Features& features, const Footprint& obstacles,
-                                     const Footprint_Normals& normals, Bbox2 bounds, Voronoi_Edge_Normals& out);
+                                     const Footprint_Normals& normals, Bbox2 bounds, Voronoi_Edge_Spans& out);
 
 // build CSR (Compressed Sparse Row) grid representation from row-major list of non-zero element coordinates.
 void build_csr(const unsigned int* nz_coords, CSR_Grid& out);
@@ -78,7 +78,7 @@ CSR_Grid_Neis cell_neis(const CSR_Grid& grid, int linear_index);
 // also arrange edge obstacle ids in edge_normal_indices and Voronoi_Features such that if two edge points a and b are on the same edge,
 // side_1[a] == side_1[b] and side_2[a] == side_2[b].
 void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edges,
-                 Voronoi_Edge_Normals& edge_normal_indices, Voronoi_Features& features, Voronoi_Traced_Edges& out);
+                 Voronoi_Edge_Spans& edge_normal_indices, Voronoi_Features& features, Voronoi_Traced_Edges& out);
 
 // builds annotated voronoi diagram (i.e. Explicit Corridor Map) represented as a half-edge mesh.
 void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space& out);
