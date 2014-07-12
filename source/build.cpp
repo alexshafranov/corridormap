@@ -989,48 +989,7 @@ void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space&
     {
         int u_nz = nz(*in.vertex_grid, in.traced_edges->u[i]);
         int v_nz = nz(*in.vertex_grid, in.traced_edges->v[i]);
-
-        Edge* edge = create_edge(out, u_nz, v_nz);
-        Half_Edge* e0 = edge->dir + 0;
-        Half_Edge* e1 = edge->dir + 1;
-
-        Vec2 u = source(out, edge)->pos;
-        Vec2 v = target(out, edge)->pos;
-
-        unsigned int obstacle_id_1 = in.traced_edges->obstacle_ids_1[i];
-        unsigned int obstacle_id_2 = in.traced_edges->obstacle_ids_2[i];
-
-        {
-            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
-            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
-
-            if (is_left(u, v, cp0))
-            {
-                e0->sides[0] = cp0;
-                e0->sides[1] = cp1;
-            }
-            else
-            {
-                e0->sides[0] = cp1;
-                e0->sides[1] = cp0;
-            }
-        }
-
-        {
-            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
-            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
-
-            if (is_left(v, u, cp0))
-            {
-                e1->sides[0] = cp0;
-                e1->sides[1] = cp1;
-            }
-            else
-            {
-                e1->sides[0] = cp1;
-                e1->sides[1] = cp0;
-            }
-        }
+        create_edge(out, u_nz, v_nz);
     }
 
     // 3. events: convert positions and compute sides.
@@ -1068,6 +1027,64 @@ void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space&
             }
 
             prev = r.pos;
+        }
+    }
+
+    // 4. compute vertex closest points.
+    for (int i = 0; i < in.traced_edges->num_edges; ++i)
+    {
+        Edge* edge = out.edges.items + i;
+        Half_Edge* e0 = edge->dir + 0;
+        Half_Edge* e1 = edge->dir + 1;
+
+        Vec2 u = source(out, edge)->pos;
+        Vec2 v = target(out, edge)->pos;
+
+        Vec2 u_prev = v;
+        if (event(out, e0))
+        {
+            u_prev = event(out, e0)->pos;
+        }
+
+        Vec2 v_prev = u;
+        if (event(out, e1))
+        {
+            v_prev = event(out, e1)->pos;
+        }
+
+        unsigned int obstacle_id_1 = in.traced_edges->obstacle_ids_1[i];
+        unsigned int obstacle_id_2 = in.traced_edges->obstacle_ids_2[i];
+
+        {
+            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
+            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
+
+            if (is_left(v_prev, v, cp0))
+            {
+                e0->sides[0] = cp0;
+                e0->sides[1] = cp1;
+            }
+            else
+            {
+                e0->sides[0] = cp1;
+                e0->sides[1] = cp0;
+            }
+        }
+
+        {
+            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
+            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
+
+            if (is_left(u_prev, u, cp0))
+            {
+                e1->sides[0] = cp0;
+                e1->sides[1] = cp1;
+            }
+            else
+            {
+                e1->sides[0] = cp1;
+                e1->sides[1] = cp0;
+            }
         }
     }
 }
