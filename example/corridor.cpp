@@ -41,7 +41,7 @@
 #include "corridormap/vec2.h"
 #include "corridormap/build_alloc.h"
 #include "corridormap/build_ocl.h"
-#include "debugdraw.h"
+#include "draw.h"
 
 // force NVIDIA GPU when using Optimus.
 #ifdef _WIN32

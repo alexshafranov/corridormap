@@ -21,7 +21,7 @@
 
 #include "corridormap/vec2.h"
 #include "corridormap/runtime.h"
-#include "debugdraw.h"
+#include "draw.h"
 
 namespace corridormap {
 

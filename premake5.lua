@@ -98,7 +98,7 @@ solution "corridormap"
         kind "ConsoleApp"
         flags { "NoPCH", "NoRTTI", "FatalWarnings", "NoExceptions" }
         includedirs { "include", "deps/OpenCL", "deps/clew", "example/glfw/include", "example/glew/include", "example/nanovg/src" }
-        files { "example/corridor.cpp", "example/debugdraw.cpp" }
+        files { "example/corridor.cpp", "example/draw.cpp" }
         defines { "GLEW_STATIC" }
         links { "corridormap-library", "glew", "glfw", "clew", "nanovg" }
 
