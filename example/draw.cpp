@@ -59,13 +59,17 @@ namespace
     {
         Vec2 inv_dim = sub(state.bounds_max, state.bounds_min);
         inv_dim = make_vec2(1.f / inv_dim.x, 1.f / inv_dim.y);
-        return mul(mul(sub(v, state.bounds_min), inv_dim), state.image_dimensions);
+        Vec2 norm_v = mul(sub(v, state.bounds_min), inv_dim);
+        norm_v.y = 1.f - norm_v.y;
+        return mul(norm_v, state.image_dimensions);
     }
 
     Vec2 from_image(Vec2 v, const Draw_State& state)
     {
-        Vec2 inv_dim = make_vec2(1.f/state.image_dimensions.x, 1.f/state.image_dimensions.y);
-        return add(state.bounds_min, mul(mul(v, inv_dim), sub(state.bounds_max, state.bounds_min)));
+        Vec2 inv_dim = make_vec2(1.f / state.image_dimensions.x, 1.f / state.image_dimensions.y);
+        Vec2 norm_v = mul(v, inv_dim);
+        norm_v.y = 1.f - norm_v.y;
+        return add(state.bounds_min, mul(norm_v, sub(state.bounds_max, state.bounds_min)));
     }
 
     Segment to_image(Vec2 a, Vec2 b, const Draw_State& state)
