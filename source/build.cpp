@@ -1079,34 +1079,34 @@ void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space&
         unsigned int obstacle_id_2 = in.traced_edges->obstacle_ids_2[i];
 
         {
-            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
-            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
+            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
+            Vec2 cp2 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
 
-            if (is_left(v_prev, v, cp0))
+            if (is_left(v_prev, v, cp1))
             {
-                e0->sides[0] = cp0;
-                e0->sides[1] = cp1;
+                e0->sides[0] = cp1;
+                e0->sides[1] = cp2;
             }
             else
             {
-                e0->sides[0] = cp1;
-                e0->sides[1] = cp0;
+                e0->sides[0] = cp2;
+                e0->sides[1] = cp1;
             }
         }
 
         {
-            Vec2 cp0 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
-            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
+            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
+            Vec2 cp2 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
 
-            if (is_left(u_prev, u, cp0))
+            if (is_left(u_prev, u, cp1))
             {
-                e1->sides[0] = cp0;
-                e1->sides[1] = cp1;
+                e1->sides[0] = cp1;
+                e1->sides[1] = cp2;
             }
             else
             {
-                e1->sides[0] = cp1;
-                e1->sides[1] = cp0;
+                e1->sides[0] = cp2;
+                e1->sides[1] = cp1;
             }
         }
     }
