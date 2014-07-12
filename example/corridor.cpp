@@ -160,7 +160,7 @@ int main()
     obstacles.num_poly_verts = num_poly_verts;
 
     const float border = 60.f;
-    corridormap::Bbox2 obstacle_bounds = corridormap::bounds(obstacles, border);
+    corridormap::Bbox2 obstacle_bounds = corridormap::fit(corridormap::bounds(obstacles, border), float(render_target_width)/float(render_target_height));
 
     const float max_dist = corridormap::max_distance(obstacle_bounds);
     const float max_error = 0.1f;

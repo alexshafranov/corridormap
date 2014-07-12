@@ -32,6 +32,8 @@ namespace corridormap {
 
 // computes 2d bounding box of the input footprint.
 Bbox2 bounds(const Footprint& f, float border);
+// grow smaller dimension to match the dedired aspect.
+Bbox2 fit(Bbox2 box, float aspect);
 
 // maximum distance for points and lines.
 // computed such that distance mesh "covers" the full render target in ortho projection.

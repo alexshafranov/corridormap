@@ -66,6 +66,29 @@ Bbox2 bounds(const Footprint& f, float border)
     return result;
 }
 
+Bbox2 fit(Bbox2 box, float aspect)
+{
+    float bounds_width = box.max[0] - box.min[0];
+    float bounds_height = box.max[1] - box.min[1];
+
+    if (bounds_width > bounds_height)
+    {
+        float new_height = bounds_width / aspect;
+        float diff = new_height - bounds_height;
+        box.max[1] += diff * 0.5f;
+        box.min[1] -= diff * 0.5f;
+    }
+    else
+    {
+        float new_width = bounds_height * aspect;
+        float diff = new_width - bounds_width;
+        box.max[0] += diff * 0.5f;
+        box.min[0] -= diff * 0.5f;
+    }
+
+    return box;
+}
+
 float max_distance(Bbox2 bounds)
 {
     float w = bounds.max[0] - bounds.min[0];
