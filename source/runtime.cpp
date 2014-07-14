@@ -332,7 +332,8 @@ void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corri
     Vec2* out_right = out.right_o;
 
     const Half_Edge* edge = opposite(space, path[0]);
-    extract_vertex(space, edge, out_origins, out_radii, out_left, out_right);
+    // swap left and right since the first vertex is extracted through opposite direction edge.
+    extract_vertex(space, edge, out_origins, out_radii, out_right, out_left);
 
     for (int i = 0; i < path_size; ++i)
     {
