@@ -114,14 +114,18 @@ struct Corridor
     int max_discs;
     // num discs in a corridor.
     int num_discs;
-    // [0..num_discs)
+    // [0..num_discs).
     Vec2* origins;
-    // [0..num_discs)
+    // [0..num_discs).
     float* radii;
-    // [0..num_discs)
-    Vec2* left;
-    // [0..num_discs)
-    Vec2* right;
+    // left side closest obstacle point. [0..num_discs).
+    Vec2* left_o;
+    // right side closest obstacle point. [0..num_discs).
+    Vec2* right_o;
+    // left side shrunk corridor border point. [0..num_discs).
+    Vec2* left_b;
+    // right side shrunk corridor border point. [0..num_discs).
+    Vec2* right_b;
 };
 
 }

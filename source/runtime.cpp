@@ -246,8 +246,10 @@ Corridor create_corridor(Memory* mem, int max_discs)
     memset(&result, 0, sizeof(result));
     result.origins = allocate<Vec2>(mem, max_discs);
     result.radii = allocate<float>(mem, max_discs);
-    result.left = allocate<Vec2>(mem, max_discs);
-    result.right = allocate<Vec2>(mem, max_discs);
+    result.left_o = allocate<Vec2>(mem, max_discs);
+    result.right_o = allocate<Vec2>(mem, max_discs);
+    result.left_b = allocate<Vec2>(mem, max_discs);
+    result.right_b = allocate<Vec2>(mem, max_discs);
     result.max_discs = max_discs;
     return result;
 }
@@ -256,8 +258,10 @@ void destroy(Memory* mem, Corridor& c)
 {
     mem->deallocate(c.origins);
     mem->deallocate(c.radii);
-    mem->deallocate(c.left);
-    mem->deallocate(c.right);
+    mem->deallocate(c.left_o);
+    mem->deallocate(c.right_o);
+    mem->deallocate(c.left_b);
+    mem->deallocate(c.right_b);
     memset(&c, 0, sizeof(c));
 }
 
@@ -297,8 +301,8 @@ void extract(const Walkable_Space& space, const Half_Edge** path, int path_size,
 
     Vec2* out_origins = out.origins;
     float* out_radii = out.radii;
-    Vec2* out_left = out.left;
-    Vec2* out_right = out.right;
+    Vec2* out_left = out.left_o;
+    Vec2* out_right = out.right_o;
 
     const Half_Edge* edge = opposite(space, path[0]);
     extract_vertex(space, edge, out_origins, out_radii, out_left, out_right);
@@ -316,6 +320,9 @@ void extract(const Walkable_Space& space, const Half_Edge** path, int path_size,
     }
 
     out.num_discs = int(out_origins - out.origins);
+    // initialize shrunk borders to the obstacle closest points.
+    memcpy(out.left_b, out.left_o, out.num_discs*sizeof(Vec2));
+    memcpy(out.right_b, out.right_o, out.num_discs*sizeof(Vec2));
 }
 
 }
