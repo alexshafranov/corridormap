@@ -219,6 +219,8 @@ int degree(const Walkable_Space& space, const Vertex* vertex)
 
 int num_path_discs(const Walkable_Space& space, const Half_Edge** path, int path_size)
 {
+    corridormap_assert(path_size > 0);
+
     int result = 0;
 
     for (int i = 0; i < path_size; ++i)
