@@ -82,6 +82,8 @@ Vertex* source(const Walkable_Space& space, const Edge* e);
 
 /// corridor
 
+// convert vertex path to half-edge path.
+void vertex_to_edge_path(const Walkable_Space& space, const Vertex** path, int path_size, Half_Edge** out);
 // returns number of event points and vertices along the half-edge path.
 int num_path_discs(const Walkable_Space& space, const Half_Edge** path, int path_size);
 

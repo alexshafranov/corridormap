@@ -265,6 +265,28 @@ void destroy(Memory* mem, Corridor& c)
     memset(&c, 0, sizeof(c));
 }
 
+void vertex_to_edge_path(const Walkable_Space& space, const Vertex** path, int path_size, Half_Edge** out)
+{
+    for (int i = 0; i < path_size-1; ++i)
+    {
+        const Vertex* u = path[i+0];
+        const Vertex* v = path[i+1];
+        Half_Edge* edge = 0;
+
+        for (Half_Edge* e = half_edge(space, u); e != 0; e = next(space, e))
+        {
+            if (target(space, e) == v)
+            {
+                edge = e;
+                break;
+            }
+        }
+
+        corridormap_assert(edge != 0);
+        out[i] = edge;
+    }
+}
+
 namespace
 {
     void extract_vertex(const Walkable_Space& space, const Half_Edge* edge, Vec2* out_origins, float* out_radii, Vec2* out_left, Vec2* out_right)
