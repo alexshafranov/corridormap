@@ -245,4 +245,25 @@ int num_path_discs(const Walkable_Space& space, const Half_Edge** path, int path
     return result;
 }
 
+Corridor create_corridor(Memory* mem, int max_discs)
+{
+    Corridor result;
+    memset(&result, 0, sizeof(result));
+    result.origins = allocate<Vec2>(mem, max_discs);
+    result.radii = allocate<float>(mem, max_discs);
+    result.left = allocate<Vec2>(mem, max_discs);
+    result.right = allocate<Vec2>(mem, max_discs);
+    result.max_discs = max_discs;
+    return result;
+}
+
+void destroy(Memory* mem, Corridor& c)
+{
+    mem->deallocate(c.origins);
+    mem->deallocate(c.radii);
+    mem->deallocate(c.left);
+    mem->deallocate(c.right);
+    memset(&c, 0, sizeof(c));
+}
+
 }

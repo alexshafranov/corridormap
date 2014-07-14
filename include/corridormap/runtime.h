@@ -31,7 +31,7 @@ namespace corridormap {
 
 // allocate and initialize walkable space data.
 Walkable_Space create_walkable_space(Memory* mem, int max_vertices, int max_edges, int max_events);
-// destroy voronoi space.
+// destroy walkable space.
 void destroy(Memory* mem, Walkable_Space& d);
 
 // creates a new vertex with the specified position.
@@ -84,6 +84,11 @@ Vertex* source(const Walkable_Space& space, const Edge* e);
 
 // returns number of event points and vertices along the half-edge path.
 int num_path_discs(const Walkable_Space& space, const Half_Edge** path, int path_size);
+
+// allocate corridor.
+Corridor create_corridor(Memory* mem, int max_discs);
+// destroy corridor.
+void destroy(Memory* mem, Corridor& corridor);
 
 }
 
