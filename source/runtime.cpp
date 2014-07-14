@@ -325,4 +325,20 @@ void extract(const Walkable_Space& space, const Half_Edge** path, int path_size,
     memcpy(out.right_b, out.right_o, out.num_discs*sizeof(Vec2));
 }
 
+void shrink(Corridor& corridor, float clearance)
+{
+    for (int i = 0; i < corridor.num_discs; ++i)
+    {
+        Vec2 origin = corridor.origins[i];
+        float radius = corridor.radii[i];
+        corridormap_assert(radius > clearance);
+        Vec2 l = corridor.left_o[i];
+        Vec2 r = corridor.right_o[i];
+        Vec2 l_b = add(l, scale(normalized(sub(origin, l)), clearance));
+        Vec2 r_b = add(r, scale(normalized(sub(origin, r)), clearance));
+        corridor.left_b[i] = l_b;
+        corridor.right_b[i] = r_b;
+    }
+}
+
 }

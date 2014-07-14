@@ -92,6 +92,8 @@ void destroy(Memory* mem, Corridor& corridor);
 
 // extract corridor from half-edge path.
 void extract(const Walkable_Space& space, const Half_Edge** path, int path_size, Corridor& out);
+// shrink corridor to the new clearance value.
+void shrink(Corridor& corridor, float clearance);
 
 }
 
