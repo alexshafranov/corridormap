@@ -497,9 +497,9 @@ namespace
     void draw_vertices(Draw_State& state)
     {
         NVG_State_Scope s(state.vg);
-        nvgBeginPath(state.vg);
         nvgStrokeColor(state.vg, nvgRGB(0xff, 0xeb, 0x3b));
         nvgStrokeWidth(state.vg, 2.5f);
+        nvgBeginPath(state.vg);
 
         for (Vertex* v = first(state.space->vertices); v != 0; v = next(state.space->vertices, v))
         {
@@ -548,6 +548,20 @@ void draw_walkable_space(Draw_State& state)
     draw_edges(state);
     draw_events(state);
     draw_vertices(state);
+}
+
+void draw_corridor(Draw_State& state, Corridor& corridor)
+{
+    NVG_State_Scope s(state.vg);
+    nvgLineCap(state.vg, NVG_ROUND);
+    nvgFillColor(state.vg, nvgRGBA(0, 0, 0, 127));
+
+    for (int i = 0; i < corridor.num_discs; ++i)
+    {
+        nvgBeginPath(state.vg);
+        circle(state, corridor.origins[i], corridor.radii[i] - corridor.clearance);
+        nvgFill(state.vg);
+    }
 }
 
 }

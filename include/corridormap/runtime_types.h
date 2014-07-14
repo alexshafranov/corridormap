@@ -46,7 +46,7 @@ struct Vertex
 // one direction of the edge in voronoi diagram.
 struct Half_Edge
 {
-    // link to the next incident half-edge.
+    // link to the next incident half-edge in CCW order, forms cyclic list of edges around each vertex.
     int next;
     // index of the target vertex.
     int target;
@@ -114,6 +114,8 @@ struct Corridor
     int max_discs;
     // num discs in a corridor.
     int num_discs;
+    // current clearance value (>= 0 for shrunk corridors).
+    float clearance;
     // [0..num_discs).
     Vec2* origins;
     // [0..num_discs).

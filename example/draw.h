@@ -40,6 +40,7 @@ struct Draw_State
 };
 
 void draw_walkable_space(Draw_State& state);
+void draw_corridor(Draw_State& state, Corridor& corridor);
 
 }
 

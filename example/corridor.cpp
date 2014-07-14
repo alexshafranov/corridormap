@@ -211,6 +211,7 @@ int main()
     corridormap::Voronoi_Features features;
     corridormap::Voronoi_Traced_Edges traced_edges;
     corridormap::Walkable_Space space;
+    corridormap::Corridor corridor;
 
     {
         cl_int error_code;
@@ -273,6 +274,25 @@ int main()
         corridormap::build_walkable_space(params, space);
     }
 
+    {
+        int path_verts[] = { 0, 2, 4, 8, 9, 13, 17, 21, 18, 26 };
+        const int vert_path_size = sizeof(path_verts)/sizeof(path_verts[0]);
+        corridormap::Vertex* vert_path[vert_path_size];
+
+        for (int i = 0; i < vert_path_size; ++i)
+        {
+            vert_path[i] = space.vertices.items + path_verts[i];
+        }
+
+        corridormap::Half_Edge* edge_path[sizeof(path_verts)/sizeof(path_verts[0]) - 1];
+        vertex_to_edge_path(space, vert_path, vert_path_size, edge_path);
+        int edge_path_size = vert_path_size-1;
+        int num_discs = corridormap::num_path_discs(space, edge_path, edge_path_size);
+        corridor = create_corridor(&mem, num_discs);
+        corridormap::extract(space, edge_path, edge_path_size, corridor);
+        corridormap::shrink(corridor, 30.f);
+    }
+
     corridormap::Draw_State draw_state;
     draw_state.agent_radius = 15.f;
     draw_state.bounds_min = corridormap::make_vec2(obstacle_bounds.min);
@@ -306,6 +326,7 @@ int main()
 
         draw_state.image_dimensions = corridormap::make_vec2(float(screen_width), float(screen_height));
         corridormap::draw_walkable_space(draw_state);
+        corridormap::draw_corridor(draw_state, corridor);
 
         nvgEndFrame(vg);
 
