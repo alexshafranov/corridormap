@@ -107,6 +107,23 @@ struct Walkable_Space
     Pool<Event> events;
 };
 
+// Set of discs describing path corridor.
+struct Corridor
+{
+    // num allocated discs.
+    int max_discs;
+    // num discs in a corridor.
+    int num_discs;
+    // [0..num_discs)
+    Vec2* origins;
+    // [0..num_discs)
+    float* radii;
+    // [0..num_discs)
+    Vec2* left;
+    // [0..num_discs)
+    Vec2* right;
+};
+
 }
 
 #endif

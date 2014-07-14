@@ -70,33 +70,33 @@ inline Event* event(const Walkable_Space& space, const Half_Edge* e)
     return ptr(space.events, e->event);
 }
 
-inline Event* next(const Walkable_Space& space, Half_Edge* half_edge, Event* e)
+inline Event* next(const Walkable_Space& space, const Half_Edge* half_edge, const Event* e)
 {
     Edge* p = edge(space, half_edge);
     int dir = int(half_edge - p->dir);
     return ptr(space.events, e->next[dir]);
 }
 
-inline Vec2 left_side(const Walkable_Space& space, Half_Edge* half_edge, Event* e)
+inline Vec2 left_side(const Walkable_Space& space, const Half_Edge* half_edge, const Event* e)
 {
     Edge* p = edge(space, half_edge);
     int dir = int(half_edge - p->dir);
     return e->sides[dir^0];
 }
 
-inline Vec2 right_side(const Walkable_Space& space, Half_Edge* half_edge, Event* e)
+inline Vec2 right_side(const Walkable_Space& space, const Half_Edge* half_edge, const Event* e)
 {
     Edge* p = edge(space, half_edge);
     int dir = int(half_edge - p->dir);
     return e->sides[dir^1];
 }
 
-inline Vec2 left_side(const Walkable_Space&, Half_Edge* half_edge)
+inline Vec2 left_side(const Walkable_Space&, const Half_Edge* half_edge)
 {
     return half_edge->sides[0];
 }
 
-inline Vec2 right_side(const Walkable_Space&, Half_Edge* half_edge)
+inline Vec2 right_side(const Walkable_Space&, const Half_Edge* half_edge)
 {
     return half_edge->sides[1];
 }

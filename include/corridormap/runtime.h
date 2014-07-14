@@ -63,15 +63,15 @@ Half_Edge* next(const Walkable_Space& space, const Half_Edge* e);
 // first event in the direction of this half-edge.
 Event* event(const Walkable_Space& space, const Half_Edge* e);
 // next event in the direction of this half-edge.
-Event* next(const Walkable_Space& space, Half_Edge* half_edge, Event* e);
+Event* next(const Walkable_Space& space, const Half_Edge* half_edge, const Event* e);
 // left side at the specified event point along this half-edge direction.
-Vec2 left_side(const Walkable_Space& space, Half_Edge* half_edge, Event* e);
+Vec2 left_side(const Walkable_Space& space, const Half_Edge* half_edge, const Event* e);
 // right side at the specified event point along this half-edge direction.
-Vec2 right_side(const Walkable_Space& space, Half_Edge* half_edge, Event* e);
+Vec2 right_side(const Walkable_Space& space, const Half_Edge* half_edge, const Event* e);
 // left side at the target vertex along this half-edge direction.
-Vec2 left_side(const Walkable_Space& space, Half_Edge* half_edge);
+Vec2 left_side(const Walkable_Space& space, const Half_Edge* half_edge);
 // right side at the target vertex along this half-edge direction.
-Vec2 right_side(const Walkable_Space& space, Half_Edge* half_edge);
+Vec2 right_side(const Walkable_Space& space, const Half_Edge* half_edge);
 
 /// edge
 
@@ -79,6 +79,11 @@ Vec2 right_side(const Walkable_Space& space, Half_Edge* half_edge);
 Vertex* target(const Walkable_Space& space, const Edge* e);
 // source vertex in the default direction of this edge (i.e. first half-edge).
 Vertex* source(const Walkable_Space& space, const Edge* e);
+
+/// corridor
+
+// returns number of event points and vertices along the half-edge path.
+int num_path_discs(const Walkable_Space& space, const Half_Edge** path, int path_size);
 
 }
 

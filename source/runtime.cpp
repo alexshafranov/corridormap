@@ -216,4 +216,33 @@ int degree(const Walkable_Space& space, const Vertex* vertex)
     return result;
 }
 
+int num_path_discs(const Walkable_Space& space, const Half_Edge** path, int path_size)
+{
+    int result = 0;
+
+    for (int i = 0; i < path_size - 1; ++i)
+    {
+        const Half_Edge* e0 = path[i+0];
+        const Half_Edge* e1 = path[i+1];
+        // assert subsequent edges in the path share a vertex.
+        corridormap_assert(e0->target == opposite(space, e1)->target);
+
+        // vertices: source(e0), source(e1), target(e1).
+        result += 3;
+
+        // count events.
+        for (Event* evt = event(space, e0); evt != 0; evt = next(space, e0, evt))
+        {
+            result++;
+        }
+
+        for (Event* evt = event(space, e1); evt != 0; evt = next(space, e1, evt))
+        {
+            result++;
+        }
+    }
+
+    return result;
+}
+
 }
