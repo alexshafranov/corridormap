@@ -135,24 +135,6 @@ namespace
         circle_corner(vg, corner, c, b, state, max_steps, step + 1);
     }
 
-    void connect_sides(NVGcontext* vg, Vec2 curr_pos, Vec2 curr_side, Vec2 prev_pos, Vec2 prev_side, const Draw_State& state)
-    {
-        Segment prev_seg = to_image(prev_pos, prev_side, state);
-        Segment curr_seg = to_image(curr_pos, curr_side, state);
-
-        if (equal(prev_side, curr_side, 1e-6f))
-        {
-            Vec2 corner = to_image(curr_side, state);
-            Vec2 a = prev_seg.b;
-            Vec2 b = curr_seg.b;
-            circle_corner(vg, corner, a, b, state);
-        }
-        else
-        {
-            nvgLineTo(vg, curr_seg.b.x, curr_seg.b.y);
-        }
-    }
-
     Border_Line_State begin_border(Draw_State& state, Vec2 start_pos, Vec2 start_side, bool start_path=true)
     {
         Border_Line_State border;
@@ -176,7 +158,7 @@ namespace
         Segment prev_seg = to_image(border.prev_pos, border.prev_side, state);
         Segment curr_seg = to_image(pos, side, state);
 
-        if (equal(border.prev_side, side, 1e-6f))
+        if (equal(border.prev_side, side, 0.05f))
         {
             Vec2 corner = to_image(side, state);
             Vec2 a = prev_seg.b;

@@ -51,7 +51,7 @@ inline Vec2 sub(Vec2 a, Vec2 b)
 
 inline Vec2 mul(Vec2 a, Vec2 b)
 {
-    return make_vec2(a.x * b.x, a.y * b.y);
+    return make_vec2(a.x*b.x, a.y*b.y);
 }
 
 inline Vec2 scale(Vec2 a, float val)
@@ -59,9 +59,14 @@ inline Vec2 scale(Vec2 a, float val)
     return make_vec2(a.x*val, a.y*val);
 }
 
+inline float sq(float v)
+{
+    return v*v;
+}
+
 inline Vec2 normalized(Vec2 a)
 {
-    return scale(a, 1.f/sqrt(a.x*a.x + a.y*a.y));
+    return scale(a, 1.f/sqrt(sq(a.x) + sq(a.y)));
 }
 
 inline float dot(Vec2 a, Vec2 b)
@@ -76,7 +81,7 @@ inline float len(Vec2 a)
 
 inline bool equal(Vec2 a, Vec2 b, float epsilon)
 {
-    return abs(a.x - b.x) < epsilon && abs(a.y - b.y) < epsilon;
+    return sq(a.x - b.x) + sq(a.y - b.y) < sq(epsilon);
 }
 
 inline float clamp(float val, float a, float b)
