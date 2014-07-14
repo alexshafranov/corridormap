@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <algorithm>
 #include <string.h>
 #include "corridormap/assert.h"
 #include "corridormap/memory.h"
@@ -220,27 +221,19 @@ int num_path_discs(const Walkable_Space& space, const Half_Edge** path, int path
 {
     int result = 0;
 
-    for (int i = 0; i < path_size - 1; ++i)
+    for (int i = 0; i < path_size; ++i)
     {
-        const Half_Edge* e0 = path[i+0];
-        const Half_Edge* e1 = path[i+1];
+        const Half_Edge* e = path[i];
         // assert subsequent edges in the path share a vertex.
-        corridormap_assert(e0->target == opposite(space, e1)->target);
-
-        // vertices: source(e0), source(e1), target(e1).
-        result += 3;
-
+        corridormap_assert((i + 1 == path_size) || (e->target == opposite(space, path[i+1])->target));
         // count events.
-        for (Event* evt = event(space, e0); evt != 0; evt = next(space, e0, evt))
-        {
-            result++;
-        }
-
-        for (Event* evt = event(space, e1); evt != 0; evt = next(space, e1, evt))
+        for (Event* evt = event(space, e); evt != 0; evt = next(space, e, evt))
         {
             result++;
         }
     }
+
+    result += path_size + 1;
 
     return result;
 }
@@ -264,6 +257,63 @@ void destroy(Memory* mem, Corridor& c)
     mem->deallocate(c.left);
     mem->deallocate(c.right);
     memset(&c, 0, sizeof(c));
+}
+
+namespace
+{
+    void extract_vertex(const Walkable_Space& space, const Half_Edge* edge, Vec2* out_origins, float* out_radii, Vec2* out_left, Vec2* out_right)
+    {
+        Vec2 p = target(space, edge)->pos;
+        Vec2 l = left_side(space, edge);
+        Vec2 r = right_side(space, edge);
+        float radius = std::min(len(sub(l, p)), len(sub(r, p)));
+
+        *out_origins++ = p;
+        *out_radii++ = radius;
+        *out_left++ = l;
+        *out_right++ = r;
+    }
+
+    void extract_event(const Walkable_Space& space, const Half_Edge* edge, const Event* event, Vec2* out_origins, float* out_radii, Vec2* out_left, Vec2* out_right)
+    {
+        Vec2 p = event->pos;
+        Vec2 l = left_side(space, edge, event);
+        Vec2 r = right_side(space, edge, event);
+        float radius = std::min(len(sub(l, p)), len(sub(r, p)));
+
+        *out_origins++ = p;
+        *out_radii++ = radius;
+        *out_left++ = l;
+        *out_right++ = r;
+    }
+}
+
+void extract(const Walkable_Space& space, const Half_Edge** path, int path_size, Corridor& out)
+{
+    corridormap_assert(path_size > 0);
+    corridormap_assert(num_path_discs(space, path, path_size) <= out.max_discs);
+
+    Vec2* out_origins = out.origins;
+    float* out_radii = out.radii;
+    Vec2* out_left = out.left;
+    Vec2* out_right = out.right;
+
+    const Half_Edge* edge = opposite(space, path[0]);
+    extract_vertex(space, edge, out_origins, out_radii, out_left, out_right);
+
+    for (int i = 0; i < path_size; ++i)
+    {
+        const Half_Edge* edge = path[i];
+
+        for (Event* evt = event(space, edge); evt != 0; evt = next(space, edge, evt))
+        {
+            extract_event(space, edge, evt, out_origins, out_radii, out_left, out_right);
+        }
+
+        extract_vertex(space, edge, out_origins, out_radii, out_left, out_right);
+    }
+
+    out.num_discs = int(out_origins - out.origins);
 }
 
 }

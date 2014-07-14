@@ -90,6 +90,9 @@ Corridor create_corridor(Memory* mem, int max_discs);
 // destroy corridor.
 void destroy(Memory* mem, Corridor& corridor);
 
+// extract corridor from half-edge path.
+void extract(const Walkable_Space& space, const Half_Edge** path, int path_size, Corridor& out);
+
 }
 
 #include "corridormap/runtime.inl"
