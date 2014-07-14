@@ -107,27 +107,42 @@ struct Walkable_Space
     Pool<Event> events;
 };
 
-// Set of discs describing path corridor.
+// Type of the curve connecting subsequent corridor border points.
+enum Border_Curve_Type
+{
+    // next point is equal to the current one.
+    border_type_skip = 0,
+    // circle arc around obstacle point.
+    border_type_arc_obstacle,
+    // circle arc around edge vertex (happens where two subsequent path edges connect).
+    border_type_arc_vertex,
+    // line between current point and the next one.
+    border_type_line,
+};
+
+// Set of disks describing path corridor.
 struct Corridor
 {
-    // num allocated discs.
-    int max_discs;
-    // num discs in a corridor.
-    int num_discs;
+    // num allocated disks.
+    int max_disks;
+    // num disks in a corridor.
+    int num_disks;
     // current clearance value (>= 0 for shrunk corridors).
     float clearance;
-    // [0..num_discs).
+    // [0..num_disks).
     Vec2* origins;
-    // [0..num_discs).
+    // [0..num_disks).
     float* radii;
-    // left side closest obstacle point. [0..num_discs).
+    // left side closest obstacle point. [0..num_disks).
     Vec2* left_o;
-    // right side closest obstacle point. [0..num_discs).
+    // right side closest obstacle point. [0..num_disks).
     Vec2* right_o;
-    // left side shrunk corridor border point. [0..num_discs).
+    // left side shrunk corridor border point. [0..num_disks).
     Vec2* left_b;
-    // right side shrunk corridor border point. [0..num_discs).
+    // right side shrunk corridor border point. [0..num_disks).
     Vec2* right_b;
+    // packed curve type for left and right borders. curves[i] gives 
+    unsigned char* curves;
 };
 
 }

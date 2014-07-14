@@ -88,12 +88,12 @@ void vertex_to_edge_path(const Walkable_Space& space, Vertex** path, int path_si
 int num_path_discs(const Walkable_Space& space, Half_Edge** path, int path_size);
 
 // allocate corridor.
-Corridor create_corridor(Memory* mem, int max_discs);
+Corridor create_corridor(Memory* mem, int max_disks);
 // destroy corridor.
 void destroy(Memory* mem, Corridor& corridor);
 
-// extract corridor from half-edge path.
-void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out);
+// extract corridor from half-edge path. epsilon is used to test equality of border points.
+void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon=0.1f);
 // shrink corridor to the new clearance value.
 void shrink(Corridor& corridor, float clearance);
 

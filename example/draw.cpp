@@ -89,30 +89,51 @@ namespace
         return s;
     }
 
-    void moveTo(Draw_State& state, Vec2 pos)
+    void move_to(Draw_State& state, Vec2 pos)
     {
         Vec2 pos_img = to_image(pos, state);
         nvgMoveTo(state.vg, pos_img.x, pos_img.y);
     }
 
-    Segment moveTo(Draw_State& state, Vec2 vertex, Vec2 side)
+    Segment move_to(Draw_State& state, Vec2 vertex, Vec2 side)
     {
         Segment seg = to_image(vertex, side, state);
         nvgMoveTo(state.vg, seg.b.x, seg.b.y);
         return seg;
     }
 
-    void lineTo(Draw_State& state, Vec2 pos)
+    void line_to(Draw_State& state, Vec2 pos)
     {
         Vec2 pos_img = to_image(pos, state);
         nvgLineTo(state.vg, pos_img.x, pos_img.y);
     }
 
-    Segment lineTo(Draw_State& state, Vec2 vertex, Vec2 side)
+    Segment line_to(Draw_State& state, Vec2 vertex, Vec2 side)
     {
         Segment seg = to_image(vertex, side, state);
         nvgLineTo(state.vg, seg.b.x, seg.b.y);
         return seg;
+    }
+
+    void arc(Draw_State& state, Vec2 origin, Vec2 a, Vec2 b, int max_steps=4, int step=0)
+    {
+        Vec2 a_img = to_image(a, state);
+        Vec2 b_img = to_image(b, state);
+        Vec2 origin_img = to_image(origin, state);
+        float radius = mag(sub(a_img, origin_img));
+
+        if (step == max_steps || mag(sub(b_img, a_img)) < 8.f)
+        {
+            nvgLineTo(state.vg, b_img.x, b_img.y);
+            return;
+        }
+
+        Vec2 n = normalized(sub(scale(add(a_img, b_img), 0.5f), origin_img));
+        Vec2 c_img = add(origin_img, scale(n, radius));
+        Vec2 c = from_image(c_img, state);
+
+        arc(state, origin, a, c, max_steps, step + 1);
+        arc(state, origin, c, b, max_steps, step + 1);
     }
 
     void circle(Draw_State& state, Vec2 origin, float radius)
@@ -143,11 +164,11 @@ namespace
 
         if (start_path)
         {
-            moveTo(state, start_pos, start_side);
+            move_to(state, start_pos, start_side);
         }
         else
         {
-            lineTo(state, start_pos, start_side);
+            line_to(state, start_pos, start_side);
         }
 
         return border;
@@ -195,11 +216,11 @@ namespace
         Border_Line_State right_border = begin_border(state, u, left_side(*state.space, e1), true);
         walk_events_right_side(state, right_border, e0);
         next_border_point(state, right_border, v, right_side(*state.space, e0));
-        lineTo(state, v);
+        line_to(state, v);
         Border_Line_State left_border = begin_border(state, v, left_side(*state.space, e0), false);
         walk_events_right_side(state, left_border, e1);
         next_border_point(state, left_border, u, right_side(*state.space, e1));
-        lineTo(state, u);
+        line_to(state, u);
         nvgClosePath(state.vg);
 
         nvgFill(state.vg);
@@ -265,7 +286,7 @@ namespace
         Border_Line_State right_border = begin_border(state, corner, corner, false);
         walk_events_right_side(state, right_border, opp_edge);
         next_border_point(state, right_border, u, right_side(*state.space, opp_edge));
-        lineTo(state, u);
+        line_to(state, u);
 
         nvgClosePath(state.vg);
         nvgFill(state.vg);
@@ -439,11 +460,11 @@ namespace
         {
             nvgBeginPath(state.vg);
 
-            moveTo(state, make_vec2(state.obstacles->x[offset], state.obstacles->y[offset]));
+            move_to(state, make_vec2(state.obstacles->x[offset], state.obstacles->y[offset]));
 
             for (int v = 1; v < state.obstacles->num_poly_verts[i]; ++v)
             {
-                lineTo(state, make_vec2(state.obstacles->x[offset + v], state.obstacles->y[offset + v]));
+                line_to(state, make_vec2(state.obstacles->x[offset + v], state.obstacles->y[offset + v]));
             }
 
             nvgClosePath(state.vg);
@@ -467,14 +488,14 @@ namespace
             Vec2 v = target(*state.space, e0)->pos;
 
             nvgBeginPath(state.vg);
-            moveTo(state, u);
+            move_to(state, u);
 
             for (Event* e = event(*state.space, e0); e != 0; e = next(*state.space, e0, e))
             {
-                lineTo(state, e->pos);
+                line_to(state, e->pos);
             }
 
-            lineTo(state, v);
+            line_to(state, v);
             nvgStroke(state.vg);
         }
     }
@@ -521,14 +542,14 @@ namespace
             {
                 nvgStrokeColor(state.vg, nvgRGB(255, 0, 0));
                 nvgBeginPath(state.vg);
-                moveTo(state, e->pos);
-                lineTo(state, e->pos, left_side(*state.space, edge->dir, e));
+                move_to(state, e->pos);
+                line_to(state, e->pos, left_side(*state.space, edge->dir, e));
                 nvgStroke(state.vg);
 
                 nvgStrokeColor(state.vg, nvgRGB(0, 255, 0));
                 nvgBeginPath(state.vg);
-                moveTo(state, e->pos);
-                lineTo(state, e->pos, right_side(*state.space, edge->dir, e));
+                move_to(state, e->pos);
+                line_to(state, e->pos, right_side(*state.space, edge->dir, e));
                 nvgStroke(state.vg);
             }
         }
@@ -552,16 +573,56 @@ void draw_walkable_space(Draw_State& state)
 
 void draw_corridor(Draw_State& state, Corridor& corridor)
 {
+    if (corridor.num_disks <= 0)
+    {
+        return;
+    }
+
     NVG_State_Scope s(state.vg);
     nvgLineCap(state.vg, NVG_ROUND);
     nvgFillColor(state.vg, nvgRGBA(0, 0, 0, 127));
+    nvgStrokeColor(state.vg, nvgRGB(255, 255, 255));
+    nvgStrokeWidth(state.vg, 2.f);
+    nvgBeginPath(state.vg);
 
-    for (int i = 0; i < corridor.num_discs; ++i)
+    move_to(state, corridor.right_b[0]);
+
+    for (int i = 1; i < corridor.num_disks; ++i)
     {
-        nvgBeginPath(state.vg);
-        circle(state, corridor.origins[i], corridor.radii[i] - corridor.clearance);
-        nvgFill(state.vg);
+        Vec2 src = corridor.right_b[i-1];
+        Vec2 tgt = corridor.right_b[i];
+
+        if ((corridor.curves[i] & 0xf0) >> 4 == border_type_arc_vertex)
+        {
+            arc(state, corridor.origins[i], src, tgt);
+        }
+        else
+        {
+            line_to(state, tgt);
+        }
     }
+
+    line_to(state, corridor.left_b[corridor.num_disks-1]);
+
+    for (int i = corridor.num_disks-1; i > 0; --i)
+    {
+        Vec2 src = corridor.left_b[i];
+        Vec2 tgt = corridor.left_b[i-1];
+
+        if ((corridor.curves[i] & 0x0f) >> 0 == border_type_arc_vertex)
+        {
+            arc(state, corridor.origins[i], src, tgt);
+        }
+        else
+        {
+            line_to(state, tgt);
+        }
+    }
+
+    line_to(state, corridor.right_b[0]);
+
+    nvgFill(state.vg);
+    nvgStroke(state.vg);
 }
 
 }
