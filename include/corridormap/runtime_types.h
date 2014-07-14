@@ -96,7 +96,7 @@ struct Pool
     T* items;
 };
 
-// Generalized Voronoi Diagram where edges and vertices are annotated with the closest obstacle information.
+// Medial axis graph with edges and vertices annotated with closest obstacle information.
 struct Walkable_Space
 {
     // pool of vertices.
