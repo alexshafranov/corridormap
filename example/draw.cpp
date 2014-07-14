@@ -79,7 +79,7 @@ namespace
         s.b = to_image(b, state);
 
         Vec2 d = sub(s.b, s.a);
-        float l = len(d);
+        float l = mag(d);
         if (l > 0.f)
         {
             d = normalized(d);
@@ -123,7 +123,7 @@ namespace
 
     void circle_corner(NVGcontext* vg, Vec2 corner, Vec2 a, Vec2 b, const Draw_State& state, int max_steps=100, int step=0)
     {
-        if (step == max_steps || len(sub(b, a)) < 8.f)
+        if (step == max_steps || mag(sub(b, a)) < 8.f)
         {
             nvgLineTo(vg, b.x, b.y);
             return;

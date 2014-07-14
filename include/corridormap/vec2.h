@@ -74,7 +74,7 @@ inline float dot(Vec2 a, Vec2 b)
     return a.x*b.x + a.y*b.y;
 }
 
-inline float len(Vec2 a)
+inline float mag(Vec2 a)
 {
     return sqrt(dot(a, a));
 }

@@ -227,7 +227,7 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
             Vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
             Vec2 next = { poly_x[next_idx], poly_y[next_idx] };
 
-            float len_e1 = len(sub(next, curr));
+            float len_e1 = mag(sub(next, curr));
 
             Vec2 e0 = normalized(sub(prev, curr));
             Vec2 e1 = normalized(sub(next, curr));
@@ -847,7 +847,7 @@ namespace
 
         Vec2 seg = sub(p1, p0);
         Vec2 dir = normalized(seg);
-        float seg_len = len(seg);
+        float seg_len = mag(seg);
 
         float proj = dot(sub(point, p0), dir);
 

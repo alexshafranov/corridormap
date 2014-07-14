@@ -268,7 +268,7 @@ namespace
         Vec2 p = target(space, edge)->pos;
         Vec2 l = left_side(space, edge);
         Vec2 r = right_side(space, edge);
-        float radius = std::min(len(sub(l, p)), len(sub(r, p)));
+        float radius = std::min(mag(sub(l, p)), mag(sub(r, p)));
 
         *out_origins++ = p;
         *out_radii++ = radius;
@@ -281,7 +281,7 @@ namespace
         Vec2 p = event->pos;
         Vec2 l = left_side(space, edge, event);
         Vec2 r = right_side(space, edge, event);
-        float radius = std::min(len(sub(l, p)), len(sub(r, p)));
+        float radius = std::min(mag(sub(l, p)), mag(sub(r, p)));
 
         *out_origins++ = p;
         *out_radii++ = radius;
