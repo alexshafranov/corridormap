@@ -101,6 +101,10 @@ void shrink(Corridor& corridor, float clearance);
 Border_Curve_Type left_border_curve(const Corridor& corridor, int disk_index);
 Border_Curve_Type right_border_curve(const Corridor& corridor, int disk_index);
 
+// set border curve type.
+void set_left_border_curve(const Corridor& corridor, int disk_index, Border_Curve_Type type);
+void set_right_border_curve(const Corridor& corridor, int disk_index, Border_Curve_Type type);
+
 }
 
 #include "corridormap/runtime.inl"

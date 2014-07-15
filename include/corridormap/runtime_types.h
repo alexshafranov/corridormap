@@ -129,6 +129,8 @@ struct Corridor
     int num_disks;
     // current clearance value (>= 0 for shrunk corridors).
     float clearance;
+    // epsilon used to compare border points.
+    float epsilon;
     // [0..num_disks).
     Vec2* origins;
     // [0..num_disks).

@@ -409,6 +409,33 @@ namespace
             init_event_curves(space, edge, prev_l, prev_r, out_curves, epsilon);
         }
     }
+
+    void update_curves(Corridor& corridor, float epsilon)
+    {
+        corridormap_assert(corridor.num_disks > 0);
+
+        Vec2 prev_l = corridor.left_b[0];
+        Vec2 prev_r = corridor.right_b[0];
+
+        for (int i = 1; i < corridor.num_disks; ++i)
+        {
+            Vec2 curr_l = corridor.left_b[i];
+            Vec2 curr_r = corridor.right_b[i];
+
+            if (left_border_curve(corridor, i) == border_type_point && !equal(curr_l, prev_l, epsilon))
+            {
+                set_left_border_curve(corridor, i, border_type_arc_obstacle);
+            }
+
+            if (right_border_curve(corridor, i) == border_type_point && !equal(curr_l, prev_l, epsilon))
+            {
+                set_right_border_curve(corridor, i, border_type_arc_obstacle);
+            }
+
+            prev_l = curr_l;
+            prev_r = curr_r;
+        }
+    }
 }
 
 void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon)
@@ -435,6 +462,7 @@ void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corri
 
     out.num_disks = int(out_origins - out.origins);
     out.clearance = 0.f;
+    out.epsilon = epsilon;
     // initialize shrunk borders to the obstacle closest points.
     memcpy(out.left_b, out.left_o, out.num_disks*sizeof(Vec2));
     memcpy(out.right_b, out.right_o, out.num_disks*sizeof(Vec2));
@@ -455,6 +483,11 @@ void shrink(Corridor& corridor, float clearance)
         Vec2 r_b = add(r, scale(normalized(sub(origin, r)), clearance));
         corridor.left_b[i] = l_b;
         corridor.right_b[i] = r_b;
+    }
+
+    if (corridor.num_disks > 0)
+    {
+        update_curves(corridor, corridor.epsilon);
     }
 }
 

@@ -290,7 +290,7 @@ int main()
         int num_disks = corridormap::num_path_discs(space, edge_path, edge_path_size);
         corridor = create_corridor(&mem, num_disks);
         corridormap::extract(space, edge_path, edge_path_size, corridor);
-        // corridormap::shrink(corridor, 30.f);
+        corridormap::shrink(corridor, 30.f);
     }
 
     corridormap::Draw_State draw_state;
