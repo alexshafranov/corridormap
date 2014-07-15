@@ -362,17 +362,8 @@ namespace
         out_curves++;
     }
 
-    void init_curve_types(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon)
+    void init_event_curves(const Walkable_Space& space, const Half_Edge* edge, Vec2& prev_l, Vec2& prev_r, unsigned char*& out_curves, float epsilon)
     {
-        corridormap_assert(path_size > 0);
-        unsigned char* out_curves = out.curves;
-
-        const Half_Edge* edge = path[0];
-        *out_curves++ = border_type_point << 0 | border_type_point << 4;
-
-        Vec2 prev_l = right_side(space, opposite(space, edge));
-        Vec2 prev_r = left_side(space, opposite(space, edge));
-
         for (Event* evt = event(space, edge); evt != 0; evt = next(space, edge, evt))
         {
             Vec2 curr_l = left_side(space, edge, evt);
@@ -387,6 +378,24 @@ namespace
         set_event_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
         prev_l = curr_l;
         prev_r = curr_r;
+    }
+
+    // non-shrunk corridor border curves could be:
+    // - points = subsequent closest points are equal,
+    // - lines = subsequent closest points are not equal,
+    // - arcs around voronoi vertices = non-equal closest points between arriving half-edge and outgoing half-edge.
+    void init_curves(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon)
+    {
+        corridormap_assert(path_size > 0);
+        unsigned char* out_curves = out.curves;
+
+        const Half_Edge* edge = path[0];
+        *out_curves++ = border_type_point << 0 | border_type_point << 4;
+
+        Vec2 prev_l = right_side(space, opposite(space, edge));
+        Vec2 prev_r = left_side(space, opposite(space, edge));
+
+        init_event_curves(space, edge, prev_l, prev_r, out_curves, epsilon);
 
         for (int i = 1; i < path_size; ++i)
         {
@@ -397,20 +406,7 @@ namespace
             prev_l = curr_l;
             prev_r = curr_r;
 
-            for (Event* evt = event(space, edge); evt != 0; evt = next(space, edge, evt))
-            {
-                Vec2 curr_l = left_side(space, edge, evt);
-                Vec2 curr_r = right_side(space, edge, evt);
-                set_event_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
-                prev_l = curr_l;
-                prev_r = curr_r;
-            }
-
-            curr_l = left_side(space, edge);
-            curr_r = right_side(space, edge);
-            set_event_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
-            prev_l = curr_l;
-            prev_r = curr_r;
+            init_event_curves(space, edge, prev_l, prev_r, out_curves, epsilon);
         }
     }
 }
@@ -434,7 +430,7 @@ void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corri
 
     if (path_size > 0)
     {
-        init_curve_types(space, path, path_size, out, epsilon);
+        init_curves(space, path, path_size, out, epsilon);
     }
 
     out.num_disks = int(out_origins - out.origins);
