@@ -96,6 +96,8 @@ void destroy(Memory* mem, Corridor& corridor);
 void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon=0.1f);
 // shrink corridor to the new clearance value.
 void shrink(Corridor& corridor, float clearance);
+// linear search for the disk closest to the specified point.
+int find_closest_disk(const Corridor& corridor, Vec2 point);
 
 // unpack curve type for the connection between disk_index and disk_index+1.
 Border_Curve_Type left_border_curve(const Corridor& corridor, int disk_index);

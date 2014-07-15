@@ -143,7 +143,7 @@ struct Corridor
     Vec2* border_l;
     // right side shrunk corridor border point. [0..num_disks).
     Vec2* border_r;
-    // packed curve type for left and right borders. curves[i] gives 
+    // packed curve type for left and right borders.
     unsigned char* curves;
 };
 

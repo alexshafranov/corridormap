@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <string.h>
+#include <float.h>
 #include "corridormap/assert.h"
 #include "corridormap/memory.h"
 #include "corridormap/vec2.h"
@@ -512,6 +513,25 @@ void shrink(Corridor& corridor, float clearance)
     {
         update_curves(corridor, corridor.epsilon);
     }
+}
+
+int find_closest_disk(const Corridor& corridor, Vec2 point)
+{
+    float min_dist = FLT_MAX;
+    int result = 0;
+
+    for (int i = 0; i < corridor.num_disks; ++i)
+    {
+        float dist_sq = mag_sq(sub(point, corridor.origin[i]));
+
+        if (dist_sq < min_dist)
+        {
+            min_dist = dist_sq;
+            result = i;
+        }
+    }
+
+    return result;
 }
 
 }
