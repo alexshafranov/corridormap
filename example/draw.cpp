@@ -592,7 +592,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
         Vec2 src = corridor.right_b[i-1];
         Vec2 tgt = corridor.right_b[i];
 
-        if ((corridor.curves[i] & 0xf0) >> 4 == border_type_arc_vertex)
+        if (right_border_curve(corridor, i) == border_type_arc_vertex)
         {
             arc(state, corridor.origins[i], src, tgt);
         }
@@ -609,7 +609,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
         Vec2 src = corridor.left_b[i];
         Vec2 tgt = corridor.left_b[i-1];
 
-        if ((corridor.curves[i] & 0x0f) >> 0 == border_type_arc_vertex)
+        if (left_border_curve(corridor, i) == border_type_arc_vertex)
         {
             arc(state, corridor.origins[i], src, tgt);
         }

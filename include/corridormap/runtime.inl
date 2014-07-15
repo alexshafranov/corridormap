@@ -113,6 +113,18 @@ inline Vertex* source(const Walkable_Space& space, const Edge* e)
     return space.vertices.items + e->dir[1].target;
 }
 
+/// corridor
+
+inline Border_Curve_Type left_border_curve(const Corridor& corridor, int disk_index)
+{
+    return static_cast<Border_Curve_Type>((corridor.curves[disk_index] & 0x0f) >> 0);
+}
+
+inline Border_Curve_Type right_border_curve(const Corridor& corridor, int disk_index)
+{
+    return static_cast<Border_Curve_Type>((corridor.curves[disk_index] & 0xf0) >> 4);
+}
+
 }
 
 #endif
