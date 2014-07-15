@@ -571,6 +571,24 @@ void draw_walkable_space(Draw_State& state)
     draw_vertices(state);
 }
 
+namespace
+{
+    void draw_border_curve(Draw_State& state, Border_Curve_Type curve_type, Vec2 origin, Vec2 src, Vec2 tgt)
+    {
+        switch (curve_type)
+        {
+        case border_type_arc_vertex:
+            arc(state, origin, src, tgt);
+            break;
+        case border_type_line:
+            line_to(state, tgt);
+            break;
+        default:
+            break;
+        };
+    }
+}
+
 void draw_corridor(Draw_State& state, Corridor& corridor)
 {
     if (corridor.num_disks <= 0)
@@ -591,18 +609,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
     {
         Vec2 src = corridor.right_b[i-1];
         Vec2 tgt = corridor.right_b[i];
-
-        switch (right_border_curve(corridor, i))
-        {
-        case border_type_arc_vertex:
-            arc(state, corridor.origins[i], src, tgt);
-            break;
-        case border_type_line:
-            line_to(state, tgt);
-            break;
-        default:
-            break;
-        };
+        draw_border_curve(state, right_border_curve(corridor, i), corridor.origins[i], src, tgt);
     }
 
     line_to(state, corridor.left_b[corridor.num_disks-1]);
@@ -611,18 +618,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
     {
         Vec2 src = corridor.left_b[i];
         Vec2 tgt = corridor.left_b[i-1];
-
-        switch (left_border_curve(corridor, i))
-        {
-        case border_type_arc_vertex:
-            arc(state, corridor.origins[i], src, tgt);
-            break;
-        case border_type_line:
-            line_to(state, tgt);
-            break;
-        default:
-            break;
-        };
+        draw_border_curve(state, left_border_curve(corridor, i), corridor.origins[i], src, tgt);
     }
 
     line_to(state, corridor.right_b[0]);
