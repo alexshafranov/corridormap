@@ -332,14 +332,14 @@ namespace
     {
         *out_curves = border_type_point << 0 | border_type_point << 4;
 
-        if (!equal(curr_l, prev_l, epsilon))
+        if (!equal(prev_l, curr_l, epsilon))
         {
-            *out_curves |= border_type_line << 0;
+            *out_curves = (*out_curves & 0xf0) | (border_type_line << 0);
         }
 
-        if (!equal(curr_r, prev_r, epsilon))
+        if (!equal(prev_r, curr_r, epsilon))
         {
-            *out_curves |= border_type_line << 4;
+            *out_curves = (*out_curves & 0x0f) | (border_type_line << 4);
         }
 
         out_curves++;
@@ -351,12 +351,12 @@ namespace
 
         if (!equal(prev_l, curr_l, epsilon))
         {
-            *out_curves |= border_type_arc_vertex << 0;
+            *out_curves = (*out_curves & 0xf0) | (border_type_arc_vertex << 0);
         }
 
         if (!equal(prev_r, curr_r, epsilon))
         {
-            *out_curves |= border_type_arc_vertex << 4;
+            *out_curves = (*out_curves & 0x0f) | (border_type_arc_vertex << 4);
         }
 
         out_curves++;
@@ -410,6 +410,7 @@ namespace
         }
     }
 
+    // when shrinking, some points could become arcs.
     void update_curves(Corridor& corridor, float epsilon)
     {
         corridormap_assert(corridor.num_disks > 0);
