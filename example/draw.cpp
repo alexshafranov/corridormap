@@ -592,14 +592,17 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
         Vec2 src = corridor.right_b[i-1];
         Vec2 tgt = corridor.right_b[i];
 
-        if (right_border_curve(corridor, i) == border_type_arc_vertex)
+        switch (right_border_curve(corridor, i))
         {
+        case border_type_arc_vertex:
             arc(state, corridor.origins[i], src, tgt);
-        }
-        else
-        {
+            break;
+        case border_type_line:
             line_to(state, tgt);
-        }
+            break;
+        default:
+            break;
+        };
     }
 
     line_to(state, corridor.left_b[corridor.num_disks-1]);
@@ -609,14 +612,17 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
         Vec2 src = corridor.left_b[i];
         Vec2 tgt = corridor.left_b[i-1];
 
-        if (left_border_curve(corridor, i) == border_type_arc_vertex)
+        switch (left_border_curve(corridor, i))
         {
+        case border_type_arc_vertex:
             arc(state, corridor.origins[i], src, tgt);
-        }
-        else
-        {
+            break;
+        case border_type_line:
             line_to(state, tgt);
-        }
+            break;
+        default:
+            break;
+        };
     }
 
     line_to(state, corridor.right_b[0]);

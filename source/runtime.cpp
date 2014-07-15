@@ -328,59 +328,95 @@ namespace
         }
     }
 
+    void set_event_curves(Vec2 prev_l, Vec2 prev_r, Vec2 curr_l, Vec2 curr_r, float epsilon, unsigned char*& out_curves)
+    {
+        *out_curves = border_type_point << 0 | border_type_point << 4;
+
+        if (!equal(curr_l, prev_l, epsilon))
+        {
+            *out_curves |= border_type_line << 0;
+        }
+
+        if (!equal(curr_r, prev_r, epsilon))
+        {
+            *out_curves |= border_type_line << 4;
+        }
+
+        out_curves++;
+    }
+
+    void set_vertex_curves(Vec2 prev_l, Vec2 prev_r, Vec2 curr_l, Vec2 curr_r, float epsilon, unsigned char*& out_curves)
+    {
+        *out_curves = border_type_point << 0 | border_type_point << 4;
+
+        if (!equal(prev_l, curr_l, epsilon))
+        {
+            *out_curves |= border_type_arc_vertex << 0;
+        }
+
+        if (!equal(prev_r, curr_r, epsilon))
+        {
+            *out_curves |= border_type_arc_vertex << 4;
+        }
+
+        out_curves++;
+    }
+
     void init_curve_types(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon)
     {
+        corridormap_assert(path_size > 0);
         unsigned char* out_curves = out.curves;
 
         const Half_Edge* edge = path[0];
-        Vec2 prev_l = left_side(space, edge);
-        Vec2 prev_r = right_side(space, edge);
-        *out_curves++ = 0;
+        *out_curves++ = border_type_point << 0 | border_type_point << 4;
+
+        Vec2 prev_l = right_side(space, opposite(space, edge));
+        Vec2 prev_r = left_side(space, opposite(space, edge));
 
         for (Event* evt = event(space, edge); evt != 0; evt = next(space, edge, evt))
         {
-            *out_curves++ = 0;
+            Vec2 curr_l = left_side(space, edge, evt);
+            Vec2 curr_r = right_side(space, edge, evt);
+            set_event_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
+            prev_l = curr_l;
+            prev_r = curr_r;
         }
 
-        *out_curves++ = 0;
+        Vec2 curr_l = left_side(space, edge);
+        Vec2 curr_r = right_side(space, edge);
+        set_event_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
+        prev_l = curr_l;
+        prev_r = curr_r;
 
         for (int i = 1; i < path_size; ++i)
         {
             const Half_Edge* edge = path[i];
-            const Half_Edge* opp_edge = opposite(space, edge);
-            Vec2 curr_l = right_side(space, opp_edge);
-            Vec2 curr_r = left_side(space, opp_edge);
-
-            *out_curves = 0;
-
-            if (!equal(prev_l, curr_l, epsilon))
-            {
-                *out_curves |= border_type_arc_vertex << 0;
-            }
-
-            if (!equal(prev_r, curr_r, epsilon))
-            {
-                *out_curves |= border_type_arc_vertex << 4;
-            }
-
-            out_curves++;
+            Vec2 curr_l = right_side(space, opposite(space, edge));
+            Vec2 curr_r = left_side(space, opposite(space, edge));
+            set_vertex_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
+            prev_l = curr_l;
+            prev_r = curr_r;
 
             for (Event* evt = event(space, edge); evt != 0; evt = next(space, edge, evt))
             {
-                *out_curves++ = 0;
+                Vec2 curr_l = left_side(space, edge, evt);
+                Vec2 curr_r = right_side(space, edge, evt);
+                set_event_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
+                prev_l = curr_l;
+                prev_r = curr_r;
             }
 
-            *out_curves++ = 0;
-
-            prev_l = left_side(space, edge);
-            prev_r = right_side(space, edge);
+            curr_l = left_side(space, edge);
+            curr_r = right_side(space, edge);
+            set_event_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
+            prev_l = curr_l;
+            prev_r = curr_r;
         }
     }
 }
 
 void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon)
 {
-    corridormap_assert(path_size > 0);
     corridormap_assert(num_path_discs(space, path, path_size) <= out.max_disks);
 
     Vec2* out_origins = out.origins;
@@ -396,7 +432,10 @@ void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corri
         extract_vertex(space, path[i], out_origins, out_radii, out_left, out_right);
     }
 
-    init_curve_types(space, path, path_size, out, epsilon);
+    if (path_size > 0)
+    {
+        init_curve_types(space, path, path_size, out, epsilon);
+    }
 
     out.num_disks = int(out_origins - out.origins);
     out.clearance = 0.f;
