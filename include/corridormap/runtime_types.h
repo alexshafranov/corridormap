@@ -132,17 +132,17 @@ struct Corridor
     // epsilon used to compare border points.
     float epsilon;
     // [0..num_disks).
-    Vec2* origins;
+    Vec2* origin;
     // [0..num_disks).
-    float* radii;
+    float* radius;
     // left side closest obstacle point. [0..num_disks).
-    Vec2* left_o;
+    Vec2* obstacle_l;
     // right side closest obstacle point. [0..num_disks).
-    Vec2* right_o;
+    Vec2* obstacle_r;
     // left side shrunk corridor border point. [0..num_disks).
-    Vec2* left_b;
+    Vec2* border_l;
     // right side shrunk corridor border point. [0..num_disks).
-    Vec2* right_b;
+    Vec2* border_r;
     // packed curve type for left and right borders. curves[i] gives 
     unsigned char* curves;
 };

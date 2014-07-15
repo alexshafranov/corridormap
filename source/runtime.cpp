@@ -242,12 +242,12 @@ Corridor create_corridor(Memory* mem, int max_disks)
 {
     Corridor result;
     memset(&result, 0, sizeof(result));
-    result.origins = allocate<Vec2>(mem, max_disks);
-    result.radii = allocate<float>(mem, max_disks);
-    result.left_o = allocate<Vec2>(mem, max_disks);
-    result.right_o = allocate<Vec2>(mem, max_disks);
-    result.left_b = allocate<Vec2>(mem, max_disks);
-    result.right_b = allocate<Vec2>(mem, max_disks);
+    result.origin = allocate<Vec2>(mem, max_disks);
+    result.radius = allocate<float>(mem, max_disks);
+    result.obstacle_l = allocate<Vec2>(mem, max_disks);
+    result.obstacle_r = allocate<Vec2>(mem, max_disks);
+    result.border_l = allocate<Vec2>(mem, max_disks);
+    result.border_r = allocate<Vec2>(mem, max_disks);
     result.curves = allocate<unsigned char>(mem, max_disks);
     result.max_disks = max_disks;
     return result;
@@ -255,12 +255,12 @@ Corridor create_corridor(Memory* mem, int max_disks)
 
 void destroy(Memory* mem, Corridor& c)
 {
-    mem->deallocate(c.origins);
-    mem->deallocate(c.radii);
-    mem->deallocate(c.left_o);
-    mem->deallocate(c.right_o);
-    mem->deallocate(c.left_b);
-    mem->deallocate(c.right_b);
+    mem->deallocate(c.origin);
+    mem->deallocate(c.radius);
+    mem->deallocate(c.obstacle_l);
+    mem->deallocate(c.obstacle_r);
+    mem->deallocate(c.border_l);
+    mem->deallocate(c.border_r);
     mem->deallocate(c.curves);
     memset(&c, 0, sizeof(c));
 }
@@ -294,37 +294,37 @@ void vertex_to_edge_path(const Walkable_Space& space, Vertex** path, int path_si
 
 namespace
 {
-    void extract_vertex(const Walkable_Space& space, const Half_Edge* edge, Vec2*& out_origins, float*& out_radii, Vec2*& out_left, Vec2*& out_right)
+    void extract_vertex(const Walkable_Space& space, const Half_Edge* edge, Vec2*& out_origin, float*& out_radius, Vec2*& out_obstacle_l, Vec2*& out_obstacle_r)
     {
         Vec2 p = target(space, edge)->pos;
         Vec2 l = left_side(space, edge);
         Vec2 r = right_side(space, edge);
         float radius = std::min(mag(sub(l, p)), mag(sub(r, p)));
 
-        *out_origins++ = p;
-        *out_radii++ = radius;
-        *out_left++ = l;
-        *out_right++ = r;
+        *out_origin++ = p;
+        *out_radius++ = radius;
+        *out_obstacle_l++ = l;
+        *out_obstacle_r++ = r;
     }
 
-    void extract_event(const Walkable_Space& space, const Half_Edge* edge, const Event* event, Vec2*& out_origins, float*& out_radii, Vec2*& out_left, Vec2*& out_right)
+    void extract_event(const Walkable_Space& space, const Half_Edge* edge, const Event* event, Vec2*& out_origin, float*& out_radius, Vec2*& out_obstacle_l, Vec2*& out_obstacle_r)
     {
         Vec2 p = event->pos;
         Vec2 l = left_side(space, edge, event);
         Vec2 r = right_side(space, edge, event);
         float radius = std::min(mag(sub(l, p)), mag(sub(r, p)));
 
-        *out_origins++ = p;
-        *out_radii++ = radius;
-        *out_left++ = l;
-        *out_right++ = r;
+        *out_origin++ = p;
+        *out_radius++ = radius;
+        *out_obstacle_l++ = l;
+        *out_obstacle_r++ = r;
     }
 
-    void extract_events(const Walkable_Space& space, const Half_Edge* edge, Vec2*& out_origins, float*& out_radii, Vec2*& out_left, Vec2*& out_right)
+    void extract_events(const Walkable_Space& space, const Half_Edge* edge, Vec2*& out_origin, float*& out_radius, Vec2*& out_obstacle_l, Vec2*& out_obstacle_r)
     {
         for (Event* evt = event(space, edge); evt != 0; evt = next(space, edge, evt))
         {
-            extract_event(space, edge, evt, out_origins, out_radii, out_left, out_right);
+            extract_event(space, edge, evt, out_origin, out_radius, out_obstacle_l, out_obstacle_r);
         }
     }
 
@@ -415,13 +415,13 @@ namespace
     {
         corridormap_assert(corridor.num_disks > 0);
 
-        Vec2 prev_l = corridor.left_b[0];
-        Vec2 prev_r = corridor.right_b[0];
+        Vec2 prev_l = corridor.border_l[0];
+        Vec2 prev_r = corridor.border_r[0];
 
         for (int i = 1; i < corridor.num_disks; ++i)
         {
-            Vec2 curr_l = corridor.left_b[i];
-            Vec2 curr_r = corridor.right_b[i];
+            Vec2 curr_l = corridor.border_l[i];
+            Vec2 curr_r = corridor.border_r[i];
 
             if (left_border_curve(corridor, i) == border_type_point)
             {
@@ -465,17 +465,17 @@ void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corri
 {
     corridormap_assert(num_path_discs(space, path, path_size) <= out.max_disks);
 
-    Vec2* out_origins = out.origins;
-    float* out_radii = out.radii;
-    Vec2* out_left = out.left_o;
-    Vec2* out_right = out.right_o;
+    Vec2* out_origin = out.origin;
+    float* out_radius = out.radius;
+    Vec2* out_obstacle_l = out.obstacle_l;
+    Vec2* out_obstacle_r = out.obstacle_r;
 
     for (int i = 0; i < path_size; ++i)
     {
         // swap left and right since the source vertex is extracted through opposite direction edge.
-        extract_vertex(space, opposite(space, path[i]), out_origins, out_radii, out_right, out_left);
-        extract_events(space, path[i], out_origins, out_radii, out_left, out_right);
-        extract_vertex(space, path[i], out_origins, out_radii, out_left, out_right);
+        extract_vertex(space, opposite(space, path[i]), out_origin, out_radius, out_obstacle_r, out_obstacle_l);
+        extract_events(space, path[i], out_origin, out_radius, out_obstacle_l, out_obstacle_r);
+        extract_vertex(space, path[i], out_origin, out_radius, out_obstacle_l, out_obstacle_r);
     }
 
     if (path_size > 0)
@@ -483,12 +483,12 @@ void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corri
         init_curves(space, path, path_size, out, epsilon);
     }
 
-    out.num_disks = int(out_origins - out.origins);
+    out.num_disks = int(out_origin - out.origin);
     out.clearance = 0.f;
     out.epsilon = epsilon;
     // initialize shrunk borders to the obstacle closest points.
-    memcpy(out.left_b, out.left_o, out.num_disks*sizeof(Vec2));
-    memcpy(out.right_b, out.right_o, out.num_disks*sizeof(Vec2));
+    memcpy(out.border_l, out.obstacle_l, out.num_disks*sizeof(Vec2));
+    memcpy(out.border_r, out.obstacle_r, out.num_disks*sizeof(Vec2));
 }
 
 void shrink(Corridor& corridor, float clearance)
@@ -497,15 +497,15 @@ void shrink(Corridor& corridor, float clearance)
 
     for (int i = 0; i < corridor.num_disks; ++i)
     {
-        Vec2 origin = corridor.origins[i];
-        float radius = corridor.radii[i];
+        Vec2 origin = corridor.origin[i];
+        float radius = corridor.radius[i];
         corridormap_assert(radius > clearance);
-        Vec2 l = corridor.left_o[i];
-        Vec2 r = corridor.right_o[i];
+        Vec2 l = corridor.obstacle_l[i];
+        Vec2 r = corridor.obstacle_r[i];
         Vec2 l_b = add(l, scale(normalized(sub(origin, l)), clearance));
         Vec2 r_b = add(r, scale(normalized(sub(origin, r)), clearance));
-        corridor.left_b[i] = l_b;
-        corridor.right_b[i] = r_b;
+        corridor.border_l[i] = l_b;
+        corridor.border_r[i] = r_b;
     }
 
     if (corridor.num_disks > 0)

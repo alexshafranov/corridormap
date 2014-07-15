@@ -590,22 +590,22 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
     nvgStrokeWidth(state.vg, 2.f);
     nvgBeginPath(state.vg);
 
-    arc(state, corridor.origins[0], corridor.left_b[0], corridor.right_b[0]);
+    arc(state, corridor.origin[0], corridor.border_l[0], corridor.border_r[0]);
 
     for (int i = 1; i < corridor.num_disks; ++i)
     {
-        Vec2 src = corridor.right_b[i-1];
-        Vec2 tgt = corridor.right_b[i];
-        draw_border_curve(state, right_border_curve(corridor, i), corridor.origins[i], corridor.right_o[i-1], src, tgt);
+        Vec2 src = corridor.border_r[i-1];
+        Vec2 tgt = corridor.border_r[i];
+        draw_border_curve(state, right_border_curve(corridor, i), corridor.origin[i], corridor.obstacle_r[i-1], src, tgt);
     }
 
-    arc(state, corridor.origins[corridor.num_disks-1], corridor.right_b[corridor.num_disks-1], corridor.left_b[corridor.num_disks-1]);
+    arc(state, corridor.origin[corridor.num_disks-1], corridor.border_r[corridor.num_disks-1], corridor.border_l[corridor.num_disks-1]);
 
     for (int i = corridor.num_disks-1; i > 0; --i)
     {
-        Vec2 src = corridor.left_b[i];
-        Vec2 tgt = corridor.left_b[i-1];
-        draw_border_curve(state, left_border_curve(corridor, i), corridor.origins[i], corridor.left_o[i-1], src, tgt);
+        Vec2 src = corridor.border_l[i];
+        Vec2 tgt = corridor.border_l[i-1];
+        draw_border_curve(state, left_border_curve(corridor, i), corridor.origin[i], corridor.obstacle_l[i-1], src, tgt);
     }
 
     nvgFill(state.vg);
