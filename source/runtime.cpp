@@ -422,14 +422,36 @@ namespace
             Vec2 curr_l = corridor.left_b[i];
             Vec2 curr_r = corridor.right_b[i];
 
-            if (left_border_curve(corridor, i) == border_type_point && !equal(curr_l, prev_l, epsilon))
+            if (left_border_curve(corridor, i) == border_type_point)
             {
-                set_left_border_curve(corridor, i, border_type_arc_obstacle);
+                if (!equal(curr_l, prev_l, epsilon))
+                {
+                    set_left_border_curve(corridor, i, border_type_arc_obstacle);
+                }
             }
 
-            if (right_border_curve(corridor, i) == border_type_point && !equal(curr_l, prev_l, epsilon))
+            if (left_border_curve(corridor, i) == border_type_arc_obstacle)
             {
-                set_right_border_curve(corridor, i, border_type_arc_obstacle);
+                if (equal(curr_l, prev_l, epsilon))
+                {
+                    set_left_border_curve(corridor, i, border_type_point);
+                }
+            }
+
+            if (right_border_curve(corridor, i) == border_type_point)
+            {
+                if (!equal(curr_r, prev_r, epsilon))
+                {
+                    set_right_border_curve(corridor, i, border_type_arc_obstacle);
+                }
+            }
+
+            if (right_border_curve(corridor, i) == border_type_arc_obstacle)
+            {
+                if (equal(curr_r, prev_r, epsilon))
+                {
+                    set_left_border_curve(corridor, i, border_type_point);
+                }
             }
 
             prev_l = curr_l;

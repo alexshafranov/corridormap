@@ -128,13 +128,13 @@ inline Border_Curve_Type right_border_curve(const Corridor& corridor, int disk_i
 inline void set_left_border_curve(const Corridor& corridor, int disk_index, Border_Curve_Type type)
 {
     unsigned char c = corridor.curves[disk_index];
-    corridor.curves[disk_index] = (c & 0xf0) + (static_cast<unsigned char>(type) << 0);
+    corridor.curves[disk_index] = (c & 0xf0) | (static_cast<unsigned char>(type) << 0);
 }
 
 inline void set_right_border_curve(const Corridor& corridor, int disk_index, Border_Curve_Type type)
 {
     unsigned char c = corridor.curves[disk_index];
-    corridor.curves[disk_index] = (c & 0x0f) + (static_cast<unsigned char>(type) << 4);
+    corridor.curves[disk_index] = (c & 0x0f) | (static_cast<unsigned char>(type) << 4);
 }
 
 }
