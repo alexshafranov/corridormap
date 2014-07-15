@@ -111,13 +111,13 @@ struct Walkable_Space
 enum Border_Curve_Type
 {
     // next point is equal to the current one.
-    border_type_skip = 0,
-    // circle arc around obstacle point.
-    border_type_arc_obstacle,
-    // circle arc around edge vertex (happens where two subsequent path edges connect).
-    border_type_arc_vertex,
+    border_type_point = 0,
     // line between current point and the next one.
     border_type_line,
+    // circle arc around edge vertex.
+    border_type_arc_vertex,
+    // circle arc around obstacle vertex.
+    border_type_arc_obstacle,
 };
 
 // Set of disks describing path corridor.
