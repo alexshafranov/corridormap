@@ -601,7 +601,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
 
     NVG_State_Scope s(state.vg);
     nvgLineCap(state.vg, NVG_ROUND);
-    nvgFillColor(state.vg, nvgRGBA(0, 0, 0, 127));
+    nvgFillColor(state.vg, nvgRGBA(0, 255, 0, 127));
     nvgStrokeColor(state.vg, nvgRGB(255, 255, 255));
     nvgStrokeWidth(state.vg, 2.f);
     nvgBeginPath(state.vg);
