@@ -132,20 +132,6 @@ namespace
         nvgCircle(state.vg, o.x, o.y, radius);
     }
 
-    void circle_corner(NVGcontext* vg, Vec2 corner, Vec2 a, Vec2 b, const Draw_State& state, int max_steps=100, int step=0)
-    {
-        if (step == max_steps || mag(sub(b, a)) < 8.f)
-        {
-            nvgLineTo(vg, b.x, b.y);
-            return;
-        }
-
-        Vec2 n = normalized(sub(scale(add(a, b), 0.5f), corner));
-        Vec2 c = add(corner, scale(n, state.agent_radius));
-        circle_corner(vg, corner, a, c, state, max_steps, step + 1);
-        circle_corner(vg, corner, c, b, state, max_steps, step + 1);
-    }
-
     Border_Line_State begin_border(Draw_State& state, Vec2 start_pos, Vec2 start_side, bool start_path=true)
     {
         Border_Line_State border;
@@ -164,6 +150,14 @@ namespace
         return border;
     }
 
+    void circle_corner(Draw_State& state, Vec2 corner, Vec2 a, Vec2 b)
+    {
+        float radius = mag(sub(a, corner));
+        a = normalized(sub(a, corner));
+        b = normalized(sub(b, corner));
+        nvgArc(state.vg, corner.x, corner.y, radius, atan2(a.y, a.x), atan2(b.y, b.x), NVG_CW);
+    }
+
     void next_border_point(Draw_State& state, Border_Line_State& border, Vec2 pos, Vec2 side)
     {
         Segment prev_seg = to_image(border.prev_pos, border.prev_side, state);
@@ -174,7 +168,7 @@ namespace
             Vec2 corner = to_image(side, state);
             Vec2 a = prev_seg.b;
             Vec2 b = curr_seg.b;
-            circle_corner(state.vg, corner, a, b, state);
+            circle_corner(state, corner, a, b);
         }
         else
         {
