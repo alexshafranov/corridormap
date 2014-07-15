@@ -115,25 +115,15 @@ namespace
         return seg;
     }
 
-    void arc(Draw_State& state, Vec2 origin, Vec2 a, Vec2 b, int max_steps=4, int step=0)
+    void arc(Draw_State& state, Vec2 origin, Vec2 a, Vec2 b, int dir=NVG_CCW)
     {
-        Vec2 a_img = to_image(a, state);
-        Vec2 b_img = to_image(b, state);
-        Vec2 origin_img = to_image(origin, state);
-        float radius = mag(sub(a_img, origin_img));
-
-        if (step == max_steps || mag(sub(b_img, a_img)) < 8.f)
-        {
-            nvgLineTo(state.vg, b_img.x, b_img.y);
-            return;
-        }
-
-        Vec2 n = normalized(sub(scale(add(a_img, b_img), 0.5f), origin_img));
-        Vec2 c_img = add(origin_img, scale(n, radius));
-        Vec2 c = from_image(c_img, state);
-
-        arc(state, origin, a, c, max_steps, step + 1);
-        arc(state, origin, c, b, max_steps, step + 1);
+        Vec2 c = to_image(origin, state);
+        Vec2 s = to_image(a, state);
+        Vec2 t = to_image(b, state);
+        float radius = mag(sub(s, c));
+        s = normalized(sub(s, c));
+        t = normalized(sub(t, c));
+        nvgArc(state.vg, c.x, c.y, radius, atan2(s.y, s.x), atan2(t.y, t.x), dir);
     }
 
     void circle(Draw_State& state, Vec2 origin, float radius)
@@ -581,7 +571,7 @@ namespace
             arc(state, vertex, source, target);
             break;
         case border_type_arc_obstacle:
-            arc(state, closest_point, source, target);
+            arc(state, closest_point, source, target, NVG_CW);
             break;
         case border_type_line:
             line_to(state, target);
@@ -606,7 +596,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
     nvgStrokeWidth(state.vg, 2.f);
     nvgBeginPath(state.vg);
 
-    move_to(state, corridor.right_b[0]);
+    arc(state, corridor.origins[0], corridor.left_b[0], corridor.right_b[0]);
 
     for (int i = 1; i < corridor.num_disks; ++i)
     {
@@ -615,7 +605,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
         draw_border_curve(state, right_border_curve(corridor, i), corridor.origins[i], corridor.right_o[i-1], src, tgt);
     }
 
-    line_to(state, corridor.left_b[corridor.num_disks-1]);
+    arc(state, corridor.origins[corridor.num_disks-1], corridor.right_b[corridor.num_disks-1], corridor.left_b[corridor.num_disks-1]);
 
     for (int i = corridor.num_disks-1; i > 0; --i)
     {
@@ -623,8 +613,6 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
         Vec2 tgt = corridor.left_b[i-1];
         draw_border_curve(state, left_border_curve(corridor, i), corridor.origins[i], corridor.left_o[i-1], src, tgt);
     }
-
-    line_to(state, corridor.right_b[0]);
 
     nvgFill(state.vg);
     nvgStroke(state.vg);
