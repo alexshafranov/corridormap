@@ -557,17 +557,17 @@ void draw_walkable_space(Draw_State& state)
 
 namespace
 {
-    void draw_border_curve(Draw_State& state, Border_Curve_Type curve_type, Vec2 vertex, Vec2 closest_point, Vec2 source, Vec2 target)
+    void draw_border_curve(Draw_State& state, Curve curve_type, Vec2 vertex, Vec2 closest_point, Vec2 source, Vec2 target)
     {
         switch (curve_type)
         {
-        case border_type_arc_vertex:
+        case curve_arc_vertex:
             arc(state, vertex, source, target);
             break;
-        case border_type_arc_obstacle:
+        case curve_arc_obstacle:
             arc(state, closest_point, source, target, NVG_CW);
             break;
-        case border_type_line:
+        case curve_line:
             line_to(state, target);
             break;
         default:
@@ -611,7 +611,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
     nvgFill(state.vg);
     nvgStroke(state.vg);
 
-#if 0
+#if 1
     const int max_path_size = 1024;
     Vec2 path[max_path_size];
     int path_size = find_shortest_path(corridor, path, max_path_size);
@@ -627,6 +627,13 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
             line_to(state, path[i]);
         }
 
+        nvgStroke(state.vg);
+
+        nvgBeginPath(state.vg);
+        for (int i = 0; i < path_size; ++i)
+        {
+            circle(state, path[i], 2.f);
+        }
         nvgStroke(state.vg);
     }
 #endif

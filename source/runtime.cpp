@@ -331,16 +331,16 @@ namespace
 
     void set_event_curves(Vec2 prev_l, Vec2 prev_r, Vec2 curr_l, Vec2 curr_r, float epsilon, unsigned char*& out_curves)
     {
-        *out_curves = border_type_point << 0 | border_type_point << 4;
+        *out_curves = curve_point << 0 | curve_point << 4;
 
         if (!equal(prev_l, curr_l, epsilon))
         {
-            *out_curves = (*out_curves & 0xf0) | (border_type_line << 0);
+            *out_curves = (*out_curves & 0xf0) | (curve_line << 0);
         }
 
         if (!equal(prev_r, curr_r, epsilon))
         {
-            *out_curves = (*out_curves & 0x0f) | (border_type_line << 4);
+            *out_curves = (*out_curves & 0x0f) | (curve_line << 4);
         }
 
         out_curves++;
@@ -348,16 +348,16 @@ namespace
 
     void set_vertex_curves(Vec2 prev_l, Vec2 prev_r, Vec2 curr_l, Vec2 curr_r, float epsilon, unsigned char*& out_curves)
     {
-        *out_curves = border_type_point << 0 | border_type_point << 4;
+        *out_curves = curve_point << 0 | curve_point << 4;
 
         if (!equal(prev_l, curr_l, epsilon))
         {
-            *out_curves = (*out_curves & 0xf0) | (border_type_arc_vertex << 0);
+            *out_curves = (*out_curves & 0xf0) | (curve_arc_vertex << 0);
         }
 
         if (!equal(prev_r, curr_r, epsilon))
         {
-            *out_curves = (*out_curves & 0x0f) | (border_type_arc_vertex << 4);
+            *out_curves = (*out_curves & 0x0f) | (curve_arc_vertex << 4);
         }
 
         out_curves++;
@@ -391,7 +391,7 @@ namespace
         unsigned char* out_curves = out.curves;
 
         const Half_Edge* edge = path[0];
-        *out_curves++ = border_type_point << 0 | border_type_point << 4;
+        *out_curves++ = curve_point << 0 | curve_point << 4;
 
         Vec2 prev_l = right_side(space, opposite(space, edge));
         Vec2 prev_r = left_side(space, opposite(space, edge));
@@ -426,16 +426,16 @@ namespace
 
             switch (left_border_curve(corridor, i))
             {
-            case border_type_point:
+            case curve_point:
                 if (!equal(curr_l, prev_l, epsilon))
                 {
-                    set_left_border_curve(corridor, i, border_type_arc_obstacle);
+                    set_left_border_curve(corridor, i, curve_arc_obstacle);
                 }
                 break;
-            case border_type_arc_obstacle:
+            case curve_arc_obstacle:
                 if (equal(curr_l, prev_l, epsilon))
                 {
-                    set_left_border_curve(corridor, i, border_type_point);
+                    set_left_border_curve(corridor, i, curve_point);
                 }
                 break;
             default:
@@ -444,16 +444,16 @@ namespace
 
             switch (right_border_curve(corridor, i))
             {
-            case border_type_point:
+            case curve_point:
                 if (!equal(curr_r, prev_r, epsilon))
                 {
-                    set_right_border_curve(corridor, i, border_type_arc_obstacle);
+                    set_right_border_curve(corridor, i, curve_arc_obstacle);
                 }
                 break;
-            case border_type_arc_obstacle:
+            case curve_arc_obstacle:
                 if (equal(curr_r, prev_r, epsilon))
                 {
-                    set_right_border_curve(corridor, i, border_type_point);
+                    set_right_border_curve(corridor, i, curve_point);
                 }
                 break;
             default:
@@ -544,6 +544,40 @@ namespace
     {
         return det(sub(a, o), sub(b, o));
     }
+
+    // skip equal points border points on the left side.
+    Vec2 get_portal_l(const Corridor& corridor, int disk_index)
+    {
+        Vec2 result = corridor.border_l[disk_index];
+
+        for (int i = disk_index+1; i < corridor.num_disks; ++i)
+        {
+            if (left_border_curve(corridor, i) != curve_point)
+            {
+                result = corridor.border_l[i];
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    // skip equal points border points on the right side.
+    Vec2 get_portal_r(const Corridor& corridor, int disk_index)
+    {
+        Vec2 result = corridor.border_r[disk_index];
+
+        for (int i = disk_index+1; i < corridor.num_disks; ++i)
+        {
+            if (right_border_curve(corridor, i) != curve_point)
+            {
+                result = corridor.border_r[i];
+                break;
+            }
+        }
+
+        return result;
+    }
 }
 
 int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
@@ -562,29 +596,8 @@ int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
 
     for (int i = 0; i < corridor.num_disks && path_size < max_path_size; ++i)
     {
-        Vec2 portal_l = corridor.border_l[i];
-        Vec2 portal_r = corridor.border_r[i];
-
-        if (orient(apex, right, portal_r) >= 0.f)
-        {
-            if (equal(apex, right, 1e-6f) || orient(apex, portal_r, left) > 0.f)
-            {
-                right = portal_r;
-                right_idx = i;
-            }
-            else
-            {
-                path[path_size++] = left;
-                apex = left;
-                apex_idx = left_idx;
-                left = apex;
-                right = apex;
-                left_idx = apex_idx;
-                right_idx = apex_idx;
-                i = apex_idx;
-                continue;
-            }
-        }
+        Vec2 portal_l = get_portal_l(corridor, i);
+        Vec2 portal_r = get_portal_r(corridor, i);
 
         if (orient(apex, portal_l, left) >= 0.f)
         {
@@ -598,6 +611,27 @@ int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
                 path[path_size++] = right;
                 apex = right;
                 apex_idx = right_idx;
+                left = apex;
+                right = apex;
+                left_idx = apex_idx;
+                right_idx = apex_idx;
+                i = apex_idx;
+                continue;
+            }
+        }
+
+        if (orient(apex, right, portal_r) >= 0.f)
+        {
+            if (equal(apex, right, 1e-6f) || orient(apex, portal_r, left) > 0.f)
+            {
+                right = portal_r;
+                right_idx = i;
+            }
+            else
+            {
+                path[path_size++] = left;
+                apex = left;
+                apex_idx = left_idx;
                 left = apex;
                 right = apex;
                 left_idx = apex_idx;

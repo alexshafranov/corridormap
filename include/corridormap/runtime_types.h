@@ -107,17 +107,17 @@ struct Walkable_Space
     Pool<Event> events;
 };
 
-// Type of the curve connecting subsequent corridor border points.
-enum Border_Curve_Type
+// Curve types for corridor borders.
+enum Curve
 {
     // next point is equal to the current one.
-    border_type_point = 0,
+    curve_point = 0,
     // line between current point and the next one.
-    border_type_line,
+    curve_line,
     // circle arc around edge vertex.
-    border_type_arc_vertex,
+    curve_arc_vertex,
     // circle arc around obstacle vertex.
-    border_type_arc_obstacle,
+    curve_arc_obstacle,
 };
 
 // Set of disks describing a path corridor.

@@ -101,13 +101,13 @@ int find_closest_disk(const Corridor& corridor, Vec2 point);
 // finds shortest path inside the corridor, by applying funnel algorithm. returns resulting path size.
 int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size);
 
-// unpack curve type for the connection between disk_index and disk_index+1.
-Border_Curve_Type left_border_curve(const Corridor& corridor, int disk_index);
-Border_Curve_Type right_border_curve(const Corridor& corridor, int disk_index);
+// unpack curve type for the connection between disk_index-1 and disk_index.
+Curve left_border_curve(const Corridor& corridor, int disk_index);
+Curve right_border_curve(const Corridor& corridor, int disk_index);
 
 // set border curve type.
-void set_left_border_curve(const Corridor& corridor, int disk_index, Border_Curve_Type type);
-void set_right_border_curve(const Corridor& corridor, int disk_index, Border_Curve_Type type);
+void set_left_border_curve(const Corridor& corridor, int disk_index, Curve type);
+void set_right_border_curve(const Corridor& corridor, int disk_index, Curve type);
 
 }
 

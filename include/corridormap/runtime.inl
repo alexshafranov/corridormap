@@ -115,23 +115,23 @@ inline Vertex* source(const Walkable_Space& space, const Edge* e)
 
 /// corridor
 
-inline Border_Curve_Type left_border_curve(const Corridor& corridor, int disk_index)
+inline Curve left_border_curve(const Corridor& corridor, int disk_index)
 {
-    return static_cast<Border_Curve_Type>((corridor.curves[disk_index] & 0x0f) >> 0);
+    return static_cast<Curve>((corridor.curves[disk_index] & 0x0f) >> 0);
 }
 
-inline Border_Curve_Type right_border_curve(const Corridor& corridor, int disk_index)
+inline Curve right_border_curve(const Corridor& corridor, int disk_index)
 {
-    return static_cast<Border_Curve_Type>((corridor.curves[disk_index] & 0xf0) >> 4);
+    return static_cast<Curve>((corridor.curves[disk_index] & 0xf0) >> 4);
 }
 
-inline void set_left_border_curve(const Corridor& corridor, int disk_index, Border_Curve_Type type)
+inline void set_left_border_curve(const Corridor& corridor, int disk_index, Curve type)
 {
     unsigned char c = corridor.curves[disk_index];
     corridor.curves[disk_index] = (c & 0xf0) | (static_cast<unsigned char>(type) << 0);
 }
 
-inline void set_right_border_curve(const Corridor& corridor, int disk_index, Border_Curve_Type type)
+inline void set_right_border_curve(const Corridor& corridor, int disk_index, Curve type)
 {
     unsigned char c = corridor.curves[disk_index];
     corridor.curves[disk_index] = (c & 0x0f) | (static_cast<unsigned char>(type) << 4);
