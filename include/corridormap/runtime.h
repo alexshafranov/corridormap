@@ -41,14 +41,14 @@ Edge* create_edge(Walkable_Space& space, int u, int v);
 // creates a new event and appends it to the specified edge.
 Event* create_event(Walkable_Space& space, Vec2 pos, int edge);
 
-/// vertex
+/// Vertex
 
 // first half-edge which has this vertex as a source.
 Half_Edge* half_edge(const Walkable_Space& space, const Vertex* v);
 // number of edges incident to this vertex.
 int degree(const Walkable_Space& space, const Vertex* vertex);
 
-/// half-edge
+/// Half_Edge
 
 // the edge that owns this half-edge.
 Edge* edge(const Walkable_Space& space, const Half_Edge* e);
@@ -73,14 +73,14 @@ Vec2 left_side(const Walkable_Space& space, const Half_Edge* half_edge);
 // right side at the target vertex along this half-edge direction.
 Vec2 right_side(const Walkable_Space& space, const Half_Edge* half_edge);
 
-/// edge
+/// Edge
 
 // target vertex in the default direction of this edge (i.e. first half-edge).
 Vertex* target(const Walkable_Space& space, const Edge* e);
 // source vertex in the default direction of this edge (i.e. first half-edge).
 Vertex* source(const Walkable_Space& space, const Edge* e);
 
-/// corridor
+/// Corridor
 
 // convert vertex path to half-edge path.
 void vertex_to_edge_path(const Walkable_Space& space, Vertex** path, int path_size, Half_Edge** out);

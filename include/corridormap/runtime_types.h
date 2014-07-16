@@ -32,7 +32,7 @@ struct Vec2
     float y;
 };
 
-// vertex of the voronoi diagram.
+// Vertex of the medial axis graph.
 struct Vertex
 {
     // pool link.
@@ -43,7 +43,7 @@ struct Vertex
     Vec2 pos;
 };
 
-// one direction of the edge in voronoi diagram.
+// Edge direction of medial axis graph.
 struct Half_Edge
 {
     // link to the next incident half-edge in CCW order, forms cyclic list of edges around each vertex.
@@ -56,7 +56,7 @@ struct Half_Edge
     Vec2 sides[2];
 };
 
-// edge of the voronoi diagram.
+// Medial axis graph edge.
 struct Edge
 {
     // pool link.
@@ -65,7 +65,7 @@ struct Edge
     Half_Edge dir[2];
 };
 
-// edge event point - position on the edge where closest obstacle changes.
+// Edge event point: position on the edge where left or right closest obstacle changes.
 struct Event
 {
     // pool link.
@@ -78,7 +78,7 @@ struct Event
     Vec2 sides[2];
 };
 
-// array based free list.
+// Array-based free list.
 template <typename T>
 struct Pool
 {
@@ -120,7 +120,7 @@ enum Border_Curve_Type
     border_type_arc_obstacle,
 };
 
-// Set of disks describing path corridor.
+// Set of disks describing a path corridor.
 struct Corridor
 {
     // num allocated disks.

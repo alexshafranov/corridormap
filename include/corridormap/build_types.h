@@ -23,12 +23,12 @@
 #define CORRIDORMAP_BUILD_TYPES_H_
 
 // 
-// types used during construction of the corridor map.
+// Types used during construction of the corridor map.
 //
 
 namespace corridormap {
 
-// obstacles represented as a set of 2d convex polygons. polys are expected to be in CCW order.
+// Obstacles represented as a set of 2d convex polygons. Polys are expected to be in CCW order.
 struct Footprint
 {
     // the number of polygons.
@@ -58,10 +58,10 @@ struct Render_Vertex
     float z;
 };
 
-// border gets a distance mesh segment (half tent) per side.
+// Border gets a distance mesh segment (half tent) per side.
 enum { num_border_segments = 4 };
 
-// segmented distance mesh suitable for rendering.
+// Segmented distance mesh suitable for rendering.
 // each segment represents one footprint polygon.
 // triangles are stored as a list of vertices in CCW order.
 struct Distance_Mesh
@@ -78,7 +78,7 @@ struct Distance_Mesh
     unsigned int* segment_colors;
 };
 
-// voronoi vertices and edges detected from the distance mesh render.
+// Voronoi diagram vertices and edges detected from the distance mesh render.
 struct Voronoi_Features
 {
     // rasterization grid width.
@@ -101,7 +101,7 @@ struct Voronoi_Features
     unsigned int* edge_obstacle_ids_2;
 };
 
-// obstacle polygon edge normals.
+// Obstacle polygon edge normals.
 struct Footprint_Normals
 {
     // number of obstacles in footprint (number of polys + 4 border segments).
@@ -118,7 +118,7 @@ struct Footprint_Normals
     int* obstacle_normal_offsets;
 };
 
-// for each edge point and each side stores vertex_index+1 if the edge point is in the space spanned
+// For each edge point and each side stores vertex_index+1 if the edge point is in the space spanned
 // by vertex and its two normals, or 0 if edge point is not part of any span.
 struct Voronoi_Edge_Spans
 {
@@ -148,10 +148,10 @@ struct CSR_Grid
     int* row_offset;
 };
 
-// rendered distance mesh is a 4-connected grid.
+// Rendered distance mesh is a 4-connected grid.
 enum { max_grid_neis = 4 };
 
-// pack of up to max_grid_neis cells.
+// Pack of up to max_grid_neis cells.
 struct CSR_Grid_Neis
 {
     // number of neighbours [0..max_grid_neis].
@@ -166,7 +166,7 @@ struct CSR_Grid_Neis
     int lin_idx[max_grid_neis];
 };
 
-// result of trace_edges
+// Output of trace_edges function.
 struct Voronoi_Traced_Edges
 {
     // number of edges found.
@@ -189,7 +189,7 @@ struct Voronoi_Traced_Edges
     int* events;
 };
 
-// helper struct to pass input data to the final assembly of the walkable space structure.
+// Helper struct to pass input data to the final assembly of the walkable space structure.
 struct Walkable_Space_Build_Params
 {
     Bbox2 bounds;

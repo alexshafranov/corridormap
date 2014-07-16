@@ -34,7 +34,7 @@ enum Kernel_Id
     kernel_id_count,
 };
 
-// holds opencl api objects used by the library.
+// Holds opencl api objects used by the library.
 struct Opencl_Runtime
 {
     // opencl context.
@@ -76,7 +76,7 @@ struct Opencl_Runtime
     cl_uint voronoi_edge_mark_count;
 };
 
-// represents the result of corridormap::build_kernels.
+// Represents the result of corridormap::build_kernels.
 struct Compilation_Status
 {
     // opencl error code.
