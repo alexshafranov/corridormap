@@ -931,7 +931,7 @@ namespace
     {
         Vec2 dir1 = sub(curr, prev);
         Vec2 dir2 = sub(side_pos, prev);
-        return dir1.x*dir2.y - dir1.y*dir2.x > 0.f;
+        return det(dir1, dir2) > 0.f;
     }
 
     struct Event_Closest_Points

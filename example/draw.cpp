@@ -610,6 +610,26 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
 
     nvgFill(state.vg);
     nvgStroke(state.vg);
+
+#if 0
+    const int max_path_size = 1024;
+    Vec2 path[max_path_size];
+    int path_size = find_shortest_path(corridor, path, max_path_size);
+
+    if (path_size > 0)
+    {
+        nvgStrokeColor(state.vg, nvgRGB(0, 0, 0));
+        nvgBeginPath(state.vg);
+        move_to(state, path[0]);
+
+        for (int i = 1; i < path_size; ++i)
+        {
+            line_to(state, path[i]);
+        }
+
+        nvgStroke(state.vg);
+    }
+#endif
 }
 
 }

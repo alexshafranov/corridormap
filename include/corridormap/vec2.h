@@ -84,6 +84,11 @@ inline float mag_sq(Vec2 a)
     return dot(a, a);
 }
 
+inline float det(Vec2 u, Vec2 v)
+{
+    return u.x*v.y - u.y*v.x;
+}
+
 inline bool equal(Vec2 a, Vec2 b, float epsilon)
 {
     return sq(a.x - b.x) + sq(a.y - b.y) < sq(epsilon);

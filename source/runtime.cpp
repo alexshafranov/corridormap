@@ -63,7 +63,7 @@ namespace
     {
         Vec2 d1 = sub(v1, u);
         Vec2 d2 = sub(v2, u);
-        return d1.x*d2.y - d2.x*d1.y > 0.f;
+        return det(d1, d2) > 0.f;
     }
 
     Half_Edge* get_half_edge(Edge* edges, int idx)
@@ -536,6 +536,84 @@ int find_closest_disk(const Corridor& corridor, Vec2 point)
     }
 
     return result;
+}
+
+namespace
+{
+    float orient(Vec2 o, Vec2 a, Vec2 b)
+    {
+        return det(sub(a, o), sub(b, o));
+    }
+}
+
+int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
+{
+    corridormap_assert(corridor.num_disks > 0);
+    corridormap_assert(max_path_size > 0);
+    int path_size = 0;
+    int apex_idx = 0;
+    int left_idx = 0;
+    int right_idx = 0;
+    Vec2 apex = corridor.origin[apex_idx];
+    Vec2 left = corridor.origin[left_idx];
+    Vec2 right = corridor.origin[right_idx];
+
+    path[path_size++] = apex;
+
+    for (int i = 0; i < corridor.num_disks && path_size < max_path_size; ++i)
+    {
+        Vec2 portal_l = corridor.border_l[i];
+        Vec2 portal_r = corridor.border_r[i];
+
+        if (orient(apex, right, portal_r) >= 0.f)
+        {
+            if (equal(apex, right, 1e-6f) || orient(apex, portal_r, left) > 0.f)
+            {
+                right = portal_r;
+                right_idx = i;
+            }
+            else
+            {
+                path[path_size++] = left;
+                apex = left;
+                apex_idx = left_idx;
+                left = apex;
+                right = apex;
+                left_idx = apex_idx;
+                right_idx = apex_idx;
+                i = apex_idx;
+                continue;
+            }
+        }
+
+        if (orient(apex, portal_l, left) >= 0.f)
+        {
+            if (equal(apex, left, 1e-6f) || orient(apex, right, portal_l) > 0.f)
+            {
+                left = portal_l;
+                left_idx = i;
+            }
+            else
+            {
+                path[path_size++] = right;
+                apex = right;
+                apex_idx = right_idx;
+                left = apex;
+                right = apex;
+                left_idx = apex_idx;
+                right_idx = apex_idx;
+                i = apex_idx;
+                continue;
+            }
+        }
+    }
+
+    if (path_size < max_path_size)
+    {
+        path[path_size++] = corridor.origin[corridor.num_disks-1];
+    }
+
+    return path_size;
 }
 
 }

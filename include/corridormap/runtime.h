@@ -98,6 +98,8 @@ void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corri
 void shrink(Corridor& corridor, float clearance);
 // linear search for the disk closest to the specified point.
 int find_closest_disk(const Corridor& corridor, Vec2 point);
+// finds shortest path inside the corridor, by applying funnel algorithm. returns resulting path size.
+int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size);
 
 // unpack curve type for the connection between disk_index and disk_index+1.
 Border_Curve_Type left_border_curve(const Corridor& corridor, int disk_index);
