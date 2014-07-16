@@ -530,6 +530,51 @@ void shrink(Corridor& corridor, float clearance)
     }
 }
 
+namespace
+{
+    bool add_portal(Corridor& corridor, Vec2 l, Vec2 r)
+    {
+        if (corridor.num_portals < corridor.max_portals)
+        {
+            corridor.portal_l[corridor.num_portals] = l;
+            corridor.portal_r[corridor.num_portals] = r;
+            corridor.num_portals++;
+            return true;
+        }
+
+        return false;
+    }
+}
+
+int triangulate(Corridor& corridor, float /*arc_step_len*/)
+{
+    // reset previous triangulation.
+    corridor.num_portals = 0;
+
+    for (int disk = 0; disk < corridor.num_disks-1; ++disk)
+    {
+        Vec2 l0 = corridor.border_l[disk+0];
+        Vec2 l1 = corridor.border_l[disk+1];
+
+        Vec2 r0 = corridor.border_r[disk+0];
+        Vec2 r1 = corridor.border_r[disk+1];
+
+        if (!add_portal(corridor, l0, r0)) { return disk; }
+
+        if (right_border_curve(corridor, disk+1) != curve_point)
+        {
+            if (!add_portal(corridor, l0, r1)) { return disk; }
+        }
+
+        if (left_border_curve(corridor, disk+1) != curve_point)
+        {
+            if (!add_portal(corridor, l1, r1)) { return disk; }
+        }
+    }
+
+    return corridor.num_disks;
+}
+
 int find_closest_disk(const Corridor& corridor, Vec2 point)
 {
     float min_dist = FLT_MAX;
@@ -555,55 +600,12 @@ namespace
     {
         return det(sub(a, o), sub(b, o));
     }
-
-    // skip equal points border points on the left side.
-    Vec2 get_portal_l(const Corridor& corridor, int disk_index)
-    {
-        if (disk_index == corridor.num_disks)
-        {
-            return corridor.origin[corridor.num_disks-1];
-        }
-
-        Vec2 result = corridor.border_l[disk_index];
-
-        for (int i = disk_index+1; i < corridor.num_disks; ++i)
-        {
-            if (left_border_curve(corridor, i) != curve_point)
-            {
-                result = corridor.border_l[i];
-                break;
-            }
-        }
-
-        return result;
-    }
-
-    // skip equal points border points on the right side.
-    Vec2 get_portal_r(const Corridor& corridor, int disk_index)
-    {
-        if (disk_index == corridor.num_disks)
-        {
-            return corridor.origin[corridor.num_disks-1];
-        }
-
-        Vec2 result = corridor.border_r[disk_index];
-
-        for (int i = disk_index+1; i < corridor.num_disks; ++i)
-        {
-            if (right_border_curve(corridor, i) != curve_point)
-            {
-                result = corridor.border_r[i];
-                break;
-            }
-        }
-
-        return result;
-    }
 }
 
 int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
 {
     corridormap_assert(corridor.num_disks > 0);
+    corridormap_assert(corridor.num_portals > 0);
     corridormap_assert(max_path_size > 0);
     int path_size = 0;
     int apex_idx = 0;
@@ -615,10 +617,16 @@ int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
 
     path[path_size++] = apex;
 
-    for (int i = 0; i < corridor.num_disks + 1 && path_size < max_path_size; ++i)
+    for (int i = 0; i < corridor.num_portals+1 && path_size < max_path_size; ++i)
     {
-        Vec2 portal_l = get_portal_l(corridor, i);
-        Vec2 portal_r = get_portal_r(corridor, i);
+        Vec2 portal_l = corridor.origin[corridor.num_disks-1];
+        Vec2 portal_r = corridor.origin[corridor.num_disks-1];
+
+        if (i < corridor.num_portals)
+        {
+            portal_l = corridor.portal_l[i];
+            portal_r = corridor.portal_r[i];
+        }
 
         if (orient(apex, portal_l, left) >= 0.f)
         {
