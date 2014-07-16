@@ -38,6 +38,7 @@ namespace
     const float CORRIDORMAP_PI     = 3.14159265f;
 }
 
+
 Bbox2 bounds(const Footprint& f, float border)
 {
     const float* x = f.x;

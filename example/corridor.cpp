@@ -288,7 +288,7 @@ int main()
         vertex_to_edge_path(space, vert_path, vert_path_size, edge_path);
         int edge_path_size = vert_path_size-1;
         int num_disks = corridormap::num_path_discs(space, edge_path, edge_path_size);
-        corridor = create_corridor(&mem, num_disks);
+        corridor = create_corridor(&mem, num_disks, 5*num_disks);
         corridormap::extract(space, edge_path, edge_path_size, corridor);
         corridormap::shrink(corridor, 30.f);
     }

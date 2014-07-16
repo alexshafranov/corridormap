@@ -29,6 +29,12 @@
 
 namespace corridormap {
 
+namespace
+{
+    const float CORRIDORMAP_PI = 3.14159265f;
+}
+
+
 Walkable_Space create_walkable_space(Memory* mem, int max_vertices, int max_edges, int max_events)
 {
     Walkable_Space result;
@@ -239,7 +245,7 @@ int num_path_discs(const Walkable_Space& space, Half_Edge** path, int path_size)
     return result;
 }
 
-Corridor create_corridor(Memory* mem, int max_disks)
+Corridor create_corridor(Memory* mem, int max_disks, int max_portals)
 {
     Corridor result;
     memset(&result, 0, sizeof(result));
@@ -250,6 +256,9 @@ Corridor create_corridor(Memory* mem, int max_disks)
     result.border_l = allocate<Vec2>(mem, max_disks);
     result.border_r = allocate<Vec2>(mem, max_disks);
     result.curves = allocate<unsigned char>(mem, max_disks);
+    result.portal_l = allocate<Vec2>(mem, max_portals);
+    result.portal_r = allocate<Vec2>(mem, max_portals);
+    result.max_portals = max_portals;
     result.max_disks = max_disks;
     return result;
 }
@@ -263,6 +272,8 @@ void destroy(Memory* mem, Corridor& c)
     mem->deallocate(c.border_l);
     mem->deallocate(c.border_r);
     mem->deallocate(c.curves);
+    mem->deallocate(c.portal_l);
+    mem->deallocate(c.portal_r);
     memset(&c, 0, sizeof(c));
 }
 
@@ -548,6 +559,11 @@ namespace
     // skip equal points border points on the left side.
     Vec2 get_portal_l(const Corridor& corridor, int disk_index)
     {
+        if (disk_index == corridor.num_disks)
+        {
+            return corridor.origin[corridor.num_disks-1];
+        }
+
         Vec2 result = corridor.border_l[disk_index];
 
         for (int i = disk_index+1; i < corridor.num_disks; ++i)
@@ -565,6 +581,11 @@ namespace
     // skip equal points border points on the right side.
     Vec2 get_portal_r(const Corridor& corridor, int disk_index)
     {
+        if (disk_index == corridor.num_disks)
+        {
+            return corridor.origin[corridor.num_disks-1];
+        }
+
         Vec2 result = corridor.border_r[disk_index];
 
         for (int i = disk_index+1; i < corridor.num_disks; ++i)
@@ -594,7 +615,7 @@ int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
 
     path[path_size++] = apex;
 
-    for (int i = 0; i < corridor.num_disks && path_size < max_path_size; ++i)
+    for (int i = 0; i < corridor.num_disks + 1 && path_size < max_path_size; ++i)
     {
         Vec2 portal_l = get_portal_l(corridor, i);
         Vec2 portal_r = get_portal_r(corridor, i);

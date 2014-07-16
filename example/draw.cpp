@@ -632,7 +632,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
         nvgBeginPath(state.vg);
         for (int i = 0; i < path_size; ++i)
         {
-            circle(state, path[i], 2.f);
+            circle(state, path[i], 1.f);
         }
         nvgStroke(state.vg);
     }

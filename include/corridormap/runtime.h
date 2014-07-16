@@ -88,14 +88,15 @@ void vertex_to_edge_path(const Walkable_Space& space, Vertex** path, int path_si
 int num_path_discs(const Walkable_Space& space, Half_Edge** path, int path_size);
 
 // allocate corridor.
-Corridor create_corridor(Memory* mem, int max_disks);
+Corridor create_corridor(Memory* mem, int max_disks, int max_portals);
 // destroy corridor.
 void destroy(Memory* mem, Corridor& corridor);
 
 // extract corridor from half-edge path. epsilon is used to test equality of border points.
-void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon=0.1f);
+void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon=0.2f);
 // shrink corridor to the new clearance value.
 void shrink(Corridor& corridor, float clearance);
+
 // linear search for the disk closest to the specified point.
 int find_closest_disk(const Corridor& corridor, Vec2 point);
 // finds shortest path inside the corridor, by applying funnel algorithm. returns resulting path size.

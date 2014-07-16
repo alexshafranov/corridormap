@@ -127,6 +127,10 @@ struct Corridor
     int max_disks;
     // num disks in a corridor.
     int num_disks;
+    // num allocated portals.
+    int max_portals;
+    // num portals for string pulling.
+    int num_portals;
     // current clearance value (>= 0 for shrunk corridors).
     float clearance;
     // epsilon used to compare border points.
@@ -145,6 +149,10 @@ struct Corridor
     Vec2* border_r;
     // packed curve type for left and right borders.
     unsigned char* curves;
+    // left portal point. [0..num_portals).
+    Vec2* portal_l;
+    // right portal point. [0..num_portals).
+    Vec2* portal_r;
 };
 
 }
