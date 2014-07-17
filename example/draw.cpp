@@ -611,9 +611,13 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
 
     nvgFill(state.vg);
     nvgStroke(state.vg);
+}
 
-#if 1
-    // draw portals.
+void draw_portals(Draw_State& state, Corridor& corridor)
+{
+    NVG_State_Scope s(state.vg);
+    nvgLineCap(state.vg, NVG_ROUND);
+    nvgStrokeWidth(state.vg, 2.f);
     nvgStrokeColor(state.vg, nvgRGB(130, 130, 130));
 
     for (int i = 0; i < corridor.num_portals; ++i)
@@ -623,14 +627,15 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
         line_to(state, corridor.portal_r[i]);
         nvgStroke(state.vg);
     }
-#endif
+}
 
-#if 1
-    // draw path
+void draw_path(Draw_State& state, Corridor& corridor, Vec2 source, Vec2 target)
+{
+    NVG_State_Scope s(state.vg);
+    nvgLineCap(state.vg, NVG_ROUND);
+
     const int max_path_size = 1024;
     Vec2 path[max_path_size];
-    Vec2 source = corridor.origin[0];
-    Vec2 target = corridor.origin[corridor.num_disks-1];
     int path_size = find_shortest_path(corridor, source, target, path, max_path_size);
 
     if (path_size > 0)
@@ -647,7 +652,6 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
 
         nvgStroke(state.vg);
     }
-#endif
 }
 
 }

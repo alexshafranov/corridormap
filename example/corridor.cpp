@@ -328,6 +328,8 @@ int main()
         draw_state.image_dimensions = corridormap::make_vec2(float(screen_width), float(screen_height));
         corridormap::draw_walkable_space(draw_state);
         corridormap::draw_corridor(draw_state, corridor);
+        corridormap::draw_portals(draw_state, corridor);
+        corridormap::draw_path(draw_state, corridor, corridor.origin[0], corridor.origin[corridor.num_disks-1]);
 
         nvgEndFrame(vg);
 

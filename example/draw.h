@@ -41,6 +41,8 @@ struct Draw_State
 
 void draw_walkable_space(Draw_State& state);
 void draw_corridor(Draw_State& state, Corridor& corridor);
+void draw_portals(Draw_State& state, Corridor& corridor);
+void draw_path(Draw_State& state, Corridor& corridor, Vec2 source, Vec2 target);
 
 }
 
