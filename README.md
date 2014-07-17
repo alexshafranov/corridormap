@@ -1,7 +1,8 @@
 Corridor Map
 ============
-work in progress...
 ![square](/example/square.png?raw=true)
+
+work in progress...
 
 ## Construction
 Voronoi diagram is rendered on GPU.
