@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <string.h>
 #include <float.h>
+#include <math.h>
 #include "corridormap/assert.h"
 #include "corridormap/memory.h"
 #include "corridormap/vec2.h"
@@ -532,6 +533,11 @@ void shrink(Corridor& corridor, float clearance)
 
 namespace
 {
+    float orient(Vec2 o, Vec2 a, Vec2 b)
+    {
+        return det(sub(a, o), sub(b, o));
+    }
+
     bool add_portal(Corridor& corridor, Vec2 l, Vec2 r)
     {
         if (corridor.num_portals < corridor.max_portals)
@@ -544,10 +550,58 @@ namespace
 
         return false;
     }
+
+    void tess_arc(Corridor& corridor, Vec2 side, Vec2 o, Vec2 a, Vec2 b, float radius, float max_step, bool ccw)
+    {
+        Vec2 da = normalized(sub(a, o));
+        Vec2 db = normalized(sub(b, o));
+        float area = orient(o, a, b);
+        float arc_angle = acosf(dot(da, db));
+
+        if (ccw && area < 0.f)
+        {
+            arc_angle = 2.f*CORRIDORMAP_PI - arc_angle;
+        }
+
+        if (!ccw && area > 0.f)
+        {
+            arc_angle = 2.f*CORRIDORMAP_PI - arc_angle;
+        }
+
+        float arc_len = arc_angle*radius;
+        int steps = int(floorf(arc_len / max_step));
+        float theta = (ccw ? +1.f : -1.f) * arc_angle / float(steps);
+        float start_angle = atan2(da.y, da.x);
+
+        for (int i = 0; i < steps; ++i)
+        {
+            Vec2 p = make_vec2(radius*cosf(start_angle + (i+1)*theta), radius*sinf(start_angle + (i+1)*theta));
+            p = add(o, p);
+
+            if (ccw)
+            {
+                add_portal(corridor, p, side);
+            }
+            else
+            {
+                add_portal(corridor, side, p);
+            }
+        }
+
+        if (ccw)
+        {
+            add_portal(corridor, b, side);
+        }
+        else
+        {
+            add_portal(corridor, side, b);
+        }
+    }
 }
 
-int triangulate(Corridor& corridor, float /*arc_step_len*/)
+int triangulate(Corridor& corridor, float arc_step_len)
 {
+    float clearance = corridor.clearance;
     // reset previous triangulation.
     corridor.num_portals = 0;
 
@@ -555,20 +609,36 @@ int triangulate(Corridor& corridor, float /*arc_step_len*/)
     {
         Vec2 l0 = corridor.border_l[disk+0];
         Vec2 l1 = corridor.border_l[disk+1];
+        Curve curve_l = left_border_curve(corridor, disk+1);
 
         Vec2 r0 = corridor.border_r[disk+0];
         Vec2 r1 = corridor.border_r[disk+1];
+        Curve curve_r = right_border_curve(corridor, disk+1);
 
         if (!add_portal(corridor, l0, r0)) { return disk; }
 
-        if (right_border_curve(corridor, disk+1) != curve_point)
+        if (curve_r != curve_point)
         {
-            if (!add_portal(corridor, l0, r1)) { return disk; }
+            if (curve_r == curve_arc_obstacle)
+            {
+                tess_arc(corridor, l0, corridor.obstacle_r[disk], r0, r1, clearance, arc_step_len, false);
+            }
+            else
+            {
+                if (!add_portal(corridor, l0, r1)) { return disk; }
+            }
         }
 
-        if (left_border_curve(corridor, disk+1) != curve_point)
+        if (curve_l != curve_point)
         {
-            if (!add_portal(corridor, l1, r1)) { return disk; }
+            if (curve_l == curve_arc_obstacle)
+            {
+                tess_arc(corridor, r1, corridor.obstacle_l[disk], l0, l1, clearance, arc_step_len, true);
+            }
+            else
+            {
+                if (!add_portal(corridor, l1, r1)) { return disk; }
+            }
         }
     }
 
@@ -592,14 +662,6 @@ int find_closest_disk(const Corridor& corridor, Vec2 point)
     }
 
     return result;
-}
-
-namespace
-{
-    float orient(Vec2 o, Vec2 a, Vec2 b)
-    {
-        return det(sub(a, o), sub(b, o));
-    }
 }
 
 int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)

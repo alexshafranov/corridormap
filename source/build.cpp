@@ -23,6 +23,7 @@
 #include <float.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include "corridormap/assert.h"
 #include "corridormap/memory.h"
 #include "corridormap/render_interface.h"
@@ -127,12 +128,12 @@ namespace
             a->y = pos.y;
             a->z = 0.f;
 
-            b->x = pos.x + radius*cos(start_angle + (i + 0)*step_angle);
-            b->y = pos.y + radius*sin(start_angle + (i + 0)*step_angle);
+            b->x = pos.x + radius*cosf(start_angle + (i + 0)*step_angle);
+            b->y = pos.y + radius*sinf(start_angle + (i + 0)*step_angle);
             b->z = radius;
 
-            c->x = pos.x + radius*cos(start_angle + (i + 1)*step_angle);
-            c->y = pos.y + radius*sin(start_angle + (i + 1)*step_angle);
+            c->x = pos.x + radius*cosf(start_angle + (i + 1)*step_angle);
+            c->y = pos.y + radius*sinf(start_angle + (i + 1)*step_angle);
             c->z = radius;
         }
 
