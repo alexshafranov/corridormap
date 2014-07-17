@@ -103,7 +103,7 @@ int triangulate(Corridor& corridor, float arc_step_len);
 // linear search for the disk closest to the specified point.
 int find_closest_disk(const Corridor& corridor, Vec2 point);
 // finds shortest path inside the corridor, by applying funnel algorithm. returns resulting path size.
-int find_shortest_path(const Corridor& corridor, Vec2 source, Vec2 target, Vec2* path, int max_path_size);
+int find_shortest_path(const Corridor& corridor, Vec2 source, Vec2 target, int first_portal, int last_portal, Vec2* path, int max_path_size);
 
 // unpack curve type for the connection between disk_index-1 and disk_index.
 Curve left_border_curve(const Corridor& corridor, int disk_index);

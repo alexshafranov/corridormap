@@ -636,7 +636,7 @@ void draw_path(Draw_State& state, Corridor& corridor, Vec2 source, Vec2 target)
 
     const int max_path_size = 1024;
     Vec2 path[max_path_size];
-    int path_size = find_shortest_path(corridor, source, target, path, max_path_size);
+    int path_size = find_shortest_path(corridor, source, target, 0, corridor.num_portals-1, path, max_path_size);
 
     if (path_size > 0)
     {
