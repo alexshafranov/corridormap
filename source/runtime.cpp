@@ -35,7 +35,6 @@ namespace
     const float CORRIDORMAP_PI = 3.14159265f;
 }
 
-
 Walkable_Space create_walkable_space(Memory* mem, int max_vertices, int max_edges, int max_events)
 {
     Walkable_Space result;
@@ -538,72 +537,55 @@ namespace
         return det(sub(a, o), sub(b, o));
     }
 
-    bool add_portal(Corridor& corridor, Vec2 l, Vec2 r)
+    void add_portal(Corridor& corridor, Vec2 l, Vec2 r)
     {
-        if (corridor.num_portals < corridor.max_portals)
-        {
-            corridor.portal_l[corridor.num_portals] = l;
-            corridor.portal_r[corridor.num_portals] = r;
-            corridor.num_portals++;
-            return true;
-        }
-
-        return false;
+        corridor.portal_l[corridor.num_portals] = l;
+        corridor.portal_r[corridor.num_portals] = r;
+        corridor.num_portals++;
     }
 
-    void tess_arc(Corridor& corridor, Vec2 side, Vec2 o, Vec2 a, Vec2 b, float radius, float max_step, bool ccw)
+    bool tess_arc(Corridor& corridor, Vec2 portal_side, Vec2 origin, Vec2 from, Vec2 to, float radius, float max_step, bool ccw)
     {
-        Vec2 da = normalized(sub(a, o));
-        Vec2 db = normalized(sub(b, o));
-        float area = orient(o, a, b);
+        Vec2 da = normalized(sub(from, origin));
+        Vec2 db = normalized(sub(to, origin));
         float arc_angle = acosf(dot(da, db));
 
-        if (ccw && area < 0.f)
-        {
-            arc_angle = 2.f*CORRIDORMAP_PI - arc_angle;
-        }
-
-        if (!ccw && area > 0.f)
+        if (orient(origin, from, to) > 0.f != ccw)
         {
             arc_angle = 2.f*CORRIDORMAP_PI - arc_angle;
         }
 
         float arc_len = arc_angle*radius;
         int steps = int(floorf(arc_len / max_step));
-        float theta = (ccw ? +1.f : -1.f) * arc_angle / float(steps);
+        float theta = (ccw ? +arc_angle : -arc_angle) / float(steps);
         float start_angle = atan2(da.y, da.x);
 
-        for (int i = 0; i < steps; ++i)
+        if (corridor.num_portals + steps >= corridor.max_portals)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < steps-1; ++i)
         {
             Vec2 p = make_vec2(radius*cosf(start_angle + (i+1)*theta), radius*sinf(start_angle + (i+1)*theta));
-            p = add(o, p);
-
-            if (ccw)
-            {
-                add_portal(corridor, p, side);
-            }
-            else
-            {
-                add_portal(corridor, side, p);
-            }
+            p = add(origin, p);
+            add_portal(corridor, ccw ? p : portal_side, ccw ? portal_side : p);
         }
 
-        if (ccw)
-        {
-            add_portal(corridor, b, side);
-        }
-        else
-        {
-            add_portal(corridor, side, b);
-        }
+        add_portal(corridor, ccw ? to : portal_side, ccw ? portal_side : to);
+        return true;
     }
 }
 
 int triangulate(Corridor& corridor, float arc_step_len)
 {
     float clearance = corridor.clearance;
-    // reset previous triangulation.
     corridor.num_portals = 0;
+
+    if (corridor.num_disks > 0 && corridor.max_portals > 0)
+    {
+        add_portal(corridor, corridor.border_l[0], corridor.border_r[0]);
+    }
 
     for (int disk = 0; disk < corridor.num_disks-1; ++disk)
     {
@@ -615,17 +597,23 @@ int triangulate(Corridor& corridor, float arc_step_len)
         Vec2 r1 = corridor.border_r[disk+1];
         Curve curve_r = right_border_curve(corridor, disk+1);
 
-        if (!add_portal(corridor, l0, r0)) { return disk; }
+        if (corridor.num_portals + 2 >= corridor.max_portals)
+        {
+            return disk;
+        }
 
         if (curve_r != curve_point)
         {
             if (curve_r == curve_arc_obstacle)
             {
-                tess_arc(corridor, l0, corridor.obstacle_r[disk], r0, r1, clearance, arc_step_len, false);
+                if (!tess_arc(corridor, l0, corridor.obstacle_r[disk], r0, r1, clearance, arc_step_len, false))
+                {
+                    return disk;
+                }
             }
             else
             {
-                if (!add_portal(corridor, l0, r1)) { return disk; }
+                add_portal(corridor, l0, r1);
             }
         }
 
@@ -633,11 +621,14 @@ int triangulate(Corridor& corridor, float arc_step_len)
         {
             if (curve_l == curve_arc_obstacle)
             {
-                tess_arc(corridor, r1, corridor.obstacle_l[disk], l0, l1, clearance, arc_step_len, true);
+                if (!tess_arc(corridor, r1, corridor.obstacle_l[disk], l0, l1, clearance, arc_step_len, true))
+                {
+                    return disk;
+                }
             }
             else
             {
-                if (!add_portal(corridor, l1, r1)) { return disk; }
+                add_portal(corridor, l1, r1);
             }
         }
     }
@@ -664,6 +655,8 @@ int find_closest_disk(const Corridor& corridor, Vec2 point)
     return result;
 }
 
+// reference: "Simple Stupid Funnel Algorithm",
+// http://digestingduck.blogspot.co.at/2010/03/simple-stupid-funnel-algorithm.html
 int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
 {
     corridormap_assert(corridor.num_disks > 0);

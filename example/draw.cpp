@@ -585,6 +585,7 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
 
     NVG_State_Scope s(state.vg);
     nvgLineCap(state.vg, NVG_ROUND);
+
     nvgFillColor(state.vg, nvgRGBA(0, 255, 0, 127));
     nvgStrokeColor(state.vg, nvgRGB(255, 255, 255));
     nvgStrokeWidth(state.vg, 2.f);
@@ -611,8 +612,9 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
     nvgFill(state.vg);
     nvgStroke(state.vg);
 
-#if 0
-    nvgStrokeColor(state.vg, nvgRGB(0, 0, 0));
+#if 1
+    // draw portals.
+    nvgStrokeColor(state.vg, nvgRGB(130, 130, 130));
 
     for (int i = 0; i < corridor.num_portals; ++i)
     {
@@ -623,14 +625,16 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
     }
 #endif
 
-#if 0
+#if 1
+    // draw path
     const int max_path_size = 1024;
     Vec2 path[max_path_size];
     int path_size = find_shortest_path(corridor, path, max_path_size);
 
     if (path_size > 0)
     {
-        nvgStrokeColor(state.vg, nvgRGB(0, 0, 170));
+        nvgStrokeColor(state.vg, nvgRGB(90, 0, 0));
+        nvgStrokeWidth(state.vg, 3.f);
         nvgBeginPath(state.vg);
         move_to(state, path[0]);
 
@@ -639,13 +643,6 @@ void draw_corridor(Draw_State& state, Corridor& corridor)
             line_to(state, path[i]);
         }
 
-        nvgStroke(state.vg);
-
-        nvgBeginPath(state.vg);
-        for (int i = 0; i < path_size; ++i)
-        {
-            circle(state, path[i], 1.f);
-        }
         nvgStroke(state.vg);
     }
 #endif

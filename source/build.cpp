@@ -39,7 +39,6 @@ namespace
     const float CORRIDORMAP_PI     = 3.14159265f;
 }
 
-
 Bbox2 bounds(const Footprint& f, float border)
 {
     const float* x = f.x;
@@ -100,9 +99,8 @@ float max_distance(Bbox2 bounds)
 
 int distance_mesh_tris_for_point(float max_dist, float max_error)
 {
-    float cone_half_angle = acos((max_dist-max_error)/max_dist);
-    unsigned cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI/cone_half_angle));
-    return cone_triangle_count;
+    float cone_half_angle = acosf((max_dist-max_error)/max_dist);
+    return unsigned(ceil(CORRIDORMAP_PI/cone_half_angle));
 }
 
 int max_distance_mesh_verts(const Footprint& f, float max_dist, float max_error)
@@ -180,7 +178,7 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
     corridormap_assert(max_dist > max_error);
 
     const float cone_half_angle = acos((max_dist-max_error) / max_dist);
-    const int cone_triangle_count = static_cast<unsigned>(ceil(CORRIDORMAP_PI/cone_half_angle));
+    const int cone_triangle_count = unsigned(ceil(CORRIDORMAP_PI/cone_half_angle));
     const float cone_angle = 2.f*CORRIDORMAP_PI/cone_triangle_count;
 
     const int* num_poly_verts = in.num_poly_verts;
@@ -238,7 +236,7 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
             float angle_inner = acos(cos_inner);
             float angle_cone_sector = 2.f * CORRIDORMAP_PI - angle_inner;
 
-            int angle_cone_sector_steps = static_cast<unsigned>(ceil(angle_cone_sector/cone_angle));
+            int angle_cone_sector_steps = unsigned(ceil(angle_cone_sector/cone_angle));
             float angle_cone_sector_step = angle_cone_sector/angle_cone_sector_steps;
             float angle_start = atan2(e0.y, e0.x);
 
@@ -277,7 +275,7 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
     }
 
     out.num_segments = 1 + num_border_segments + in.num_polys;
-    out.num_verts = static_cast<int>(verts - out.verts);
+    out.num_verts = int(verts - out.verts);
 }
 
 void render_distance_mesh(Renderer* render_iface, const Distance_Mesh& mesh)
