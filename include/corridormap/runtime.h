@@ -96,8 +96,8 @@ void destroy(Memory* mem, Corridor& corridor);
 void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon=0.2f);
 // shrink corridor to the new clearance value.
 void shrink(Corridor& corridor, float clearance);
-// triangulate corridor (stores portal data).
-// returns number of disks processed.(could be less than num_disks if there's not enough space allocated for portals.)
+// triangulate corridor (stores portal edges).
+// returns number of disks processed. result < num_disks if there's not enough space allocated for portals.
 int triangulate(Corridor& corridor, float arc_step_len);
 
 // linear search for the disk closest to the specified point.
