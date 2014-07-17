@@ -46,7 +46,7 @@ struct Vertex
 // Edge direction of medial axis graph.
 struct Half_Edge
 {
-    // link to the next incident half-edge in CCW order, forms cyclic list of edges around each vertex.
+    // link to the next outgoing half-edge in CCW order, forms cyclic list around source vertex.
     int next;
     // index of the target vertex.
     int target;
