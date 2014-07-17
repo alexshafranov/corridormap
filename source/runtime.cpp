@@ -663,12 +663,11 @@ int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
     corridormap_assert(corridor.num_portals > 0);
     corridormap_assert(max_path_size > 0);
     int path_size = 0;
-    int apex_idx = 0;
     int left_idx = 0;
     int right_idx = 0;
-    Vec2 apex = corridor.origin[apex_idx];
-    Vec2 left = corridor.origin[left_idx];
-    Vec2 right = corridor.origin[right_idx];
+    Vec2 apex = corridor.origin[0];
+    Vec2 left = corridor.origin[0];
+    Vec2 right = corridor.origin[0];
 
     path[path_size++] = apex;
 
@@ -694,12 +693,9 @@ int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
             {
                 path[path_size++] = right;
                 apex = right;
-                apex_idx = right_idx;
                 left = apex;
-                right = apex;
-                left_idx = apex_idx;
-                right_idx = apex_idx;
-                i = apex_idx;
+                left_idx = right_idx;
+                i = right_idx;
                 continue;
             }
         }
@@ -715,12 +711,9 @@ int find_shortest_path(const Corridor& corridor, Vec2* path, int max_path_size)
             {
                 path[path_size++] = left;
                 apex = left;
-                apex_idx = left_idx;
-                left = apex;
                 right = apex;
-                left_idx = apex_idx;
-                right_idx = apex_idx;
-                i = apex_idx;
+                right_idx = left_idx;
+                i = right_idx;
                 continue;
             }
         }
