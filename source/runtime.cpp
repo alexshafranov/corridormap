@@ -654,8 +654,7 @@ int find_closest_disk(const Corridor& corridor, Vec2 point)
     return result;
 }
 
-// reference: "Simple Stupid Funnel Algorithm",
-// http://digestingduck.blogspot.co.at/2010/03/simple-stupid-funnel-algorithm.html
+// reference: "Simple Stupid Funnel Algorithm", [http://digestingduck.blogspot.co.at/2010/03/simple-stupid-funnel-algorithm.html]
 int find_shortest_path(const Corridor& corridor, Vec2 source, Vec2 target, int first_portal, int last_portal, Vec2* path, int max_path_size)
 {
     corridormap_assert(corridor.num_disks > 0);
