@@ -769,7 +769,7 @@ namespace
     }
 }
 
-int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 /*target*/, Path_Segment* path, int max_path_size)
+int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, Path_Segment* path, int max_path_size)
 {
     Ring_Buffer<Path_Segment> funnel_l(scratch, max_path_size);
     Ring_Buffer<Path_Segment> funnel_r(scratch, max_path_size);
@@ -784,14 +784,22 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
     push_back(funnel_l, make_segment(funnel_apex, corridor.border_l[l]));
     push_back(funnel_r, make_segment(funnel_apex, corridor.border_r[r]));
 
-    for (int i = 1; i < corridor.num_disks-1; ++i)
+    for (int i = 1; i < corridor.num_disks; ++i)
     {
-        int l0 = get_border_segment_l(corridor, i+0);
-        int r0 = get_border_segment_r(corridor, i+0);
+        Vec2 vertex_l = target;
+        Vec2 vertex_r = target;
+
+        if (i < corridor.num_disks-1)
+        {
+            int l = get_border_segment_l(corridor, i);
+            int r = get_border_segment_r(corridor, i);
+            vertex_l = corridor.border_l[l];
+            vertex_r = corridor.border_r[r];
+        }
 
         // add left portal point.
         {
-            Vec2 vertex = corridor.border_l[l0];
+            Vec2 vertex = vertex_l;
 
             // pop segments until empty or the CCW invariant is restored.
             while (size(funnel_l) > 0)
@@ -828,7 +836,7 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
 
         // add right portal point.
         {
-            Vec2 vertex = corridor.border_r[r0];
+            Vec2 vertex = vertex_r;
 
             // pop segments until empty or the CW invariant is restored.
             while (size(funnel_r) > 0)
