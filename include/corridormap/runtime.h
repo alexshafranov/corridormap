@@ -93,7 +93,7 @@ Corridor create_corridor(Memory* mem, int max_disks, int max_portals);
 void destroy(Memory* mem, Corridor& corridor);
 
 // extract corridor from half-edge path. epsilon is used to test equality of border points.
-void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon=0.2f);
+void extract(const Walkable_Space& space, Half_Edge** path, int path_size, Corridor& out, float epsilon);
 // shrink corridor to the new clearance value.
 void shrink(Corridor& corridor, float clearance);
 // triangulate corridor (stores portal edges).
@@ -114,6 +114,13 @@ Curve right_border_curve(const Corridor& corridor, int disk_index);
 // set border curve type.
 void set_left_border_curve(const Corridor& corridor, int disk_index, Curve type);
 void set_right_border_curve(const Corridor& corridor, int disk_index, Curve type);
+
+/// Path_Element
+
+// unpack type of the element.
+char type(const Path_Element& element);
+// winding of the element.
+bool is_ccw(const Path_Element& element);
 
 }
 

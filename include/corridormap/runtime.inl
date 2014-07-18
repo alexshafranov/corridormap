@@ -137,6 +137,18 @@ inline void set_right_border_curve(const Corridor& corridor, int disk_index, Cur
     corridor.curves[disk_index] = (c & 0x0f) | (static_cast<unsigned char>(type) << 4);
 }
 
+/// path_element
+
+inline char type(const Path_Element& element)
+{
+    return element.type & 0x7f;
+}
+
+inline bool is_ccw(const Path_Element& element)
+{
+    return (element.type & 0x80) > 0;
+}
+
 }
 
 #endif

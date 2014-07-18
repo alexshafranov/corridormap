@@ -116,6 +116,14 @@ void push_back(Ring_Buffer<T>& b, const T val)
 }
 
 template <typename T>
+void push_front(Ring_Buffer<T>&b, const T val)
+{
+    int idx = (b.front - 1) % b.max_size;
+    b.data[idx] = val;
+    b.size++;
+}
+
+template <typename T>
 T pop_back(Ring_Buffer<T>& b)
 {
     T val = b.data[(b.front + b.size - 1) % b.max_size];

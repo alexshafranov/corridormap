@@ -256,8 +256,13 @@ Corridor create_corridor(Memory* mem, int max_disks, int max_portals)
     result.border_l = allocate<Vec2>(mem, max_disks);
     result.border_r = allocate<Vec2>(mem, max_disks);
     result.curves = allocate<unsigned char>(mem, max_disks);
-    result.portal_l = allocate<Vec2>(mem, max_portals);
-    result.portal_r = allocate<Vec2>(mem, max_portals);
+
+    if (max_portals > 0)
+    {
+        result.portal_l = allocate<Vec2>(mem, max_portals);
+        result.portal_r = allocate<Vec2>(mem, max_portals);
+    }
+
     result.max_portals = max_portals;
     result.max_disks = max_disks;
     return result;
@@ -531,11 +536,6 @@ void shrink(Corridor& corridor, float clearance)
 
 namespace
 {
-    float orient(Vec2 o, Vec2 a, Vec2 b)
-    {
-        return det(sub(a, o), sub(b, o));
-    }
-
     void add_portal(Corridor& corridor, Vec2 l, Vec2 r)
     {
         corridor.portal_l[corridor.num_portals] = l;
@@ -652,238 +652,6 @@ int find_closest_disk(const Corridor& corridor, Vec2 point)
     }
 
     return result;
-}
-
-// reference: "Simple Stupid Funnel Algorithm", [http://digestingduck.blogspot.co.at/2010/03/simple-stupid-funnel-algorithm.html]
-int find_shortest_path(const Corridor& corridor, Vec2 source, Vec2 target, int first_portal, int last_portal, Vec2* path, int max_path_size)
-{
-    corridormap_assert(corridor.num_disks > 0);
-    corridormap_assert(corridor.num_portals > 0);
-    corridormap_assert(first_portal >= 0 && first_portal < corridor.num_portals);
-    corridormap_assert(last_portal >= 0 && last_portal < corridor.num_portals);
-    corridormap_assert(first_portal <= last_portal);
-    corridormap_assert(max_path_size > 0);
-
-    int path_size = 0;
-    int left_idx = 0;
-    int right_idx = 0;
-    Vec2 apex = source;
-    Vec2 left = source;
-    Vec2 right = source;
-
-    path[path_size++] = apex;
-
-    for (int i = first_portal; i <= last_portal+1 && path_size < max_path_size; ++i)
-    {
-        Vec2 portal_l = target;
-        Vec2 portal_r = target;
-
-        if (i < last_portal)
-        {
-            portal_l = corridor.portal_l[i];
-            portal_r = corridor.portal_r[i];
-        }
-
-        if (orient(apex, portal_l, left) >= 0.f)
-        {
-            if (equal(apex, left, 1e-6f) || orient(apex, right, portal_l) > 0.f)
-            {
-                left = portal_l;
-                left_idx = i;
-            }
-            else
-            {
-                path[path_size++] = right;
-                apex = right;
-                left = apex;
-                left_idx = right_idx;
-                i = right_idx;
-                continue;
-            }
-        }
-
-        if (orient(apex, right, portal_r) >= 0.f)
-        {
-            if (equal(apex, right, 1e-6f) || orient(apex, portal_r, left) > 0.f)
-            {
-                right = portal_r;
-                right_idx = i;
-            }
-            else
-            {
-                path[path_size++] = left;
-                apex = left;
-                right = apex;
-                right_idx = left_idx;
-                i = right_idx;
-                continue;
-            }
-        }
-    }
-
-    if (path_size < max_path_size)
-    {
-        path[path_size++] = target;
-    }
-
-    return path_size;
-}
-
-namespace
-{
-    int get_border_segment_l(const Corridor& corridor, int disk_index)
-    {
-        // scan forward skipping equal points.
-        for (int i = disk_index+1; i < corridor.num_disks; ++i)
-        {
-            if (left_border_curve(corridor, i) != curve_point)
-            {
-                return i;
-            }
-        }
-
-        return disk_index;
-    }
-
-    int get_border_segment_r(const Corridor& corridor, int disk_index)
-    {
-        // scan forward skipping equal points.
-        for (int i = disk_index+1; i < corridor.num_disks; ++i)
-        {
-            if (right_border_curve(corridor, i) != curve_point)
-            {
-                return i;
-            }
-        }
-
-        return disk_index;
-    }
-
-    Path_Element make_segment(Vec2 p0, Vec2 p1)
-    {
-        Path_Element result;
-        result.type = curve_line;
-        result.origin = p0;
-        result.p_0 = p0;
-        result.p_1 = p1;
-        return result;
-    }
-
-    Path_Element make_arc(Vec2 origin, Vec2 p0, Vec2 p1)
-    {
-        Path_Element result;
-        result.type = curve_arc_obstacle;
-        result.origin = origin;
-        result.p_0 = p0;
-        result.p_1 = p1;
-        return result;
-    }
-}
-
-int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, Path_Element* path, int max_path_size)
-{
-    Ring_Buffer<Path_Element> funnel_l(scratch, max_path_size);
-    Ring_Buffer<Path_Element> funnel_r(scratch, max_path_size);
-    corridormap_assert(funnel_l.data != 0);
-    corridormap_assert(funnel_r.data != 0);
-    int path_size = 0;
-    Vec2 funnel_apex = source;
-
-    // initialize funnel.
-    int l_idx = get_border_segment_l(corridor, 0);
-    int r_idx = get_border_segment_r(corridor, 0);
-    push_back(funnel_l, make_segment(funnel_apex, corridor.border_l[l_idx]));
-    push_back(funnel_r, make_segment(funnel_apex, corridor.border_r[r_idx]));
-
-    for (int i = 1; i < corridor.num_disks; ++i)
-    {
-        Vec2 vertex_l = target;
-        Vec2 vertex_r = target;
-
-        if (i < corridor.num_disks-1)
-        {
-            l_idx = get_border_segment_l(corridor, i);
-            r_idx = get_border_segment_r(corridor, i);
-            vertex_l = corridor.border_l[l_idx];
-            vertex_r = corridor.border_r[r_idx];
-        }
-
-        // add left portal point.
-        {
-            Vec2 vertex = vertex_l;
-
-            // pop segments until empty or the CCW invariant is restored.
-            while (size(funnel_l) > 0)
-            {
-                const Path_Element& elem = back(funnel_l);
-
-                if (orient(elem.p_0, elem.p_1, vertex) > 0.f)
-                {
-                    push_back(funnel_l, make_segment(elem.p_1, vertex));
-                    break;
-                }
-
-                pop_back(funnel_l);
-            }
-
-            if (size(funnel_l) == 0)
-            {
-                while (size(funnel_r) > 0)
-                {
-                    const Path_Element& elem = front(funnel_r);
-
-                    if (orient(elem.p_0, elem.p_1, vertex) > 0.f)
-                    {
-                        break;
-                    }
-
-                    funnel_apex = elem.p_1;
-                    path[path_size++] = pop_front(funnel_r);
-                }
-
-                push_back(funnel_l, make_segment(funnel_apex, vertex));
-            }
-        }
-
-        // add right portal point.
-        {
-            Vec2 vertex = vertex_r;
-
-            // pop segments until empty or the CW invariant is restored.
-            while (size(funnel_r) > 0)
-            {
-                const Path_Element& elem = back(funnel_r);
-
-                if (orient(elem.p_0, elem.p_1, vertex) < 0.f)
-                {
-                    push_back(funnel_r, make_segment(elem.p_1, vertex));
-                    break;
-                }
-
-                pop_back(funnel_r);
-            }
-
-            if (size(funnel_r) == 0)
-            {
-                while (size(funnel_l) > 0)
-                {
-                    const Path_Element& elem = front(funnel_l);
-
-                    if (orient(elem.p_0, elem.p_1, vertex) < 0.f)
-                    {
-                        break;
-                    }
-
-                    funnel_apex = elem.p_1;
-                    path[path_size++] = pop_front(funnel_l);
-                }
-
-                push_back(funnel_r, make_segment(funnel_apex, vertex));
-            }
-        }
-    }
-
-    return path_size;
 }
 
 }

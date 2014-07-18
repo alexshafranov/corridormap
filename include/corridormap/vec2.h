@@ -89,6 +89,11 @@ inline float det(Vec2 u, Vec2 v)
     return u.x*v.y - u.y*v.x;
 }
 
+inline float orient(Vec2 o, Vec2 a, Vec2 b)
+{
+    return det(sub(a, o), sub(b, o));
+}
+
 inline bool equal(Vec2 a, Vec2 b, float epsilon)
 {
     return sq(a.x - b.x) + sq(a.y - b.y) < sq(epsilon);

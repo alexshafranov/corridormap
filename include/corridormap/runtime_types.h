@@ -158,7 +158,8 @@ struct Corridor
 // Element of the path returned by the continuous funnel algorithm.
 struct Path_Element
 {
-    // continuous path segement could and arc (=curve_arc_obstacle) or segment (=curve_line)
+    // continuous path segement: arc (=curve_arc_obstacle) or segment (=curve_line),
+    // first bit is set if arc winding is ccw.
     unsigned char type;
     // arc origin (unused for the segment case).
     Vec2 origin;
