@@ -732,30 +732,30 @@ int find_shortest_path(const Corridor& corridor, Vec2 source, Vec2 target, int f
 
 namespace
 {
-    int get_border_segment_l(const Corridor& /*corridor*/, int disk_index)
+    int get_border_segment_l(const Corridor& corridor, int disk_index)
     {
         // scan forward skipping equal points.
-        // for (int i = disk_index+1; i < corridor.num_disks; ++i)
-        // {
-        //     if (left_border_curve(corridor, i) != curve_point)
-        //     {
-        //         return i;
-        //     }
-        // }
+        for (int i = disk_index+1; i < corridor.num_disks; ++i)
+        {
+            if (left_border_curve(corridor, i) != curve_point)
+            {
+                return i;
+            }
+        }
 
         return disk_index;
     }
 
-    int get_border_segment_r(const Corridor& /*corridor*/, int disk_index)
+    int get_border_segment_r(const Corridor& corridor, int disk_index)
     {
         // scan forward skipping equal points.
-        // for (int i = disk_index+1; i < corridor.num_disks; ++i)
-        // {
-        //     if (right_border_curve(corridor, i) != curve_point)
-        //     {
-        //         return i;
-        //     }
-        // }
+        for (int i = disk_index+1; i < corridor.num_disks; ++i)
+        {
+            if (right_border_curve(corridor, i) != curve_point)
+            {
+                return i;
+            }
+        }
 
         return disk_index;
     }
@@ -763,6 +763,18 @@ namespace
     Path_Segment make_segment(Vec2 p0, Vec2 p1)
     {
         Path_Segment result;
+        result.type = curve_line;
+        result.origin = p0;
+        result.p_0 = p0;
+        result.p_1 = p1;
+        return result;
+    }
+
+    Path_Segment make_arc(Vec2 origin, Vec2 p0, Vec2 p1)
+    {
+        Path_Segment result;
+        result.type = curve_arc_obstacle;
+        result.origin = origin;
         result.p_0 = p0;
         result.p_1 = p1;
         return result;
@@ -779,10 +791,10 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
     Vec2 funnel_apex = source;
 
     // initialize funnel.
-    int l = get_border_segment_l(corridor, 0);
-    int r = get_border_segment_r(corridor, 0);
-    push_back(funnel_l, make_segment(funnel_apex, corridor.border_l[l]));
-    push_back(funnel_r, make_segment(funnel_apex, corridor.border_r[r]));
+    int l_idx = get_border_segment_l(corridor, 0);
+    int r_idx = get_border_segment_r(corridor, 0);
+    push_back(funnel_l, make_segment(funnel_apex, corridor.border_l[l_idx]));
+    push_back(funnel_r, make_segment(funnel_apex, corridor.border_r[r_idx]));
 
     for (int i = 1; i < corridor.num_disks; ++i)
     {
@@ -791,10 +803,10 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
 
         if (i < corridor.num_disks-1)
         {
-            int l = get_border_segment_l(corridor, i);
-            int r = get_border_segment_r(corridor, i);
-            vertex_l = corridor.border_l[l];
-            vertex_r = corridor.border_r[r];
+            l_idx = get_border_segment_l(corridor, i);
+            r_idx = get_border_segment_r(corridor, i);
+            vertex_l = corridor.border_l[l_idx];
+            vertex_r = corridor.border_r[r_idx];
         }
 
         // add left portal point.
