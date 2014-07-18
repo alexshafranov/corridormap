@@ -760,9 +760,9 @@ namespace
         return disk_index;
     }
 
-    Path_Segment make_segment(Vec2 p0, Vec2 p1)
+    Path_Element make_segment(Vec2 p0, Vec2 p1)
     {
-        Path_Segment result;
+        Path_Element result;
         result.type = curve_line;
         result.origin = p0;
         result.p_0 = p0;
@@ -770,9 +770,9 @@ namespace
         return result;
     }
 
-    Path_Segment make_arc(Vec2 origin, Vec2 p0, Vec2 p1)
+    Path_Element make_arc(Vec2 origin, Vec2 p0, Vec2 p1)
     {
-        Path_Segment result;
+        Path_Element result;
         result.type = curve_arc_obstacle;
         result.origin = origin;
         result.p_0 = p0;
@@ -781,10 +781,10 @@ namespace
     }
 }
 
-int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, Path_Segment* path, int max_path_size)
+int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, Path_Element* path, int max_path_size)
 {
-    Ring_Buffer<Path_Segment> funnel_l(scratch, max_path_size);
-    Ring_Buffer<Path_Segment> funnel_r(scratch, max_path_size);
+    Ring_Buffer<Path_Element> funnel_l(scratch, max_path_size);
+    Ring_Buffer<Path_Element> funnel_r(scratch, max_path_size);
     corridormap_assert(funnel_l.data != 0);
     corridormap_assert(funnel_r.data != 0);
     int path_size = 0;
@@ -816,11 +816,11 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
             // pop segments until empty or the CCW invariant is restored.
             while (size(funnel_l) > 0)
             {
-                const Path_Segment& seg = back(funnel_l);
+                const Path_Element& elem = back(funnel_l);
 
-                if (orient(seg.p_0, seg.p_1, vertex) > 0.f)
+                if (orient(elem.p_0, elem.p_1, vertex) > 0.f)
                 {
-                    push_back(funnel_l, make_segment(seg.p_1, vertex));
+                    push_back(funnel_l, make_segment(elem.p_1, vertex));
                     break;
                 }
 
@@ -831,14 +831,14 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
             {
                 while (size(funnel_r) > 0)
                 {
-                    const Path_Segment& seg = front(funnel_r);
+                    const Path_Element& elem = front(funnel_r);
 
-                    if (orient(seg.p_0, seg.p_1, vertex) > 0.f)
+                    if (orient(elem.p_0, elem.p_1, vertex) > 0.f)
                     {
                         break;
                     }
 
-                    funnel_apex = seg.p_1;
+                    funnel_apex = elem.p_1;
                     path[path_size++] = pop_front(funnel_r);
                 }
 
@@ -853,11 +853,11 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
             // pop segments until empty or the CW invariant is restored.
             while (size(funnel_r) > 0)
             {
-                const Path_Segment& seg = back(funnel_r);
+                const Path_Element& elem = back(funnel_r);
 
-                if (orient(seg.p_0, seg.p_1, vertex) < 0.f)
+                if (orient(elem.p_0, elem.p_1, vertex) < 0.f)
                 {
-                    push_back(funnel_r, make_segment(seg.p_1, vertex));
+                    push_back(funnel_r, make_segment(elem.p_1, vertex));
                     break;
                 }
 
@@ -868,14 +868,14 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
             {
                 while (size(funnel_l) > 0)
                 {
-                    const Path_Segment& seg = front(funnel_l);
+                    const Path_Element& elem = front(funnel_l);
 
-                    if (orient(seg.p_0, seg.p_1, vertex) < 0.f)
+                    if (orient(elem.p_0, elem.p_1, vertex) < 0.f)
                     {
                         break;
                     }
 
-                    funnel_apex = seg.p_1;
+                    funnel_apex = elem.p_1;
                     path[path_size++] = pop_front(funnel_l);
                 }
 

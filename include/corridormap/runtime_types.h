@@ -156,7 +156,7 @@ struct Corridor
 };
 
 // Element of the path returned by the continuous funnel algorithm.
-struct Path_Segment
+struct Path_Element
 {
     // continuous path segement could and arc (=curve_arc_obstacle) or segment (=curve_line)
     unsigned char type;

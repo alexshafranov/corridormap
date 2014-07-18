@@ -660,7 +660,7 @@ void draw_continuous_path(Draw_State& state, Corridor& corridor, Memory* scratch
     nvgLineCap(state.vg, NVG_ROUND);
 
     const int max_path_size = 1024;
-    Path_Segment path[max_path_size];
+    Path_Element path[max_path_size];
     int path_size = find_shortest_path(corridor, scratch, source, target, path, max_path_size);
 
     if (path_size > 0)
