@@ -543,7 +543,7 @@ namespace
         corridor.num_portals++;
     }
 
-    bool tess_arc(Corridor& corridor, Vec2 portal_side, Vec2 origin, Vec2 from, Vec2 to, float radius, float max_step, bool ccw)
+    bool add_arc_portals(Corridor& corridor, Vec2 portal_side, Vec2 origin, Vec2 from, Vec2 to, float radius, float max_step, bool ccw)
     {
         Vec2 da = normalized(sub(from, origin));
         Vec2 db = normalized(sub(to, origin));
@@ -605,7 +605,7 @@ int triangulate(Corridor& corridor, float arc_step_len)
         {
             if (curve_r == curve_arc_obstacle)
             {
-                if (!tess_arc(corridor, l0, corridor.obstacle_r[disk], r0, r1, clearance, arc_step_len, false))
+                if (!add_arc_portals(corridor, l0, corridor.obstacle_r[disk], r0, r1, clearance, arc_step_len, false))
                 {
                     return disk;
                 }
@@ -620,7 +620,7 @@ int triangulate(Corridor& corridor, float arc_step_len)
         {
             if (curve_l == curve_arc_obstacle)
             {
-                if (!tess_arc(corridor, r1, corridor.obstacle_l[disk], l0, l1, clearance, arc_step_len, true))
+                if (!add_arc_portals(corridor, r1, corridor.obstacle_l[disk], l0, l1, clearance, arc_step_len, true))
                 {
                     return disk;
                 }
