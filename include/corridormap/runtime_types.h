@@ -155,6 +155,19 @@ struct Corridor
     Vec2* portal_r;
 };
 
+// Element of the path returned by the continuous funnel algorithm.
+struct Path_Segment
+{
+    // continuous path segement could and arc (=curve_arc_obstacle) or segment (=curve_line)
+    unsigned char type;
+    // arc origin (unused for the segment case).
+    Vec2 origin;
+    // start of the segment (or arc).
+    Vec2 p_0;
+    // end of the segment (or arc).
+    Vec2 p_1;
+};
+
 }
 
 #endif

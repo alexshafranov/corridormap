@@ -654,4 +654,30 @@ void draw_path(Draw_State& state, Corridor& corridor, Vec2 source, Vec2 target)
     }
 }
 
+void draw_continuous_path(Draw_State& state, Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target)
+{
+    NVG_State_Scope s(state.vg);
+    nvgLineCap(state.vg, NVG_ROUND);
+
+    const int max_path_size = 1024;
+    Path_Segment path[max_path_size];
+    int path_size = find_shortest_path(corridor, scratch, source, target, path, max_path_size);
+
+    if (path_size > 0)
+    {
+        nvgStrokeColor(state.vg, nvgRGB(90, 0, 0));
+        nvgStrokeWidth(state.vg, 3.f);
+        nvgBeginPath(state.vg);
+        move_to(state, path[0].p_0);
+        line_to(state, path[0].p_1);
+
+        for (int i = 1; i < path_size; ++i)
+        {
+            line_to(state, path[i].p_1);
+        }
+
+        nvgStroke(state.vg);
+    }
+}
+
 }

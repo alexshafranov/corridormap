@@ -329,7 +329,7 @@ int main()
         corridormap::draw_walkable_space(draw_state);
         corridormap::draw_corridor(draw_state, corridor);
         corridormap::draw_portals(draw_state, corridor);
-        corridormap::draw_path(draw_state, corridor, corridor.origin[0], corridor.origin[corridor.num_disks-1]);
+        corridormap::draw_continuous_path(draw_state, corridor, &mem, corridor.origin[0], corridor.origin[corridor.num_disks-1]);
 
         nvgEndFrame(vg);
 

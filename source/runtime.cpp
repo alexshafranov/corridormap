@@ -730,4 +730,219 @@ int find_shortest_path(const Corridor& corridor, Vec2 source, Vec2 target, int f
     return path_size;
 }
 
+namespace
+{
+    int get_border_segment_l(const Corridor& /*corridor*/, int disk_index)
+    {
+        // scan forward skipping equal points.
+        // for (int i = disk_index+1; i < corridor.num_disks; ++i)
+        // {
+        //     if (left_border_curve(corridor, i) != curve_point)
+        //     {
+        //         return i;
+        //     }
+        // }
+
+        return disk_index;
+    }
+
+    int get_border_segment_r(const Corridor& /*corridor*/, int disk_index)
+    {
+        // scan forward skipping equal points.
+        // for (int i = disk_index+1; i < corridor.num_disks; ++i)
+        // {
+        //     if (right_border_curve(corridor, i) != curve_point)
+        //     {
+        //         return i;
+        //     }
+        // }
+
+        return disk_index;
+    }
+}
+
+namespace
+{
+    template <typename T>
+    struct Queue
+    {
+        Queue(Memory* mem, int max_size)
+            : front(0)
+            , size(0)
+            , max_size(max_size)
+            , mem(mem)
+        {
+            data = allocate<T>(mem, max_size);
+        }
+
+        ~Queue()
+        {
+            mem->deallocate(data);
+        }
+
+        int front;
+        int size;
+        int max_size;
+        Memory* mem;
+        T* data;
+    };
+
+    template <typename T>
+    int size(const Queue<T>& q)
+    {
+        return q.size;
+    }
+
+    template <typename T>
+    void enqueue(Queue<T>& q, const T val)
+    {
+        int idx = (q.front + q.size) % q.max_size;
+        q.data[idx] = val;
+        q.size++;
+    }
+
+    template <typename T>
+    T dequeue(Queue<T>& q)
+    {
+        T val = q.data[q.front % q.max_size];
+        q.front++;
+        q.size--;
+        return val;
+    }
+
+    template <typename T>
+    T pop_back(Queue<T>& q)
+    {
+        T val = q.data[(q.front + q.size - 1) % q.max_size];
+        q.size--;
+        return val;
+    }
+
+    template <typename T>
+    T& front(Queue<T>& q)
+    {
+        return q.data[q.front % q.max_size];
+    }
+
+    template <typename T>
+    T& back(Queue<T>& q)
+    {
+        int idx = (q.front + q.size - 1) % q.max_size;
+        return q.data[idx];
+    }
+
+    template <typename T>
+    void clear(Queue<T>& q)
+    {
+        q.front = 0;
+        q.size = 0;
+    }
+
+    Path_Segment make_segment(Vec2 p0, Vec2 p1)
+    {
+        Path_Segment result;
+        result.p_0 = p0;
+        result.p_1 = p1;
+        return result;
+    }
+}
+
+int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 /*target*/, Path_Segment* path, int max_path_size)
+{
+    Queue<Path_Segment> funnel_l(scratch, max_path_size);
+    Queue<Path_Segment> funnel_r(scratch, max_path_size);
+    corridormap_assert(funnel_l.data != 0);
+    corridormap_assert(funnel_r.data != 0);
+    int path_size = 0;
+    Vec2 funnel_apex = source;
+
+    // initialize funnel.
+    int l = get_border_segment_l(corridor, 0);
+    int r = get_border_segment_r(corridor, 0);
+    enqueue(funnel_l, make_segment(funnel_apex, corridor.border_l[l]));
+    enqueue(funnel_r, make_segment(funnel_apex, corridor.border_r[r]));
+
+    for (int i = 1; i < corridor.num_disks-1; ++i)
+    {
+        int l0 = get_border_segment_l(corridor, i+0);
+        int r0 = get_border_segment_r(corridor, i+0);
+
+        // add left portal point.
+        {
+            Vec2 vertex = corridor.border_l[l0];
+
+            // pop segments until empty or the CCW invariant is restored.
+            while (size(funnel_l) > 0)
+            {
+                const Path_Segment& seg = back(funnel_l);
+
+                if (orient(seg.p_0, seg.p_1, vertex) > 0.f)
+                {
+                    enqueue(funnel_l, make_segment(seg.p_1, vertex));
+                    break;
+                }
+
+                pop_back(funnel_l);
+            }
+
+            if (size(funnel_l) == 0)
+            {
+                while (size(funnel_r) > 0)
+                {
+                    const Path_Segment& seg = front(funnel_r);
+
+                    if (orient(seg.p_0, seg.p_1, vertex) > 0.f)
+                    {
+                        break;
+                    }
+
+                    funnel_apex = seg.p_1;
+                    path[path_size++] = dequeue(funnel_r);
+                }
+
+                enqueue(funnel_l, make_segment(funnel_apex, vertex));
+            }
+        }
+
+        // add right portal point.
+        {
+            Vec2 vertex = corridor.border_r[r0];
+
+            // pop segments until empty or the CW invariant is restored.
+            while (size(funnel_r) > 0)
+            {
+                const Path_Segment& seg = back(funnel_r);
+
+                if (orient(seg.p_0, seg.p_1, vertex) < 0.f)
+                {
+                    enqueue(funnel_r, make_segment(seg.p_1, vertex));
+                    break;
+                }
+
+                pop_back(funnel_r);
+            }
+
+            if (size(funnel_r) == 0)
+            {
+                while (size(funnel_l) > 0)
+                {
+                    const Path_Segment& seg = front(funnel_l);
+
+                    if (orient(seg.p_0, seg.p_1, vertex) < 0.f)
+                    {
+                        break;
+                    }
+
+                    funnel_apex = seg.p_1;
+                    path[path_size++] = dequeue(funnel_l);
+                }
+
+                enqueue(funnel_r, make_segment(funnel_apex, vertex));
+            }
+        }
+    }
+
+    return path_size;
+}
+
 }
