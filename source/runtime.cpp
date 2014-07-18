@@ -514,8 +514,7 @@ void shrink(Corridor& corridor, float clearance)
     for (int i = 0; i < corridor.num_disks; ++i)
     {
         Vec2 origin = corridor.origin[i];
-        float radius = corridor.radius[i];
-        corridormap_assert(radius > clearance);
+        corridormap_assert(corridor.radius[i] > clearance);
         Vec2 l = corridor.obstacle_l[i];
         Vec2 r = corridor.obstacle_r[i];
         Vec2 l_b = add(l, scale(normalized(sub(origin, l)), clearance));
