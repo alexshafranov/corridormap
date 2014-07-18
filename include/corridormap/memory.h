@@ -77,6 +77,81 @@ void zero_mem(Alloc_Scope<T>& s)
     memset(s.data, 0, s.count*sizeof(T));
 }
 
+template <typename T>
+struct Ring_Buffer
+{
+    Ring_Buffer(Memory* mem, int max_size)
+        : front(0)
+        , size(0)
+        , max_size(max_size)
+        , mem(mem)
+    {
+        data = allocate<T>(mem, max_size);
+    }
+
+    ~Ring_Buffer()
+    {
+        mem->deallocate(data);
+    }
+
+    int front;
+    int size;
+    int max_size;
+    Memory* mem;
+    T* data;
+};
+
+template <typename T>
+int size(const Ring_Buffer<T>& b)
+{
+    return b.size;
+}
+
+template <typename T>
+void push_back(Ring_Buffer<T>& b, const T val)
+{
+    int idx = (b.front + b.size) % b.max_size;
+    b.data[idx] = val;
+    b.size++;
+}
+
+template <typename T>
+T pop_back(Ring_Buffer<T>& b)
+{
+    T val = b.data[(b.front + b.size - 1) % b.max_size];
+    b.size--;
+    return val;
+}
+
+template <typename T>
+T pop_front(Ring_Buffer<T>& b)
+{
+    T val = b.data[b.front % b.max_size];
+    b.front++;
+    b.size--;
+    return val;
+}
+
+template <typename T>
+T& front(Ring_Buffer<T>& b)
+{
+    return b.data[b.front % b.max_size];
+}
+
+template <typename T>
+T& back(Ring_Buffer<T>& b)
+{
+    int idx = (b.front + b.size - 1) % b.max_size;
+    return b.data[idx];
+}
+
+template <typename T>
+void clear(Ring_Buffer<T>& b)
+{
+    b.front = 0;
+    b.size = 0;
+}
+
 }
 
 #endif

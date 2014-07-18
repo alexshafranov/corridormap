@@ -562,60 +562,6 @@ CSR_Grid_Neis cell_neis(const CSR_Grid& grid, int linear_index)
 
 namespace
 {
-    template <typename T>
-    struct Queue
-    {
-        Queue(Memory* mem, int max_size)
-            : front(0)
-            , size(0)
-            , max_size(max_size)
-            , mem(mem)
-        {
-            data = allocate<T>(mem, max_size);
-        }
-
-        ~Queue()
-        {
-            mem->deallocate(data);
-        }
-
-        int front;
-        int size;
-        int max_size;
-        Memory* mem;
-        T* data;
-    };
-
-    template <typename T>
-    int size(const Queue<T>& q)
-    {
-        return q.size;
-    }
-
-    template <typename T>
-    void enqueue(Queue<T>& q, const T val)
-    {
-        int idx = (q.front + q.size) % q.max_size;
-        q.data[idx] = val;
-        q.size += 1;
-    }
-
-    template <typename T>
-    T dequeue(Queue<T>& q)
-    {
-        T val = q.data[q.front % q.max_size];
-        q.front++;
-        q.size--;
-        return val;
-    }
-
-    template <typename T>
-    void clear(Queue<T>& q)
-    {
-        q.front = 0;
-        q.size = 0;
-    }
-
     int get_next_point(const CSR_Grid& edges, const Voronoi_Features& features, int current_point, int previous_point)
     {
         unsigned int side_1 = features.edge_obstacle_ids_1[nz(edges, current_point)];
@@ -771,7 +717,7 @@ namespace
 void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edges,
                  Voronoi_Edge_Spans& spans, Voronoi_Features& features, Voronoi_Traced_Edges& out)
 {
-    Queue<int> queue_vert(scratch, vertices.num_nz);
+    Ring_Buffer<int> queue_vert(scratch, vertices.num_nz);
     Alloc_Scope<char> visited_vert(scratch, vertices.num_nz);
     Alloc_Scope<char> visited_edge(scratch, edges.num_nz);
     zero_mem(visited_vert);
@@ -779,7 +725,7 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
 
     int start_vert = features.verts[0];
 
-    enqueue(queue_vert, start_vert);
+    push_back(queue_vert, start_vert);
     visited_vert[nz(vertices, start_vert)] = 1;
 
     int* out_u = out.u;
@@ -795,7 +741,7 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
 
     while (size(queue_vert) > 0)
     {
-        int u = dequeue(queue_vert);
+        int u = pop_front(queue_vert);
         visited_vert[nz(vertices, u)] = 1;
 
         CSR_Grid_Neis neis = cell_neis(edges, u);
@@ -824,7 +770,7 @@ void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edge
 
             if (visited_vert[nz(vertices, v)] != 1)
             {
-                enqueue(queue_vert, v);
+                push_back(queue_vert, v);
             }
         }
     }
