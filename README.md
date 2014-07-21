@@ -18,9 +18,13 @@ This graph can be used to extract corridor, represented as a set of disks:
 
 ![polygons corridor](/example/polys_1_corridor.png?raw=true)
 
-Shortest path in the corridor:
+Shortest path in the corridor, fast version for triangulated corridor:
 
 ![polygons path](/example/polys_1_path.png?raw=true)
+
+Continuous shortest path (arcs & line segments), slower but doesn't require triangulation:
+
+![polygons path continuous](/example/polys_1_continuous_path.png)
 
 ## Reference
 Roland Geraerts. Planning Short Paths with Clearance using Explicit Corridors.
