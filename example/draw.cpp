@@ -562,10 +562,10 @@ namespace
     {
         switch (curve_type)
         {
-        case curve_arc_vertex:
+        case curve_reflex_arc:
             arc(state, vertex, source, target);
             break;
-        case curve_arc_obstacle:
+        case curve_convex_arc:
             arc(state, closest_point, source, target, NVG_CW);
             break;
         case curve_line:
@@ -666,13 +666,6 @@ void draw_continuous_path(Draw_State& state, Corridor& corridor, Memory* scratch
 
     if (path_size > 0)
     {
-        for (int i = 1; i < path_size; ++i)
-        {
-            Path_Element p = path[i-1];
-            Path_Element e = path[i+0];
-            corridormap_assert(equal(p.p_1, e.p_0, 1e-6f));
-        }
-
         nvgStrokeColor(state.vg, nvgRGB(90, 0, 0));
         nvgStrokeWidth(state.vg, 2.f);
         nvgBeginPath(state.vg);
@@ -680,7 +673,7 @@ void draw_continuous_path(Draw_State& state, Corridor& corridor, Memory* scratch
 
         for (int i = 0; i < path_size; ++i)
         {
-            if (type(path[i]) == curve_arc_obstacle)
+            if (type(path[i]) == curve_convex_arc)
             {
                 arc(state, path[i].origin, path[i].p_0, path[i].p_1, is_ccw(path[i]) ? NVG_CCW : NVG_CW);
             }
@@ -689,6 +682,13 @@ void draw_continuous_path(Draw_State& state, Corridor& corridor, Memory* scratch
                 line_to(state, path[i].p_1);
             }
         }
+
+        for (int i = 0; i < path_size; ++i)
+        {
+            circle(state, path[i].p_0, 2.f);
+        }
+
+        circle(state, path[path_size-1].p_1, 2.f);
 
         nvgStroke(state.vg);
     }

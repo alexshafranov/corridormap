@@ -47,7 +47,7 @@ namespace
     Path_Element make_arc(Vec2 origin, Vec2 p0, Vec2 p1, bool ccw)
     {
         Path_Element result;
-        result.type = (ccw ? 0x80 : 0x00) | curve_arc_obstacle;
+        result.type = (ccw ? 0x80 : 0x00) | curve_convex_arc;
         result.origin = origin;
         result.p_0 = p0;
         result.p_1 = p1;
@@ -180,17 +180,24 @@ namespace
         if (path.num_elems > 0)
         {
             Path_Element& previous = path.elems[path.num_elems-1];
+            previous.p_1 = new_element.p_0;
 
-            if (equal(previous.p_1, new_element.p_1, epsilon))
+            // merge consecutive path arcs.
+            if (type(previous) == curve_convex_arc && type(new_element) == curve_convex_arc)
             {
-                previous.p_1 = new_element.p_1;
-                return;
+                if (equal(previous.origin, new_element.origin, epsilon))
+                {
+                    previous.p_1 = new_element.p_1;
+                    return;
+                }
             }
 
-            if (type(previous) == curve_arc_obstacle && type(new_element) == curve_arc_obstacle)
+            // if arc is closed (i.e. extending path with line) remove it if it's too small.
+            if (type(previous) == curve_convex_arc && type(new_element) == curve_line)
             {
-                if (is_ccw(previous) == is_ccw(new_element) && equal(previous.origin, new_element.origin, epsilon))
+                if (equal(previous.p_0, previous.p_1, epsilon))
                 {
+                    previous.type = new_element.type;
                     previous.p_1 = new_element.p_1;
                     return;
                 }
@@ -204,15 +211,24 @@ namespace
     }
 
     // try to add a new element while maintaining the specified funnel side winding.
-    void grow_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, const Path_Element& new_element, float epsilon, float clearance)
+    void grow_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, bool& following_border, Path_Element& new_element, float epsilon, float clearance)
     {
-        Curve curve = Curve(new_element.type);
+        unsigned char curve = type(new_element);
         corridormap_assert(!equal(new_element.p_0, new_element.p_1, epsilon));
 
-        // treat convex arcs as their chords.
-        if (curve == curve_arc_vertex)
+        // treat reflex arcs as their chords.
+        if (curve == curve_reflex_arc)
         {
             curve = curve_line;
+            // opposite winding arcs are never part of a funnel side -> breaks following the border.
+            following_border = false;
+        }
+
+        // early out: funnel side follows the border.
+        if (following_border)
+        {
+            push_back(side, new_element);
+            return;
         }
 
         // pop segments until empty or the winding invariant is restored.
@@ -237,18 +253,8 @@ namespace
                 }
 
                 // on top of arc.
-                if (type(elem) == curve_arc_obstacle)
+                if (type(elem) == curve_convex_arc)
                 {
-                    Vec2 p_1_tangent = get_tangent_at_point(elem.p_1, elem.origin, clearance, is_ccw(elem));
-                    float area = orient(elem.p_1, p_1_tangent, new_element.p_1);
-
-                    // line is an extension of arc.
-                    if (equal(elem.p_1, new_element.p_0, epsilon) && (ccw ? area >= 0.f : area <= 0.f))
-                    {
-                        push_back(side, make_segment(elem.p_1, new_element.p_1));
-                        break;
-                    }
-
                     Vec2 tangent = get_tangent(new_element.p_1, elem.origin, clearance, is_ccw(elem), direction_outgoing);
 
                     if (in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
@@ -264,7 +270,7 @@ namespace
             }
 
             // adding arc.
-            if (curve == curve_arc_obstacle)
+            if (curve == curve_convex_arc)
             {
                 // on top of segment.
                 if (type(elem) == curve_line)
@@ -285,6 +291,8 @@ namespace
                             pop_back(side);
                             push_back(side, make_segment(elem.p_0, tangent));
                             push_back(side, make_arc(new_element.origin, tangent, new_element.p_1, ccw));
+                            // arcs return funnel side to the border.
+                            following_border = true;
                             break;
                         }
                     }
@@ -293,16 +301,8 @@ namespace
                 }
 
                 // on top of arc.
-                if (type(elem) == curve_arc_obstacle)
+                if (type(elem) == curve_convex_arc)
                 {
-                    // one arc is an extension of another -> merge.
-                    if (equal(elem.origin, new_element.origin, epsilon))
-                    {
-                        pop_back(side);
-                        push_back(side, make_arc(new_element.origin, elem.p_0, new_element.p_1, ccw));
-                        break;
-                    }
-
                     corridormap_assert(ccw == is_ccw(elem));
                     Vec2 t1;
                     Vec2 t2;
@@ -316,6 +316,8 @@ namespace
                             push_back(side, make_arc(elem.origin, elem.p_0, t1, ccw));
                             push_back(side, make_segment(t1, t2));
                             push_back(side, make_arc(new_element.origin, t2, new_element.p_1, ccw));
+                            // arcs return funnel side to the border.
+                            following_border = true;
                             break;
                         }
                     }
@@ -351,10 +353,10 @@ namespace
     {
         Vec2 vertex = new_element.p_1;
         Vec2 origin = new_element.origin;
-        Curve curve = Curve(new_element.type);
+        unsigned char curve = type(new_element);
 
-        // treat convex arcs as their chords.
-        if (curve == curve_arc_vertex)
+        // treat reflex arcs as their chords.
+        if (curve == curve_reflex_arc)
         {
             curve = curve_line;
         }
@@ -379,7 +381,7 @@ namespace
                 }
 
                 // on top of arc.
-                if (type(elem) == curve_arc_obstacle)
+                if (type(elem) == curve_convex_arc)
                 {
                     if (!wraps_arc(elem.origin, clearance, elem.p_0, is_ccw(elem), vertex))
                     {
@@ -396,7 +398,7 @@ namespace
             }
 
             // adding an arc.
-            if (curve == curve_arc_obstacle)
+            if (curve == curve_convex_arc)
             {
                 // on top of segment.
                 if (type(elem) == curve_line)
@@ -413,7 +415,7 @@ namespace
                 }
 
                 // on top of arc.
-                if (type(elem) == curve_arc_obstacle)
+                if (type(elem) == curve_convex_arc)
                 {
                     Vec2 t1;
                     Vec2 t2;
@@ -434,33 +436,32 @@ namespace
     }
 
     // try to append a new current element funnel apex was moved over opposite side.
-    void restart_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, Vec2 apex, const Path_Element& new_element, float clearance)
+    void restart_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, Vec2 apex, bool& following_border, const Path_Element& new_element, float clearance)
     {
-        Vec2 prev_vertex = new_element.p_0;
-        Vec2 vertex = new_element.p_1;
-        Vec2 origin = new_element.origin;
-        Curve curve = Curve(new_element.type);
+        unsigned char curve = type(new_element);
 
-        if (curve == curve_arc_vertex)
+        if (curve == curve_reflex_arc)
         {
             curve = curve_line;
         }
 
         if (curve == curve_line)
         {
-            push_back(side, make_segment(apex, vertex));
+            push_back(side, make_segment(apex, new_element.p_1));
         }
         else
         {
-            Vec2 tangent = get_tangent(apex, origin, clearance, ccw, direction_incoming);
-            if (in_arc(tangent, prev_vertex, vertex, ccw))
+            Vec2 tangent = get_tangent(apex, new_element.origin, clearance, ccw, direction_incoming);
+            if (in_arc(tangent, new_element.p_0, new_element.p_1, ccw))
             {
                 push_back(side, make_segment(apex, tangent));
-                push_back(side, make_arc(origin, tangent, vertex, ccw));
+                push_back(side, make_arc(new_element.origin, tangent, new_element.p_1, ccw));
+                following_border = true;
             }
             else
             {
-                push_back(side, make_segment(apex, vertex));
+                push_back(side, make_segment(apex, new_element.p_1));
+                following_border = false;
             }
         }
     }
@@ -474,6 +475,10 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
     corridormap_assert(funnel_l.data != 0);
     corridormap_assert(funnel_r.data != 0);
     Vec2 funnel_apex = source;
+    // true if left side topmost element is part of the corridor border.
+    bool following_border_l = false;
+    // true if right side topmost element is part of the corridor border.
+    bool following_border_r = false;
 
     Path path_state;
     path_state.max_elems = max_path_size;
@@ -493,11 +498,11 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
     {
         elem_l.p_1 = target;
         elem_l.origin = target;
-        elem_l.type = curve_line;
+        elem_l.type = 0x80 | curve_line;
 
         elem_r.p_1 = target;
         elem_r.origin = target;
-        elem_r.type = curve_line;
+        elem_r.type = 0x00 | curve_line;
 
         if (i < corridor.num_disks-1)
         {
@@ -505,45 +510,33 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
             elem_r.p_1 = corridor.border_r[i];
             elem_l.origin = corridor.obstacle_l[i];
             elem_r.origin = corridor.obstacle_r[i];
-            elem_l.type = (unsigned char)left_border_curve(corridor, i);
-            elem_r.type = (unsigned char)right_border_curve(corridor, i);
+            elem_l.type = 0x80 | (unsigned char)left_border_curve(corridor, i);
+            elem_r.type = 0x00 | (unsigned char)right_border_curve(corridor, i);
             corridormap_assert(elem_l.type != curve_point || equal(elem_l.p_0, elem_l.p_1, corridor.epsilon));
             corridormap_assert(elem_r.type != curve_point || equal(elem_r.p_0, elem_r.p_1, corridor.epsilon));
         }
 
         // add left portal element.
-        if (elem_l.type != curve_point)
+        if (type(elem_l) != curve_point)
         {
-            grow_funnel_side(funnel_l, winding_ccw, elem_l, corridor.epsilon, corridor.clearance);
-
+            grow_funnel_side(funnel_l, winding_ccw, following_border_l, elem_l, corridor.epsilon, corridor.clearance);
             if (size(funnel_l) == 0)
             {
                 move_funnel_apex(funnel_r, winding_cw, funnel_apex, elem_l, path_state, corridor.clearance, corridor.epsilon);
-
-                if (full(path_state))
-                {
-                    return path_state.num_elems;
-                }
-
-                restart_funnel_side(funnel_l, winding_ccw, funnel_apex, elem_l, corridor.clearance);
+                if (full(path_state)) { return path_state.num_elems; }
+                restart_funnel_side(funnel_l, winding_ccw, funnel_apex, following_border_l, elem_l, corridor.clearance);
             }
         }
 
         // add right portal element.
-        if (elem_r.type != curve_point)
+        if (type(elem_r) != curve_point)
         {
-            grow_funnel_side(funnel_r, winding_cw, elem_r, corridor.epsilon, corridor.clearance);
-
+            grow_funnel_side(funnel_r, winding_cw, following_border_r, elem_r, corridor.epsilon, corridor.clearance);
             if (size(funnel_r) == 0)
             {
                 move_funnel_apex(funnel_l, winding_ccw, funnel_apex, elem_r, path_state, corridor.clearance, corridor.epsilon);
-
-                if (full(path_state))
-                {
-                    return path_state.num_elems;
-                }
-
-                restart_funnel_side(funnel_r, winding_cw, funnel_apex, elem_r, corridor.clearance);
+                if (full(path_state)) { return path_state.num_elems; }
+                restart_funnel_side(funnel_r, winding_cw, funnel_apex, following_border_r, elem_r, corridor.clearance);
             }
         }
 

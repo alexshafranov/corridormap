@@ -114,10 +114,10 @@ enum Curve
     curve_point = 0,
     // line between current point and the next one.
     curve_line,
-    // circle arc around edge vertex.
-    curve_arc_vertex,
-    // circle arc around obstacle vertex.
-    curve_arc_obstacle,
+    // circle arc around edge vertex. (reflex part of corridor border).
+    curve_reflex_arc,
+    // circle arc around obstacle vertex. (convex part of corridor border).
+    curve_convex_arc,
 };
 
 // Set of disks describing a path corridor.
@@ -158,7 +158,7 @@ struct Corridor
 // Element of the path returned by the continuous funnel algorithm.
 struct Path_Element
 {
-    // continuous path segement: arc (=curve_arc_obstacle) or segment (=curve_line),
+    // continuous path segement: arc (=curve_convex_arc) or segment (=curve_line),
     // first bit is set if arc winding is ccw.
     unsigned char type;
     // arc origin (unused for the segment case).

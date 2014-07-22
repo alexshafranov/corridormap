@@ -368,12 +368,12 @@ namespace
 
         if (!equal(prev_l, curr_l, epsilon))
         {
-            *out_curves = (*out_curves & 0xf0) | (curve_arc_vertex << 0);
+            *out_curves = (*out_curves & 0xf0) | (curve_reflex_arc << 0);
         }
 
         if (!equal(prev_r, curr_r, epsilon))
         {
-            *out_curves = (*out_curves & 0x0f) | (curve_arc_vertex << 4);
+            *out_curves = (*out_curves & 0x0f) | (curve_reflex_arc << 4);
         }
 
         out_curves++;
@@ -445,10 +445,10 @@ namespace
             case curve_point:
                 if (!equal(curr_l, prev_l, epsilon))
                 {
-                    set_left_border_curve(corridor, i, curve_arc_obstacle);
+                    set_left_border_curve(corridor, i, curve_convex_arc);
                 }
                 break;
-            case curve_arc_obstacle:
+            case curve_convex_arc:
                 if (equal(curr_l, prev_l, epsilon))
                 {
                     set_left_border_curve(corridor, i, curve_point);
@@ -463,10 +463,10 @@ namespace
             case curve_point:
                 if (!equal(curr_r, prev_r, epsilon))
                 {
-                    set_right_border_curve(corridor, i, curve_arc_obstacle);
+                    set_right_border_curve(corridor, i, curve_convex_arc);
                 }
                 break;
-            case curve_arc_obstacle:
+            case curve_convex_arc:
                 if (equal(curr_r, prev_r, epsilon))
                 {
                     set_right_border_curve(corridor, i, curve_point);
@@ -603,7 +603,7 @@ int triangulate(Corridor& corridor, float arc_step_len)
 
         if (curve_r != curve_point)
         {
-            if (curve_r == curve_arc_obstacle)
+            if (curve_r == curve_convex_arc)
             {
                 if (!add_arc_portals(corridor, l0, corridor.obstacle_r[disk], r0, r1, clearance, arc_step_len, false))
                 {
@@ -618,7 +618,7 @@ int triangulate(Corridor& corridor, float arc_step_len)
 
         if (curve_l != curve_point)
         {
-            if (curve_l == curve_arc_obstacle)
+            if (curve_l == curve_convex_arc)
             {
                 if (!add_arc_portals(corridor, r1, corridor.obstacle_l[disk], l0, l1, clearance, arc_step_len, true))
                 {

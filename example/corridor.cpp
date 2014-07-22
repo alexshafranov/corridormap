@@ -289,7 +289,7 @@ int main()
         int edge_path_size = vert_path_size-1;
         int num_disks = corridormap::num_path_discs(space, edge_path, edge_path_size);
         corridor = create_corridor(&mem, num_disks, 5*num_disks);
-        corridormap::extract(space, edge_path, edge_path_size, corridor, 3.f);
+        corridormap::extract(space, edge_path, edge_path_size, corridor, 3.5f);
         corridormap::shrink(corridor, 30.f);
         corridormap::triangulate(corridor, 8.f);
     }
