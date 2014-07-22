@@ -198,26 +198,6 @@ namespace
         }
     }
 
-    // moves apex over top-most arc. "eats" the whole arc (if tangent past the end), or cuts it at the tangent point.
-    bool move_apex_over_arc(Ring_Buffer<Path_Element>& side, Vec2 tangent, Vec2& apex, Path& path_state, float epsilon)
-    {
-        Path_Element& arc = front(side);
-
-        // tangent point splits the arc -> grow path by the arc part before tangent point and signal that we're done.
-        if (in_arc(tangent, arc.p_0, arc.p_1, is_ccw(arc)))
-        {
-            grow_path(path_state, make_arc(arc.origin, arc.p_0, tangent, is_ccw(arc)), epsilon);
-            apex = tangent;
-            arc.p_0 = tangent;
-            return true;
-        }
-
-        // otherwise grow path by the full arc and continue moving apex.
-        grow_path(path_state, pop_front(side), epsilon);
-        apex = arc.p_1;
-        return false;
-    }
-
     // try to add a new element defined by 'curve', 'origin', 'prev_vertex' & 'vertex' while maintaining the specified funnel side winding.
     void grow_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, const Path_Element& new_element, float epsilon, float clearance)
     {
@@ -346,6 +326,26 @@ namespace
         }
     }
 
+    // moves apex over top-most arc. "eats" the whole arc (if tangent past the end), or cuts it at the tangent point.
+    bool move_apex_over_arc(Ring_Buffer<Path_Element>& side, Vec2 tangent, Vec2& apex, Path& path_state, float epsilon)
+    {
+        Path_Element& arc = front(side);
+
+        // tangent point splits the arc -> grow path by the arc part before tangent point and signal that we're done.
+        if (in_arc(tangent, arc.p_0, arc.p_1, is_ccw(arc)))
+        {
+            grow_path(path_state, make_arc(arc.origin, arc.p_0, tangent, is_ccw(arc)), epsilon);
+            apex = tangent;
+            arc.p_0 = tangent;
+            return true;
+        }
+
+        // otherwise grow path by the full arc and continue moving apex.
+        grow_path(path_state, pop_front(side), epsilon);
+        apex = arc.p_1;
+        return false;
+    }
+
     // if failed to add a new element to it's own side (i.e. never satisfied that side winding invariant) then move funnel apex up over the opposite side & grow path.
     void move_funnel_apex(Ring_Buffer<Path_Element>& side, bool ccw, Vec2& apex, const Path_Element& new_element, Path& path, float clearance, float epsilon)
     {
@@ -467,8 +467,9 @@ namespace
 
 int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, Path_Element* path, int max_path_size)
 {
-    Ring_Buffer<Path_Element> funnel_l(scratch, max_path_size);
-    Ring_Buffer<Path_Element> funnel_r(scratch, max_path_size);
+    corridormap_assert(corridor.num_disks > 0);
+    Ring_Buffer<Path_Element> funnel_l(scratch, corridor.num_disks);
+    Ring_Buffer<Path_Element> funnel_r(scratch, corridor.num_disks);
     corridormap_assert(funnel_l.data != 0);
     corridormap_assert(funnel_r.data != 0);
     Vec2 funnel_apex = source;
