@@ -59,10 +59,10 @@ namespace
     // 'incoming' specifies direction of tangent for side test.
     Vec2 get_tangent(Vec2 point, Vec2 origin, float radius, bool ccw, bool incoming)
     {
-        Vec2 d = sub(point, origin);
+        Vec2 d = point - origin;
         float l = mag(d);
         corridormap_assert(l >= radius);
-        d = scale(d, 1.f/l);
+        d = d/l;
         float t = sqrtf(sq(l) - sq(radius));
 
         float sina = t / l;
@@ -72,11 +72,11 @@ namespace
         Vec2 m21 = make_vec2( cosa,  sina);
         Vec2 m22 = make_vec2(-sina,  cosa);
 
-        Vec2 t1 = add(origin, scale(make_vec2(dot(d, m11), dot(d, m12)), radius));
-        Vec2 t2 = add(origin, scale(make_vec2(dot(d, m21), dot(d, m22)), radius));
+        Vec2 t1 = origin + radius*make_vec2(dot(d, m11), dot(d, m12));
+        Vec2 t2 = origin + radius*make_vec2(dot(d, m21), dot(d, m22));
 
-        Vec2 td = sub(t1, point);
-        Vec2 od = sub(origin, point);
+        Vec2 td = t1 - point;
+        Vec2 od = origin - point;
 
         float area = incoming ? det(td, od) : -det(td, od);
         Vec2 t_ccw = area > 0.f ? t1 : t2;
@@ -87,11 +87,11 @@ namespace
     // computes endpoint of the 2*radius sized tangent segment to the point on circle.
     Vec2 get_tangent_at_point(Vec2 point, Vec2 origin, float radius, bool ccw)
     {
-        Vec2 d = sub(point, origin);
+        Vec2 d = point - origin;
         corridormap_assert(fabs(mag(d) - radius) < 1e-3f);
         (void)(radius);
-        Vec2 e1 = add(point, make_vec2(-d.y,  d.x));
-        Vec2 e2 = add(point, make_vec2( d.y, -d.x));
+        Vec2 e1 = point + make_vec2(-d.y,  d.x);
+        Vec2 e2 = point + make_vec2( d.y, -d.x);
         float area = orient(point, e1, origin);
         Vec2 e_ccw = area > 0.f ? e1 : e2;
         Vec2 e_cw  = area > 0.f ? e2 : e1;
@@ -105,35 +105,35 @@ namespace
     {
         if (ccw1 && ccw2)
         {
-            Vec2 d = sub(o2, o1);
+            Vec2 d = o2 - o1;
             float s = mag(d);
             corridormap_assert(s > 0.f);
-            Vec2 p = scale(make_vec2(-d.y, d.x), radius/s);
-            t1 = sub(o1, p);
-            t2 = sub(o2, p);
+            Vec2 p = make_vec2(-d.y, d.x)*radius/s;
+            t1 = o1 - p;
+            t2 = o2 - p;
         }
         else if (!ccw1 && !ccw2)
         {
-            Vec2 d = sub(o2, o1);
+            Vec2 d = o2 - o1;
             float s = mag(d);
             corridormap_assert(s > 0.f);
-            Vec2 p = scale(make_vec2(-d.y, d.x), radius/s);
-            t1 = add(o1, p);
-            t2 = add(o2, p);
+            Vec2 p = make_vec2(-d.y, d.x)*radius/s;
+            t1 = o1 + p;
+            t2 = o2 + p;
         }
         else if (ccw1 && !ccw2)
         {
             Vec2 t = get_tangent(o2, o1, 2.f*radius, ccw1, direction_outgoing);
-            Vec2 v = scale(sub(o1, t), 0.5f);
-            t1 = add(t, v);
-            t2 = add(o2, v);
+            Vec2 v = (o1 - t)*0.5f;
+            t1 = t + v;
+            t2 = o2 + v;
         }
         else // if (!ccw1 && ccw2)
         {
             Vec2 t = get_tangent(o1, o2, 2.f*radius, ccw2, direction_incoming);
-            Vec2 v = scale(sub(o2, t), 0.5f);
-            t2 = add(t, v);
-            t1 = add(o1, v);
+            Vec2 v = (o2 - t)*0.5f;
+            t2 = t + v;
+            t1 = o1 + v;
         }
     }
 
@@ -303,7 +303,6 @@ namespace
                 // on top of arc.
                 if (type(elem) == curve_convex_arc)
                 {
-                    corridormap_assert(ccw == is_ccw(elem));
                     Vec2 t1;
                     Vec2 t2;
                     get_mutual_tangent(elem.origin, new_element.origin, clearance, ccw, ccw, t1, t2);

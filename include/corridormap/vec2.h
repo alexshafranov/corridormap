@@ -39,24 +39,34 @@ inline Vec2 make_vec2(const float* v)
     return result;
 }
 
-inline Vec2 add(Vec2 a, Vec2 b)
+inline Vec2 operator+(Vec2 a, Vec2 b)
 {
     return make_vec2(a.x + b.x, a.y + b.y);
 }
 
-inline Vec2 sub(Vec2 a, Vec2 b)
+inline Vec2 operator-(Vec2 a, Vec2 b)
 {
     return make_vec2(a.x - b.x, a.y - b.y);
+}
+
+inline Vec2 operator*(Vec2 a, float f)
+{
+    return make_vec2(a.x*f, a.y*f);
+}
+
+inline Vec2 operator*(float f, Vec2 a)
+{
+    return make_vec2(a.x*f, a.y*f);
+}
+
+inline Vec2 operator/(Vec2 a, float f)
+{
+    return make_vec2(a.x/f, a.y/f);
 }
 
 inline Vec2 mul(Vec2 a, Vec2 b)
 {
     return make_vec2(a.x*b.x, a.y*b.y);
-}
-
-inline Vec2 scale(Vec2 a, float val)
-{
-    return make_vec2(a.x*val, a.y*val);
 }
 
 inline float sq(float v)
@@ -66,7 +76,7 @@ inline float sq(float v)
 
 inline Vec2 normalized(Vec2 a)
 {
-    return scale(a, 1.f/sqrt(sq(a.x) + sq(a.y)));
+    return a * (1.f/sqrt(sq(a.x) + sq(a.y)));
 }
 
 inline float dot(Vec2 a, Vec2 b)
@@ -91,7 +101,7 @@ inline float det(Vec2 u, Vec2 v)
 
 inline float orient(Vec2 o, Vec2 a, Vec2 b)
 {
-    return det(sub(a, o), sub(b, o));
+    return det(a - o, b - o);
 }
 
 inline bool equal(Vec2 a, Vec2 b, float epsilon)

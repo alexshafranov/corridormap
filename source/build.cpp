@@ -140,8 +140,8 @@ namespace
 
     inline int build_tent_side(Render_Vertex*& output, Vec2 a, Vec2 b, float len, float size)
     {
-        Vec2 e = sub(b, a);
-        Vec2 n = scale(make_vec2(-e.y, e.x), 1.f/len);
+        Vec2 e = b - a;
+        Vec2 n = make_vec2(-e.y, e.x)/len;
 
         Render_Vertex p0 = { a.x, a.y, 0.f };
         Render_Vertex p1 = { b.x, b.y, 0.f };
@@ -227,10 +227,10 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
             Vec2 curr = { poly_x[curr_idx], poly_y[curr_idx] };
             Vec2 next = { poly_x[next_idx], poly_y[next_idx] };
 
-            float len_e1 = mag(sub(next, curr));
+            float len_e1 = mag(next - curr);
 
-            Vec2 e0 = normalized(sub(prev, curr));
-            Vec2 e1 = normalized(sub(next, curr));
+            Vec2 e0 = normalized(prev - curr);
+            Vec2 e1 = normalized(next - curr);
 
             float cos_inner = dot(e0, e1);
             float angle_inner = acos(cos_inner);
@@ -261,7 +261,7 @@ void build_distance_mesh(const Footprint& in, Bbox2 bounds, float max_dist, floa
         Vec2 rt = { bounds.max[0], bounds.max[1] };
         Vec2 rb = { bounds.max[0], bounds.min[1] };
 
-        Vec2 len = sub(rt, lb);
+        Vec2 len = rt - lb;
 
         *num_segment_verts++ = build_tent_side(verts, lb, rb, len.x, max_dist);
         *num_segment_verts++ = build_tent_side(verts, rb, rt, len.y, max_dist);
@@ -308,7 +308,7 @@ namespace
 {
     inline void store_edge_normal(Vec2 u, Vec2 v, float*& out_x, float*& out_y)
     {
-        Vec2 dir = normalized(sub(v, u));
+        Vec2 dir = normalized(v - u);
         *out_x++ = +dir.y;
         *out_y++ = -dir.x;
     }
@@ -402,8 +402,8 @@ namespace
             Vec2 normal_curr = { normal_x[curr_idx], normal_y[curr_idx] };
             Vec2 normal_next = { normal_x[next_idx], normal_y[next_idx] };
 
-            Vec2 mid = normalized(scale(add(normal_curr, normal_next), 0.5f));
-            Vec2 dir = normalized(sub(edge_point, vertex));
+            Vec2 mid = normalized((normal_curr + normal_next)*0.5f);
+            Vec2 dir = normalized(edge_point - vertex);
 
             float dot_n = dot(normal_curr, mid);
             float dot_d = dot(dir, mid);
@@ -791,15 +791,15 @@ namespace
     {
         Segement_Closest_Point result;
 
-        Vec2 seg = sub(p1, p0);
+        Vec2 seg = p1 - p0;
         Vec2 dir = normalized(seg);
         float seg_len = mag(seg);
 
-        float proj = dot(sub(point, p0), dir);
+        float proj = dot(point - p0, dir);
 
-        Vec2 seg_closest = add(p0, scale(dir, clamp(proj, 0.f, seg_len)));
+        Vec2 seg_closest = p0 + dir*clamp(proj, 0.f, seg_len);
 
-        Vec2 seg_closest_dir = sub(seg_closest, point);
+        Vec2 seg_closest_dir = seg_closest - point;
         float seg_closest_dist = dot(seg_closest_dir, seg_closest_dir);
 
         result.closest = seg_closest;
@@ -875,8 +875,8 @@ namespace
 
     bool is_left(Vec2 prev, Vec2 curr, Vec2 side_pos)
     {
-        Vec2 dir1 = sub(curr, prev);
-        Vec2 dir2 = sub(side_pos, prev);
+        Vec2 dir1 = curr - prev;
+        Vec2 dir2 = side_pos - prev;
         return det(dir1, dir2) > 0.f;
     }
 
@@ -922,10 +922,10 @@ namespace
         Vec2 v = { obstacles->x[vertex_index], obstacles->y[vertex_index] };
         Vec2 n1 = { obstacle_normals->x[curr], obstacle_normals->y[curr] };
         Vec2 n2 = { obstacle_normals->x[next], obstacle_normals->y[next] };
-        Vec2 dir = sub(sampled_pos, v);
+        Vec2 dir = sampled_pos - v;
         float p1 = dot(dir, n1);
         float p2 = dot(dir, n2);
-        result.pos = add(v, (p1 > p2) ? scale(n1, p1) : scale(n2, p2));
+        result.pos = v + ((p1 > p2) ? n1*p1 : n2*p2);
 
         if (event > 0)
         {

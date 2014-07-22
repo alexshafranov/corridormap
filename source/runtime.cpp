@@ -67,9 +67,7 @@ namespace
 {
     bool is_ccw(Vec2 u, Vec2 v1, Vec2 v2)
     {
-        Vec2 d1 = sub(v1, u);
-        Vec2 d2 = sub(v2, u);
-        return det(d1, d2) > 0.f;
+        return det(v1 - u, v2 - u) > 0.f;
     }
 
     Half_Edge* get_half_edge(Edge* edges, int idx)
@@ -316,7 +314,7 @@ namespace
         Vec2 p = target(space, edge)->pos;
         Vec2 l = left_side(space, edge);
         Vec2 r = right_side(space, edge);
-        float radius = std::min(mag(sub(l, p)), mag(sub(r, p)));
+        float radius = std::min(mag(l - p), mag(r - p));
 
         *out_origin++ = p;
         *out_radius++ = radius;
@@ -329,7 +327,7 @@ namespace
         Vec2 p = event->pos;
         Vec2 l = left_side(space, edge, event);
         Vec2 r = right_side(space, edge, event);
-        float radius = std::min(mag(sub(l, p)), mag(sub(r, p)));
+        float radius = std::min(mag(l - p), mag(r - p));
 
         *out_origin++ = p;
         *out_radius++ = radius;
@@ -522,8 +520,8 @@ void shrink(Corridor& corridor, float clearance)
         corridormap_assert(corridor.radius[i] > clearance);
         Vec2 l = corridor.obstacle_l[i];
         Vec2 r = corridor.obstacle_r[i];
-        Vec2 l_b = add(l, scale(normalized(sub(origin, l)), clearance));
-        Vec2 r_b = add(r, scale(normalized(sub(origin, r)), clearance));
+        Vec2 l_b = l + clearance*normalized(origin - l);
+        Vec2 r_b = r + clearance*normalized(origin - r);
         corridor.border_l[i] = l_b;
         corridor.border_r[i] = r_b;
     }
@@ -545,8 +543,8 @@ namespace
 
     bool add_arc_portals(Corridor& corridor, Vec2 portal_side, Vec2 origin, Vec2 from, Vec2 to, float radius, float max_step, bool ccw)
     {
-        Vec2 da = normalized(sub(from, origin));
-        Vec2 db = normalized(sub(to, origin));
+        Vec2 da = normalized(from - origin);
+        Vec2 db = normalized(to - origin);
         float arc_angle = acosf(dot(da, db));
 
         if (orient(origin, from, to) > 0.f != ccw)
@@ -566,8 +564,7 @@ namespace
 
         for (int i = 0; i < steps-1; ++i)
         {
-            Vec2 p = make_vec2(radius*cosf(start_angle + (i+1)*theta), radius*sinf(start_angle + (i+1)*theta));
-            p = add(origin, p);
+            Vec2 p = origin + make_vec2(radius*cosf(start_angle + (i+1)*theta), radius*sinf(start_angle + (i+1)*theta));
             add_portal(corridor, ccw ? p : portal_side, ccw ? portal_side : p);
         }
 
@@ -642,7 +639,7 @@ int find_closest_disk(const Corridor& corridor, Vec2 point)
 
     for (int i = 0; i < corridor.num_disks; ++i)
     {
-        float dist_sq = mag_sq(sub(point, corridor.origin[i]));
+        float dist_sq = mag_sq(point - corridor.origin[i]);
 
         if (dist_sq < min_dist)
         {

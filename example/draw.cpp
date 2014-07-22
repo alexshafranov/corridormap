@@ -58,9 +58,9 @@ namespace
 
     Vec2 to_image(Vec2 v, const Draw_State& state)
     {
-        Vec2 inv_dim = sub(state.bounds_max, state.bounds_min);
+        Vec2 inv_dim = state.bounds_max - state.bounds_min;
         inv_dim = make_vec2(1.f / inv_dim.x, 1.f / inv_dim.y);
-        Vec2 norm_v = mul(sub(v, state.bounds_min), inv_dim);
+        Vec2 norm_v = mul(v - state.bounds_min, inv_dim);
         norm_v.y = 1.f - norm_v.y;
         return mul(norm_v, state.image_dimensions);
     }
@@ -70,7 +70,7 @@ namespace
         Vec2 inv_dim = make_vec2(1.f / state.image_dimensions.x, 1.f / state.image_dimensions.y);
         Vec2 norm_v = mul(v, inv_dim);
         norm_v.y = 1.f - norm_v.y;
-        return add(state.bounds_min, mul(norm_v, sub(state.bounds_max, state.bounds_min)));
+        return state.bounds_min + mul(norm_v, state.bounds_max - state.bounds_min);
     }
 
     Segment to_image(Vec2 a, Vec2 b, const Draw_State& state)
@@ -79,12 +79,12 @@ namespace
         s.a = to_image(a, state);
         s.b = to_image(b, state);
 
-        Vec2 d = sub(s.b, s.a);
+        Vec2 d = s.b - s.a;
         float l = mag(d);
         if (l > 0.f)
         {
             d = normalized(d);
-            s.b = add(s.a, scale(d, (l >= state.agent_radius) ? l - state.agent_radius : 0.f));
+            s.b = s.a + d * ((l >= state.agent_radius) ? l - state.agent_radius : 0.f);
         }
 
         return s;
@@ -121,9 +121,9 @@ namespace
         Vec2 c = to_image(origin, state);
         Vec2 s = to_image(a, state);
         Vec2 t = to_image(b, state);
-        float radius = mag(sub(s, c));
-        s = normalized(sub(s, c));
-        t = normalized(sub(t, c));
+        float radius = mag(s - c);
+        s = normalized(s - c);
+        t = normalized(t - c);
         nvgArc(state.vg, c.x, c.y, radius, atan2(s.y, s.x), atan2(t.y, t.x), dir);
     }
 
@@ -153,9 +153,9 @@ namespace
 
     void circle_corner(Draw_State& state, Vec2 corner, Vec2 a, Vec2 b)
     {
-        float radius = mag(sub(a, corner));
-        a = normalized(sub(a, corner));
-        b = normalized(sub(b, corner));
+        float radius = mag(a - corner);
+        a = normalized(a - corner);
+        b = normalized(b - corner);
         nvgArc(state.vg, corner.x, corner.y, radius, atan2(a.y, a.x), atan2(b.y, b.x), NVG_CW);
     }
 
@@ -251,7 +251,7 @@ namespace
         Segment seg_l = to_image(pos, side_l, state);
         Segment seg_r = to_image(pos, side_r, state);
 
-        Vec2 v_corner = add(seg_l.a, add(sub(seg_l.b, seg_l.a), sub(seg_r.b, seg_l.a)));
+        Vec2 v_corner = seg_l.a + (seg_l.b - seg_l.a) + (seg_r.b - seg_l.a);
         return from_image(v_corner, state);
     }
 
@@ -332,11 +332,11 @@ namespace
 
                 Segment s10 = to_image(vertex->pos, incoming_1->sides[0], state);
                 Segment s21 = to_image(vertex->pos, incoming_2->sides[1], state);
-                Vec2 c1 = add(o, add(sub(s10.b, o), sub(s21.b, o)));
+                Vec2 c1 = o + (s10.b - o) + (s21.b - o);
 
                 Segment s20 = to_image(vertex->pos, incoming_2->sides[0], state);
                 Segment s11 = to_image(vertex->pos, incoming_1->sides[1], state);
-                Vec2 c2 = add(o, add(sub(s20.b, o), sub(s11.b, o)));
+                Vec2 c2 = o + (s20.b - o) + (s11.b - o);
 
                 if (!equal(s10.b, s21.b, 0.1f))
                 {
@@ -399,11 +399,11 @@ namespace
 
                 Segment s10 = to_image(vertex->pos, incoming_1->sides[0], state);
                 Segment s21 = to_image(vertex->pos, incoming_2->sides[1], state);
-                Vec2 c1 = add(o, add(sub(s10.b, o), sub(s21.b, o)));
+                Vec2 c1 = o + (s10.b - o) + (s21.b - o);
 
                 Segment s20 = to_image(vertex->pos, incoming_2->sides[0], state);
                 Segment s11 = to_image(vertex->pos, incoming_1->sides[1], state);
-                Vec2 c2 = add(o, add(sub(s20.b, o), sub(s11.b, o)));
+                Vec2 c2 = o + (s20.b - o) + (s11.b - o);
 
                 if (!equal(s10.b, s21.b, 0.1f))
                 {
