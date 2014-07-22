@@ -132,7 +132,7 @@ namespace
         }
     }
 
-    // checks that point 'p' is inside arc ['a', 'b', 'ccw'].
+    // checks that point 'p' is inside arc defined by ['a', 'b', 'ccw'].
     bool is_in_arc(Vec2 p, Vec2 a, Vec2 b, bool ccw)
     {
         float area = orient(a, p, b);
@@ -152,9 +152,9 @@ namespace
         return p.num_elems >= p.max_elems;
     }
 
-    // append new element to path.
-    // if the new element and top-most element are both arcs try to merge them.
-    // if the new element is very close to the top-most, extend the top-most.
+    // append a new element to the path.
+    // if the new element and the top-most element are both arcs try to merge them.
+    // if the new element is close to the top-most, extend the top-most.
     void grow_path(Path& path, const Path_Element& new_element, float epsilon)
     {
         if (path.num_elems > 0)
