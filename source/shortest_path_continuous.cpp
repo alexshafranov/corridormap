@@ -132,11 +132,11 @@ namespace
         }
     }
 
-    // returns true if (o, a) -> (o, b) rotation 'ccw'.
-    bool check_winding(bool ccw, Vec2 o, Vec2 a, Vec2 b)
+    // returns true if (o, a) -> (o, b) rotation is counter-clockwise.
+    bool is_ccw(Vec2 o, Vec2 a, Vec2 b)
     {
         float area = orient(o, a, b);
-        return ccw ? area >= 0.f : area < 0.f;
+        return area >= 0.f;
     }
 
     // checks that point 'p' is inside arc defined by ['a', 'b', 'ccw'].
@@ -369,7 +369,7 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    if (!check_winding(ccw, elem.p_0, elem.p_1, vertex))
+                    if (is_ccw(elem.p_0, elem.p_1, vertex) != ccw)
                     {
                         break;
                     }
@@ -403,7 +403,7 @@ namespace
                 {
                     Vec2 t = get_tangent(elem.p_1, origin, clearance, !ccw, true);
 
-                    if (!check_winding(ccw, elem.p_0, elem.p_1, t))
+                    if (is_ccw(elem.p_0, elem.p_1, t) != ccw)
                     {
                         break;
                     }
