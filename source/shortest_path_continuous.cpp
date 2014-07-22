@@ -137,13 +137,6 @@ namespace
         }
     }
 
-    // true if (o, a) -> (o, b) rotation has winding specified by 'ccw'.
-    bool required_winding(Vec2 o, Vec2 a, Vec2 b, bool ccw)
-    {
-        float area = orient(o, a, b);
-        return ccw ? area >= 0.f : area <= 0.f;
-    }
-
     // checks that point 'p' is inside arc defined by ['a', 'b', 'ccw'].
     bool in_arc(Vec2 p, Vec2 a, Vec2 b, bool ccw)
     {
@@ -242,7 +235,8 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    if (required_winding(elem.p_0, elem.p_1, new_element.p_1, ccw))
+                    float area = orient(elem.p_0, elem.p_1, new_element.p_1);
+                    if (ccw ? area >= 0.f : area <= 0.f)
                     {
                         push_back(side, make_segment(elem.p_1, new_element.p_1));
                         break;
@@ -282,7 +276,8 @@ namespace
 
                     Vec2 tangent = get_tangent(p, new_element.origin, clearance, ccw, direction_incoming);
 
-                    if (required_winding(elem.p_0, elem.p_1, tangent, ccw))
+                    float area = orient(elem.p_0, elem.p_1, tangent);
+                    if (ccw ? area >= 0.f : area <= 0.f)
                     {
                         if (in_arc(tangent, new_element.p_0, new_element.p_1, ccw))
                         {
@@ -368,7 +363,8 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    if (required_winding(elem.p_0, elem.p_1, vertex, !ccw))
+                    float area = orient(elem.p_0, elem.p_1, vertex);
+                    if (ccw ? area < 0.f : area > 0.f)
                     {
                         break;
                     }
@@ -402,7 +398,8 @@ namespace
                 {
                     Vec2 t = get_tangent(elem.p_1, origin, clearance, !ccw, direction_incoming);
 
-                    if (required_winding(elem.p_0, elem.p_1, t, !ccw))
+                    float area = orient(elem.p_0, elem.p_1, t);
+                    if (ccw ? area < 0.f : area > 0.f)
                     {
                         break;
                     }
@@ -462,6 +459,14 @@ namespace
             }
         }
     }
+
+    void flush_funnel_side(Dequeue<Path_Element>& side, Path& path_state, float epsilon)
+    {
+        while (size(side) > 0)
+        {
+            grow_path(path_state, pop_front(side), epsilon);
+        }
+    }
 }
 
 int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, Path_Element* path, int max_path_size)
@@ -491,7 +496,7 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
     elem_l.p_0 = corridor.border_l[0];
     elem_r.p_0 = corridor.border_r[0];
 
-    for (int i = 1; i < corridor.num_disks; ++i)
+    for (int i = 1; i <= corridor.num_disks; ++i)
     {
         elem_l.p_1 = target;
         elem_l.origin = target;
@@ -501,7 +506,7 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
         elem_r.origin = target;
         elem_r.type = 0x00 | curve_line;
 
-        if (i < corridor.num_disks-1)
+        if (i < corridor.num_disks)
         {
             elem_l.p_1 = corridor.border_l[i];
             elem_r.p_1 = corridor.border_r[i];
@@ -511,6 +516,11 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
             elem_r.type = 0x00 | (unsigned char)right_border_curve(corridor, i);
             corridormap_assert(elem_l.type != curve_point || equal(elem_l.p_0, elem_l.p_1, corridor.epsilon));
             corridormap_assert(elem_r.type != curve_point || equal(elem_r.p_0, elem_r.p_1, corridor.epsilon));
+        }
+        else
+        {
+            following_border_l = false;
+            following_border_r = false;
         }
 
         // add left portal element.
@@ -539,6 +549,22 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
 
         elem_l.p_0 = elem_l.p_1;
         elem_r.p_0 = elem_r.p_1;
+    }
+
+    // grow path with remaining elements from one of the funnels. (if path wasn't grown up to target due to preceision issues).
+    if (!equal(path_state.elems[path_state.num_elems-1].p_1, target, 1e-6f))
+    {
+        if (size(funnel_l) > 0)
+        {
+            flush_funnel_side(funnel_l, path_state, corridor.epsilon);
+            return path_state.num_elems;
+        }
+
+        if (size(funnel_r) > 0)
+        {
+            flush_funnel_side(funnel_r, path_state, corridor.epsilon);
+            return path_state.num_elems;
+        }
     }
 
     return path_state.num_elems;
