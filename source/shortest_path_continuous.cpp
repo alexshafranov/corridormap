@@ -133,7 +133,7 @@ namespace
     }
 
     // checks that point 'p' is inside arc defined by ['a', 'b', 'ccw'].
-    bool is_in_arc(Vec2 p, Vec2 a, Vec2 b, bool ccw)
+    bool in_arc(Vec2 p, Vec2 a, Vec2 b, bool ccw)
     {
         float area = orient(a, p, b);
         return ccw ? (area >= -1e-3f) : (area <= 1e-3f);
@@ -236,7 +236,7 @@ namespace
 
                     Vec2 tangent = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), false);
 
-                    if (is_in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
+                    if (in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
                     {
                         pop_back(side);
                         push_back(side, make_arc(elem.origin, elem.p_0, tangent, is_ccw(elem)));
@@ -265,7 +265,7 @@ namespace
 
                     if (ccw ? area >= 0.f : area <= 0.f)
                     {
-                        if (is_in_arc(tangent, prev_vertex, vertex, ccw))
+                        if (in_arc(tangent, prev_vertex, vertex, ccw))
                         {
                             pop_back(side);
                             push_back(side, make_segment(elem.p_0, tangent));
@@ -293,9 +293,9 @@ namespace
                     Vec2 t2;
                     get_mutual_tangent(elem.origin, origin, clearance, ccw, ccw, t1, t2);
 
-                    if (is_in_arc(t1, elem.p_0, elem.p_1, ccw))
+                    if (in_arc(t1, elem.p_0, elem.p_1, ccw))
                     {
-                        if (is_in_arc(t2, prev_vertex, vertex, ccw))
+                        if (in_arc(t2, prev_vertex, vertex, ccw))
                         {
                             pop_back(side);
                             push_back(side, make_arc(elem.origin, elem.p_0, t1, ccw));
@@ -341,7 +341,6 @@ namespace
                     }
 
                     apex = elem.p_1;
-
                     grow_path(path, pop_front(side), epsilon);
                 }
 
@@ -358,7 +357,7 @@ namespace
 
                     Vec2 tangent = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), false);
 
-                    if (is_in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
+                    if (in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
                     {
                         Path_Element& e = front(side);
                         e.p_0 = tangent;
@@ -412,7 +411,7 @@ namespace
                         break;
                     }
 
-                    if (is_in_arc(t1, elem.p_0, elem.p_1, is_ccw(elem)))
+                    if (in_arc(t1, elem.p_0, elem.p_1, is_ccw(elem)))
                     {
                         grow_path(path, make_arc(elem.origin, elem.p_0, t1, ccw), epsilon);
                         Path_Element& e = front(side);
@@ -447,7 +446,7 @@ namespace
         else
         {
             Vec2 tangent = get_tangent(apex, origin, clearance, ccw, true);
-            if (is_in_arc(tangent, prev_vertex, vertex, ccw))
+            if (in_arc(tangent, prev_vertex, vertex, ccw))
             {
                 push_back(side, make_segment(apex, tangent));
                 push_back(side, make_arc(origin, tangent, vertex, ccw));
