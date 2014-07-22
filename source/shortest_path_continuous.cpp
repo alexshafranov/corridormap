@@ -139,6 +139,14 @@ namespace
         return ccw ? (area >= -1e-3f) : (area <= 1e-3f);
     }
 
+    // checks that direction (point - start_arc) wraps around arc (i.e. tangent point will be past the arc_start).
+    bool wraps_arc(Vec2 origin, float radius, Vec2 arc_start, bool ccw, Vec2 point)
+    {
+        Vec2 start_tangent = get_tangent_at_point(arc_start, origin, radius, ccw);
+        float area = orient(arc_start, start_tangent, point);
+        return ccw ? area > 0.f : area < 0.f;
+    }
+
     // internal struct to keep output path state.
     struct Path
     {
@@ -327,6 +335,7 @@ namespace
         while (size(side) > 0)
         {
             Path_Element elem = front(side);
+            // corridormap_assert(!equal(elem.p_0, elem.p_1, epsilon));
 
             // adding a vertex.
             if (curve == curve_line)
@@ -347,10 +356,7 @@ namespace
                 // on top of arc.
                 if (type(elem) == curve_arc_obstacle)
                 {
-                    corridormap_assert(ccw == is_ccw(elem));
-                    Vec2 p_0_tangent = get_tangent_at_point(elem.p_0, elem.origin, clearance, is_ccw(elem));
-                    float area = orient(elem.p_0, p_0_tangent, vertex);
-                    if (ccw ? area < 0.f : area > 0.f)
+                    if (!wraps_arc(elem.origin, clearance, elem.p_0, is_ccw(elem), vertex))
                     {
                         break;
                     }
@@ -392,21 +398,11 @@ namespace
                 // on top of arc.
                 if (type(elem) == curve_arc_obstacle)
                 {
-                    corridormap_assert(ccw == is_ccw(elem));
                     Vec2 t1;
                     Vec2 t2;
-                    get_mutual_tangent(elem.origin, origin, clearance, ccw, !ccw, t1, t2);
+                    get_mutual_tangent(elem.origin, origin, clearance, is_ccw(elem), !ccw, t1, t2);
 
-                    if (equal(elem.p_0, elem.p_1, epsilon))
-                    {
-                        apex = elem.p_1;
-                        grow_path(path, pop_front(side), epsilon);
-                        continue;
-                    }
-
-                    Vec2 k0_tan = get_tangent_at_point(elem.p_0, elem.origin, clearance, ccw);
-                    float area0 = orient(elem.p_0, k0_tan, t1);
-                    if (ccw ? area0 <= 0.f : area0 >= 0.f)
+                    if (!wraps_arc(elem.origin, clearance, elem.p_0, is_ccw(elem), t2))
                     {
                         break;
                     }
