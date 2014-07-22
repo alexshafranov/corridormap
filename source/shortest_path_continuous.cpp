@@ -551,7 +551,7 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
         elem_r.p_0 = elem_r.p_1;
     }
 
-    // grow path with remaining elements from one of the funnels. (if path wasn't grown up to target due to preceision issues).
+    // grow path with remaining elements from one of the funnels. (if path wasn't grown up to target due to precision issues).
     if (!equal(path_state.elems[path_state.num_elems-1].p_1, target, 1e-6f))
     {
         if (size(funnel_l) > 0)
