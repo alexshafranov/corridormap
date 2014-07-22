@@ -203,15 +203,11 @@ namespace
         }
     }
 
-    // try to add a new element defined by 'curve', 'origin', 'prev_vertex' & 'vertex' while maintaining the specified funnel side winding.
+    // try to add a new element while maintaining the specified funnel side winding.
     void grow_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, const Path_Element& new_element, float epsilon, float clearance)
     {
-        Vec2 prev_vertex = new_element.p_0;
-        Vec2 vertex = new_element.p_1;
-        Vec2 origin = new_element.origin;
         Curve curve = Curve(new_element.type);
-
-        corridormap_assert(!equal(prev_vertex, vertex, epsilon));
+        corridormap_assert(!equal(new_element.p_0, new_element.p_1, epsilon));
 
         // treat convex arcs as their chords.
         if (curve == curve_arc_vertex)
@@ -230,10 +226,10 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    float area = orient(elem.p_0, elem.p_1, vertex);
+                    float area = orient(elem.p_0, elem.p_1, new_element.p_1);
                     if (ccw ? area >= 0.f : area <= 0.f)
                     {
-                        push_back(side, make_segment(elem.p_1, vertex));
+                        push_back(side, make_segment(elem.p_1, new_element.p_1));
                         break;
                     }
 
@@ -244,22 +240,22 @@ namespace
                 if (type(elem) == curve_arc_obstacle)
                 {
                     Vec2 p_1_tangent = get_tangent_at_point(elem.p_1, elem.origin, clearance, is_ccw(elem));
-                    float area = orient(elem.p_1, p_1_tangent, vertex);
+                    float area = orient(elem.p_1, p_1_tangent, new_element.p_1);
 
                     // line is an extension of arc.
-                    if (equal(elem.p_1, prev_vertex, epsilon) && (ccw ? area >= 0.f : area <= 0.f))
+                    if (equal(elem.p_1, new_element.p_0, epsilon) && (ccw ? area >= 0.f : area <= 0.f))
                     {
-                        push_back(side, make_segment(elem.p_1, vertex));
+                        push_back(side, make_segment(elem.p_1, new_element.p_1));
                         break;
                     }
 
-                    Vec2 tangent = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), direction_outgoing);
+                    Vec2 tangent = get_tangent(new_element.p_1, elem.origin, clearance, is_ccw(elem), direction_outgoing);
 
                     if (in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
                     {
                         pop_back(side);
                         push_back(side, make_arc(elem.origin, elem.p_0, tangent, is_ccw(elem)));
-                        push_back(side, make_segment(tangent, vertex));
+                        push_back(side, make_segment(tangent, new_element.p_1));
                         break;
                     }
 
@@ -274,21 +270,21 @@ namespace
                 if (type(elem) == curve_line)
                 {
                     Vec2 p = elem.p_1;
-                    if (equal(p, prev_vertex, epsilon))
+                    if (equal(p, new_element.p_0, epsilon))
                     {
                         p = elem.p_0;
                     }
 
-                    Vec2 tangent = get_tangent(p, origin, clearance, ccw, direction_incoming);
+                    Vec2 tangent = get_tangent(p, new_element.origin, clearance, ccw, direction_incoming);
                     float area = orient(elem.p_0, elem.p_1, tangent);
 
                     if (ccw ? area >= 0.f : area <= 0.f)
                     {
-                        if (in_arc(tangent, prev_vertex, vertex, ccw))
+                        if (in_arc(tangent, new_element.p_0, new_element.p_1, ccw))
                         {
                             pop_back(side);
                             push_back(side, make_segment(elem.p_0, tangent));
-                            push_back(side, make_arc(origin, tangent, vertex, ccw));
+                            push_back(side, make_arc(new_element.origin, tangent, new_element.p_1, ccw));
                             break;
                         }
                     }
@@ -300,26 +296,26 @@ namespace
                 if (type(elem) == curve_arc_obstacle)
                 {
                     // one arc is an extension of another -> merge.
-                    if (equal(elem.origin, origin, epsilon))
+                    if (equal(elem.origin, new_element.origin, epsilon))
                     {
                         pop_back(side);
-                        push_back(side, make_arc(origin, elem.p_0, vertex, ccw));
+                        push_back(side, make_arc(new_element.origin, elem.p_0, new_element.p_1, ccw));
                         break;
                     }
 
                     corridormap_assert(ccw == is_ccw(elem));
                     Vec2 t1;
                     Vec2 t2;
-                    get_mutual_tangent(elem.origin, origin, clearance, ccw, ccw, t1, t2);
+                    get_mutual_tangent(elem.origin, new_element.origin, clearance, ccw, ccw, t1, t2);
 
                     if (in_arc(t1, elem.p_0, elem.p_1, ccw))
                     {
-                        if (in_arc(t2, prev_vertex, vertex, ccw))
+                        if (in_arc(t2, new_element.p_0, new_element.p_1, ccw))
                         {
                             pop_back(side);
                             push_back(side, make_arc(elem.origin, elem.p_0, t1, ccw));
                             push_back(side, make_segment(t1, t2));
-                            push_back(side, make_arc(origin, t2, vertex, ccw));
+                            push_back(side, make_arc(new_element.origin, t2, new_element.p_1, ccw));
                             break;
                         }
                     }
