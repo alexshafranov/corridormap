@@ -132,6 +132,13 @@ namespace
         }
     }
 
+    // returns true if (o, a) -> (o, b) rotation 'ccw'.
+    bool check_winding(bool ccw, Vec2 o, Vec2 a, Vec2 b)
+    {
+        float area = orient(o, a, b);
+        return ccw ? area >= 0.f : area < 0.f;
+    }
+
     // checks that point 'p' is inside arc defined by ['a', 'b', 'ccw'].
     bool in_arc(Vec2 p, Vec2 a, Vec2 b, bool ccw)
     {
@@ -189,6 +196,26 @@ namespace
         {
             path.elems[path.num_elems++] = new_element;
         }
+    }
+
+    // moves apex over top-most arc. "eats" the whole arc (if tangent past the end), or cuts it at the tangent point.
+    bool move_apex_over_arc(Ring_Buffer<Path_Element>& side, Vec2 tangent, Vec2& apex, Path& path_state, float epsilon)
+    {
+        Path_Element& arc = front(side);
+
+        // tangent point splits the arc -> grow path by the arc part before tangent point and signal that we're done.
+        if (in_arc(tangent, arc.p_0, arc.p_1, is_ccw(arc)))
+        {
+            grow_path(path_state, make_arc(arc.origin, arc.p_0, tangent, is_ccw(arc)), epsilon);
+            apex = tangent;
+            arc.p_0 = tangent;
+            return true;
+        }
+
+        // otherwise grow path by the full arc and continue moving apex.
+        grow_path(path_state, pop_front(side), epsilon);
+        apex = arc.p_1;
+        return false;
     }
 
     // try to add a new element defined by 'curve', 'origin', 'prev_vertex' & 'vertex' while maintaining the specified funnel side winding.
@@ -334,8 +361,7 @@ namespace
 
         while (size(side) > 0)
         {
-            Path_Element elem = front(side);
-            // corridormap_assert(!equal(elem.p_0, elem.p_1, epsilon));
+            const Path_Element& elem = front(side);
 
             // adding a vertex.
             if (curve == curve_line)
@@ -343,8 +369,7 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    float area = orient(elem.p_0, elem.p_1, vertex);
-                    if (ccw ? area < 0.f : area > 0.f)
+                    if (!check_winding(ccw, elem.p_0, elem.p_1, vertex))
                     {
                         break;
                     }
@@ -361,19 +386,12 @@ namespace
                         break;
                     }
 
-                    Vec2 tangent = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), false);
+                    Vec2 t = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), false);
 
-                    if (in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
+                    if (move_apex_over_arc(side, t, apex, path, epsilon))
                     {
-                        Path_Element& e = front(side);
-                        e.p_0 = tangent;
-                        apex = tangent;
-                        grow_path(path, make_arc(elem.origin, elem.p_0, tangent, is_ccw(elem)), epsilon);
                         break;
                     }
-
-                    apex = elem.p_1;
-                    grow_path(path, pop_front(side), epsilon);
                 }
             }
 
@@ -383,10 +401,9 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    Vec2 tangent = get_tangent(elem.p_1, origin, clearance, !ccw, true);
-                    float area = orient(elem.p_0, elem.p_1, tangent);
+                    Vec2 t = get_tangent(elem.p_1, origin, clearance, !ccw, true);
 
-                    if (ccw ? area < 0.f : area > 0.f)
+                    if (!check_winding(ccw, elem.p_0, elem.p_1, t))
                     {
                         break;
                     }
@@ -407,17 +424,10 @@ namespace
                         break;
                     }
 
-                    if (in_arc(t1, elem.p_0, elem.p_1, is_ccw(elem)))
+                    if (move_apex_over_arc(side, t1, apex, path, epsilon))
                     {
-                        grow_path(path, make_arc(elem.origin, elem.p_0, t1, ccw), epsilon);
-                        Path_Element& e = front(side);
-                        e.p_0 = t1;
-                        apex = t1;
                         break;
                     }
-
-                    apex = elem.p_1;
-                    grow_path(path, pop_front(side), epsilon);
                 }
             }
         }
