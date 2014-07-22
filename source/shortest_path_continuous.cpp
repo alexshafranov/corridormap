@@ -433,6 +433,7 @@ namespace
         }
     }
 
+    // try to append a new current element funnel apex was moved over opposite side.
     void restart_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, Vec2 apex, const Path_Element& new_element, float clearance)
     {
         Vec2 prev_vertex = new_element.p_0;
