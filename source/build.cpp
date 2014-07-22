@@ -717,7 +717,7 @@ namespace
 void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edges,
                  Voronoi_Edge_Spans& spans, Voronoi_Features& features, Voronoi_Traced_Edges& out)
 {
-    Ring_Buffer<int> queue_vert(scratch, vertices.num_nz);
+    Dequeue<int> queue_vert(scratch, vertices.num_nz);
     Alloc_Scope<char> visited_vert(scratch, vertices.num_nz);
     Alloc_Scope<char> visited_edge(scratch, edges.num_nz);
     zero_mem(visited_vert);

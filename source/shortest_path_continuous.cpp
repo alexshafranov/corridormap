@@ -211,7 +211,7 @@ namespace
     }
 
     // try to add a new element while maintaining the specified funnel side winding.
-    void grow_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, bool& following_border, const Path_Element& new_element, float epsilon, float clearance)
+    void grow_funnel_side(Dequeue<Path_Element>& side, bool ccw, bool& following_border, const Path_Element& new_element, float epsilon, float clearance)
     {
         unsigned char curve = type(new_element);
         corridormap_assert(!equal(new_element.p_0, new_element.p_1, epsilon));
@@ -326,7 +326,7 @@ namespace
     }
 
     // moves apex over top-most arc. "eats" the whole arc (if tangent past the end), or cuts it at the tangent point.
-    bool move_apex_over_arc(Ring_Buffer<Path_Element>& side, Vec2 tangent, Vec2& apex, Path& path_state, float epsilon)
+    bool move_apex_over_arc(Dequeue<Path_Element>& side, Vec2 tangent, Vec2& apex, Path& path_state, float epsilon)
     {
         Path_Element& arc = front(side);
 
@@ -346,7 +346,7 @@ namespace
     }
 
     // if failed to add a new element to it's own side (i.e. never satisfied that side winding invariant) then move funnel apex up over the opposite side & grow path.
-    void move_funnel_apex(Ring_Buffer<Path_Element>& side, bool ccw, Vec2& apex, const Path_Element& new_element, Path& path, float clearance, float epsilon)
+    void move_funnel_apex(Dequeue<Path_Element>& side, bool ccw, Vec2& apex, const Path_Element& new_element, Path& path, float clearance, float epsilon)
     {
         Vec2 vertex = new_element.p_1;
         Vec2 origin = new_element.origin;
@@ -433,7 +433,7 @@ namespace
     }
 
     // try to append a new current element funnel apex was moved over opposite side.
-    void restart_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, Vec2 apex, bool& following_border, const Path_Element& new_element, float clearance)
+    void restart_funnel_side(Dequeue<Path_Element>& side, bool ccw, Vec2 apex, bool& following_border, const Path_Element& new_element, float clearance)
     {
         unsigned char curve = type(new_element);
 
@@ -467,8 +467,8 @@ namespace
 int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, Path_Element* path, int max_path_size)
 {
     corridormap_assert(corridor.num_disks > 0);
-    Ring_Buffer<Path_Element> funnel_l(scratch, corridor.num_disks);
-    Ring_Buffer<Path_Element> funnel_r(scratch, corridor.num_disks);
+    Dequeue<Path_Element> funnel_l(scratch, corridor.num_disks);
+    Dequeue<Path_Element> funnel_r(scratch, corridor.num_disks);
     corridormap_assert(funnel_l.data != 0);
     corridormap_assert(funnel_r.data != 0);
     Vec2 funnel_apex = source;
