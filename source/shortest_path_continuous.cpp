@@ -137,11 +137,11 @@ namespace
         }
     }
 
-    // returns true if (o, a) -> (o, b) rotation is counter-clockwise.
-    bool is_ccw(Vec2 o, Vec2 a, Vec2 b)
+    // true if (o, a) -> (o, b) rotation has winding specified by 'ccw'.
+    bool required_winding(Vec2 o, Vec2 a, Vec2 b, bool ccw)
     {
         float area = orient(o, a, b);
-        return area >= 0.f;
+        return ccw ? area >= 0.f : area <= 0.f;
     }
 
     // checks that point 'p' is inside arc defined by ['a', 'b', 'ccw'].
@@ -211,7 +211,7 @@ namespace
     }
 
     // try to add a new element while maintaining the specified funnel side winding.
-    void grow_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, bool& following_border, Path_Element& new_element, float epsilon, float clearance)
+    void grow_funnel_side(Ring_Buffer<Path_Element>& side, bool ccw, bool& following_border, const Path_Element& new_element, float epsilon, float clearance)
     {
         unsigned char curve = type(new_element);
         corridormap_assert(!equal(new_element.p_0, new_element.p_1, epsilon));
@@ -220,7 +220,7 @@ namespace
         if (curve == curve_reflex_arc)
         {
             curve = curve_line;
-            // opposite winding arcs are never part of a funnel side -> breaks following the border.
+            // reflex arcs move funnel side out of corridor border.
             following_border = false;
         }
 
@@ -234,7 +234,7 @@ namespace
         // pop segments until empty or the winding invariant is restored.
         while (size(side) > 0)
         {
-            Path_Element elem = back(side);
+            const Path_Element& elem = back(side);
 
             // adding a vertex.
             if (curve == curve_line)
@@ -242,8 +242,7 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    float area = orient(elem.p_0, elem.p_1, new_element.p_1);
-                    if (ccw ? area >= 0.f : area <= 0.f)
+                    if (required_winding(elem.p_0, elem.p_1, new_element.p_1, ccw))
                     {
                         push_back(side, make_segment(elem.p_1, new_element.p_1));
                         break;
@@ -282,9 +281,8 @@ namespace
                     }
 
                     Vec2 tangent = get_tangent(p, new_element.origin, clearance, ccw, direction_incoming);
-                    float area = orient(elem.p_0, elem.p_1, tangent);
 
-                    if (ccw ? area >= 0.f : area <= 0.f)
+                    if (required_winding(elem.p_0, elem.p_1, tangent, ccw))
                     {
                         if (in_arc(tangent, new_element.p_0, new_element.p_1, ccw))
                         {
@@ -370,7 +368,7 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    if (is_ccw(elem.p_0, elem.p_1, vertex) != ccw)
+                    if (required_winding(elem.p_0, elem.p_1, vertex, !ccw))
                     {
                         break;
                     }
@@ -404,7 +402,7 @@ namespace
                 {
                     Vec2 t = get_tangent(elem.p_1, origin, clearance, !ccw, direction_incoming);
 
-                    if (is_ccw(elem.p_0, elem.p_1, t) != ccw)
+                    if (required_winding(elem.p_0, elem.p_1, t, !ccw))
                     {
                         break;
                     }
