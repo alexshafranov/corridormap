@@ -29,6 +29,11 @@ namespace corridormap {
 
 namespace
 {
+    static const bool direction_incoming = true;
+    static const bool direction_outgoing = false;
+    static const bool winding_ccw = true;
+    static const bool winding_cw  = false;
+
     Path_Element make_segment(Vec2 p0, Vec2 p1)
     {
         Path_Element result;
@@ -118,14 +123,14 @@ namespace
         }
         else if (ccw1 && !ccw2)
         {
-            Vec2 t = get_tangent(o2, o1, 2.f*radius, ccw1, false);
+            Vec2 t = get_tangent(o2, o1, 2.f*radius, ccw1, direction_outgoing);
             Vec2 v = scale(sub(o1, t), 0.5f);
             t1 = add(t, v);
             t2 = add(o2, v);
         }
         else // if (!ccw1 && ccw2)
         {
-            Vec2 t = get_tangent(o1, o2, 2.f*radius, ccw2, true);
+            Vec2 t = get_tangent(o1, o2, 2.f*radius, ccw2, direction_incoming);
             Vec2 v = scale(sub(o2, t), 0.5f);
             t2 = add(t, v);
             t1 = add(o1, v);
@@ -226,7 +231,6 @@ namespace
                 if (type(elem) == curve_line)
                 {
                     float area = orient(elem.p_0, elem.p_1, vertex);
-
                     if (ccw ? area >= 0.f : area <= 0.f)
                     {
                         push_back(side, make_segment(elem.p_1, vertex));
@@ -249,7 +253,7 @@ namespace
                         break;
                     }
 
-                    Vec2 tangent = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), false);
+                    Vec2 tangent = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), direction_outgoing);
 
                     if (in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
                     {
@@ -275,7 +279,7 @@ namespace
                         p = elem.p_0;
                     }
 
-                    Vec2 tangent = get_tangent(p, origin, clearance, ccw, true);
+                    Vec2 tangent = get_tangent(p, origin, clearance, ccw, direction_incoming);
                     float area = orient(elem.p_0, elem.p_1, tangent);
 
                     if (ccw ? area >= 0.f : area <= 0.f)
@@ -386,7 +390,7 @@ namespace
                         break;
                     }
 
-                    Vec2 t = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), false);
+                    Vec2 t = get_tangent(vertex, elem.origin, clearance, is_ccw(elem), direction_outgoing);
 
                     if (move_apex_over_arc(side, t, apex, path, epsilon))
                     {
@@ -401,7 +405,7 @@ namespace
                 // on top of segment.
                 if (type(elem) == curve_line)
                 {
-                    Vec2 t = get_tangent(elem.p_1, origin, clearance, !ccw, true);
+                    Vec2 t = get_tangent(elem.p_1, origin, clearance, !ccw, direction_incoming);
 
                     if (is_ccw(elem.p_0, elem.p_1, t) != ccw)
                     {
@@ -452,7 +456,7 @@ namespace
         }
         else
         {
-            Vec2 tangent = get_tangent(apex, origin, clearance, ccw, true);
+            Vec2 tangent = get_tangent(apex, origin, clearance, ccw, direction_incoming);
             if (in_arc(tangent, prev_vertex, vertex, ccw))
             {
                 push_back(side, make_segment(apex, tangent));
@@ -514,36 +518,36 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
         // add left portal element.
         if (elem_l.type != curve_point)
         {
-            grow_funnel_side(funnel_l, true, elem_l, corridor.epsilon, corridor.clearance);
+            grow_funnel_side(funnel_l, winding_ccw, elem_l, corridor.epsilon, corridor.clearance);
 
             if (size(funnel_l) == 0)
             {
-                move_funnel_apex(funnel_r, false, funnel_apex, elem_l, path_state, corridor.clearance, corridor.epsilon);
+                move_funnel_apex(funnel_r, winding_cw, funnel_apex, elem_l, path_state, corridor.clearance, corridor.epsilon);
 
                 if (full(path_state))
                 {
                     return path_state.num_elems;
                 }
 
-                restart_funnel_side(funnel_l, true, funnel_apex, elem_l, corridor.clearance);
+                restart_funnel_side(funnel_l, winding_ccw, funnel_apex, elem_l, corridor.clearance);
             }
         }
 
         // add right portal element.
         if (elem_r.type != curve_point)
         {
-            grow_funnel_side(funnel_r, false, elem_r, corridor.epsilon, corridor.clearance);
+            grow_funnel_side(funnel_r, winding_cw, elem_r, corridor.epsilon, corridor.clearance);
 
             if (size(funnel_r) == 0)
             {
-                move_funnel_apex(funnel_l, true, funnel_apex, elem_r, path_state, corridor.clearance, corridor.epsilon);
+                move_funnel_apex(funnel_l, winding_ccw, funnel_apex, elem_r, path_state, corridor.clearance, corridor.epsilon);
 
                 if (full(path_state))
                 {
                     return path_state.num_elems;
                 }
 
-                restart_funnel_side(funnel_r, false, funnel_apex, elem_r, corridor.clearance);
+                restart_funnel_side(funnel_r, winding_cw, funnel_apex, elem_r, corridor.clearance);
             }
         }
 
