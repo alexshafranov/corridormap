@@ -89,7 +89,7 @@ void deallocate(Pool<T>& lst, T* item)
     }
     else
     {
-        for (int i = 0; i < lst.num_items; ++i)
+        for (int i = 0; i < lst.max_items; ++i)
         {
             if (lst.items[i].link == idx)
             {
