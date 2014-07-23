@@ -82,7 +82,7 @@ CSR_Grid_Neis cell_neis(const CSR_Grid& grid, int linear_index);
 void trace_edges(Memory* scratch, const CSR_Grid& vertices, const CSR_Grid& edges,
                  Voronoi_Edge_Spans& edge_normal_indices, Voronoi_Features& features, Voronoi_Traced_Edges& out);
 
-// builds annotated voronoi diagram (i.e. Explicit Corridor Map) represented as a half-edge mesh.
+// the final step: assembles the medial axis graph annotated with closest obstacle information (i.e. Explicit Corridor Map).
 void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space& out);
 
 }
