@@ -73,6 +73,44 @@ T* allocate(Pool<T>& lst)
     return result;
 }
 
+template <typename T>
+void deallocate(Pool<T>& lst, const T* item)
+{
+    int idx = int(item - lst.items);
+
+    if (lst.head == idx)
+    {
+        lst.head = item->link;
+
+        if (lst.tail == idx)
+        {
+            lst.tail = null_idx;
+        }
+    }
+    else
+    {
+        for (int i = 0; i < lst.num_items; ++i)
+        {
+            if (lst.items[i]->link == idx)
+            {
+                lst.items[i]->link = item->link;
+
+                if (lst.tail == idx)
+                {
+                    lst.tail = i;
+                }
+
+                break;
+            }
+        }
+    }
+
+    item->link = lst.head_free;
+    lst.head_free = idx;
+
+    lst.num_items--;
+}
+
 /// Pool
 
 template <typename T>
