@@ -1129,6 +1129,21 @@ namespace
             e = next_e;
         }
     }
+
+    void prune_disconnected_verts(Walkable_Space& out)
+    {
+        for (Vertex* v = first(out.vertices); v != 0;)
+        {
+            Vertex* next_v = next(out.vertices, v);
+
+            if (!half_edge(out, v))
+            {
+                deallocate(out.vertices, v);
+            }
+
+            v = next_v;
+        }
+    }
 }
 
 void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space& out)
@@ -1138,6 +1153,7 @@ void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space&
     create_events(in, out);
     compute_vertex_closest_points(in, out);
     prune_dead_ends(out);
+    prune_disconnected_verts(out);
 }
 
 }
