@@ -628,7 +628,8 @@ void draw_path(Draw_State& state, Corridor& corridor, Vec2 source, Vec2 target)
     const int max_path_size = 1024;
     Vec2 path[max_path_size];
     int fist_portal = find_first_portal(corridor, source);
-    int path_size = find_shortest_path(corridor, source, target, fist_portal, corridor.num_portals-1, path, max_path_size);
+    int last_portal = find_last_portal(corridor, target);
+    int path_size = find_shortest_path(corridor, source, target, fist_portal, last_portal, path, max_path_size);
 
     if (path_size > 0)
     {
@@ -654,7 +655,8 @@ void draw_continuous_path(Draw_State& state, Corridor& corridor, Memory* scratch
     const int max_path_size = 1024;
     Path_Element path[max_path_size];
     int fist_portal = find_first_portal(corridor, source);
-    int path_size = find_shortest_path(corridor, scratch, source, target, fist_portal, corridor.num_disks-1, path, max_path_size);
+    int last_portal = find_last_portal(corridor, target);
+    int path_size = find_shortest_path(corridor, scratch, source, target, fist_portal, last_portal, path, max_path_size);
 
     if (path_size > 0)
     {

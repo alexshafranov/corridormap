@@ -661,7 +661,36 @@ int find_first_portal(const Corridor& corridor, Vec2 source)
         Vec2 o2 = corridor.origin[i+1];
         Vec2 dir = o2 - o1;
 
+        if (equal(o1, o2, corridor.epsilon))
+        {
+            continue;
+        }
+
         if (dot(l - source, dir) >= 0.f && dot(r - source, dir) >= 0.f)
+        {
+            return i;
+        }
+    }
+
+    return corridor.num_disks;
+}
+
+int find_last_portal(const Corridor& corridor, Vec2 target)
+{
+    for (int i = corridor.num_disks-1; i >= 1; --i)
+    {
+        Vec2 l = corridor.border_l[i];
+        Vec2 r = corridor.border_r[i];
+        Vec2 o1 = corridor.origin[i+0];
+        Vec2 o2 = corridor.origin[i-1];
+        Vec2 dir = o2 - o1;
+
+        if (equal(o1, o2, corridor.epsilon))
+        {
+            continue;
+        }
+
+        if (dot(l - target, dir) >= 0.f && dot(r - target, dir) >= 0.f)
         {
             return i;
         }

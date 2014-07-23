@@ -104,6 +104,8 @@ int triangulate(Corridor& corridor, float arc_step_len);
 int find_closest_disk(const Corridor& corridor, Vec2 point);
 // linear search over disks to find the closest portal (left & right sides) in front of source.
 int find_first_portal(const Corridor& corridor, Vec2 source);
+// linear search over disks to find the closest portal (left & right sides) in front of target.
+int find_last_portal(const Corridor& corridor, Vec2 target);
 
 // finds shortest path inside the corridor, by applying funnel algorithm. returns resulting path size. corridor must be triangulated.
 int find_shortest_path(const Corridor& corridor, Vec2 source, Vec2 target, int first_portal, int last_portal, Vec2* path, int max_path_size);
