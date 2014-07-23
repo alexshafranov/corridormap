@@ -940,122 +940,129 @@ namespace
 
         return result;
     }
+
+    void create_vertices(const Walkable_Space_Build_Params& in, Walkable_Space& out)
+    {
+        for (int i = 0; i < in.features->num_vert_points; ++i)
+        {
+            Vec2 pos = convert_from_image(in.features->verts[i], in.features->grid_width, in.features->grid_height, in.bounds);
+            create_vertex(out, pos);
+        }
+    }
+
+    void create_edges(const Walkable_Space_Build_Params& in, Walkable_Space& out)
+    {
+        for (int i = 0; i < in.traced_edges->num_edges; ++i)
+        {
+            int u_nz = nz(*in.vertex_grid, in.traced_edges->u[i]);
+            int v_nz = nz(*in.vertex_grid, in.traced_edges->v[i]);
+            create_edge(out, u_nz, v_nz);
+        }
+    }
+
+    void create_events(const Walkable_Space_Build_Params& in, Walkable_Space& out)
+    {
+        for (int i = 0; i < in.traced_edges->num_edges; ++i)
+        {
+            Edge* edge = out.edges.items + i;
+            Vec2 u = source(out, edge)->pos;
+
+            int event_offset = in.traced_edges->edge_event_offset[i];
+            int num_events = in.traced_edges->edge_num_events[i];
+
+            Vec2 prev = u;
+
+            for (int j = event_offset; j < event_offset + num_events; ++j)
+            {
+                int evt = in.traced_edges->events[j];
+                int evt_lin_idx = ::abs(evt);
+                int evt_nz_index = nz(*in.edge_grid, evt_lin_idx);
+
+                Vec2 sampled_pos = convert_from_image(evt_lin_idx, in.features->grid_width, in.features->grid_height, in.bounds);
+                Event_Closest_Points r = correct_pos_and_compute_closest(evt, evt_nz_index, sampled_pos, in.bounds,
+                                                                         in.obstacles, in.obstacle_normals, in.spans, in.features);
+
+                Event* e = create_event(out, r.pos, i);
+
+                if (is_left(prev, r.pos, r.cp1))
+                {
+                    e->sides[0] = r.cp1;
+                    e->sides[1] = r.cp2;
+                }
+                else
+                {
+                    e->sides[0] = r.cp2;
+                    e->sides[1] = r.cp1;
+                }
+
+                prev = r.pos;
+            }
+        }
+    }
+
+    void compute_vertex_closest_points(const Walkable_Space_Build_Params& in, Walkable_Space& out)
+    {
+        int* obstacle_offsets = in.obstacle_normals->obstacle_normal_offsets;
+
+        for (int i = 0; i < in.traced_edges->num_edges; ++i)
+        {
+            Edge* edge = out.edges.items + i;
+            Half_Edge* e0 = edge->dir + 0;
+            Half_Edge* e1 = edge->dir + 1;
+
+            Vec2 u = source(out, edge)->pos;
+            Vec2 v = target(out, edge)->pos;
+
+            Vec2 u_prev = v;
+            if (event(out, e0))
+            {
+                u_prev = event(out, e0)->pos;
+            }
+
+            Vec2 v_prev = u;
+            if (event(out, e1))
+            {
+                v_prev = event(out, e1)->pos;
+            }
+
+            unsigned int obstacle_id_1 = in.traced_edges->obstacle_ids_1[i];
+            unsigned int obstacle_id_2 = in.traced_edges->obstacle_ids_2[i];
+            Vec2 cp01 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
+            Vec2 cp02 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
+            Vec2 cp11 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
+            Vec2 cp12 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
+
+            if (is_left(v_prev, v, cp01))
+            {
+                e0->sides[0] = cp01;
+                e0->sides[1] = cp02;
+            }
+            else
+            {
+                e0->sides[0] = cp02;
+                e0->sides[1] = cp01;
+            }
+
+            if (is_left(u_prev, u, cp11))
+            {
+                e1->sides[0] = cp11;
+                e1->sides[1] = cp12;
+            }
+            else
+            {
+                e1->sides[0] = cp12;
+                e1->sides[1] = cp11;
+            }
+        }
+    }
 }
 
 void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space& out)
 {
-    int* obstacle_offsets = in.obstacle_normals->obstacle_normal_offsets;
-
-    // 1. vertices: convert positions.
-    for (int i = 0; i < in.features->num_vert_points; ++i)
-    {
-        Vec2 pos = convert_from_image(in.features->verts[i], in.features->grid_width, in.features->grid_height, in.bounds);
-        create_vertex(out, pos);
-    }
-
-    // 2. create edges.
-    for (int i = 0; i < in.traced_edges->num_edges; ++i)
-    {
-        int u_nz = nz(*in.vertex_grid, in.traced_edges->u[i]);
-        int v_nz = nz(*in.vertex_grid, in.traced_edges->v[i]);
-        create_edge(out, u_nz, v_nz);
-    }
-
-    // 3. events: convert positions and compute sides.
-    for (int i = 0; i < in.traced_edges->num_edges; ++i)
-    {
-        Edge* edge = out.edges.items + i;
-        Vec2 u = source(out, edge)->pos;
-
-        int event_offset = in.traced_edges->edge_event_offset[i];
-        int num_events = in.traced_edges->edge_num_events[i];
-
-        Vec2 prev = u;
-
-        for (int j = event_offset; j < event_offset + num_events; ++j)
-        {
-            int evt = in.traced_edges->events[j];
-            int evt_lin_idx = ::abs(evt);
-            int evt_nz_index = nz(*in.edge_grid, evt_lin_idx);
-
-            Vec2 sampled_pos = convert_from_image(evt_lin_idx, in.features->grid_width, in.features->grid_height, in.bounds);
-            Event_Closest_Points r = correct_pos_and_compute_closest(evt, evt_nz_index, sampled_pos, in.bounds,
-                                                                     in.obstacles, in.obstacle_normals, in.spans, in.features);
-
-            Event* e = create_event(out, r.pos, i);
-
-            if (is_left(prev, r.pos, r.cp1))
-            {
-                e->sides[0] = r.cp1;
-                e->sides[1] = r.cp2;
-            }
-            else
-            {
-                e->sides[0] = r.cp2;
-                e->sides[1] = r.cp1;
-            }
-
-            prev = r.pos;
-        }
-    }
-
-    // 4. compute vertex closest points.
-    for (int i = 0; i < in.traced_edges->num_edges; ++i)
-    {
-        Edge* edge = out.edges.items + i;
-        Half_Edge* e0 = edge->dir + 0;
-        Half_Edge* e1 = edge->dir + 1;
-
-        Vec2 u = source(out, edge)->pos;
-        Vec2 v = target(out, edge)->pos;
-
-        Vec2 u_prev = v;
-        if (event(out, e0))
-        {
-            u_prev = event(out, e0)->pos;
-        }
-
-        Vec2 v_prev = u;
-        if (event(out, e1))
-        {
-            v_prev = event(out, e1)->pos;
-        }
-
-        unsigned int obstacle_id_1 = in.traced_edges->obstacle_ids_1[i];
-        unsigned int obstacle_id_2 = in.traced_edges->obstacle_ids_2[i];
-
-        {
-            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e0)->pos);
-            Vec2 cp2 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e0)->pos);
-
-            if (is_left(v_prev, v, cp1))
-            {
-                e0->sides[0] = cp1;
-                e0->sides[1] = cp2;
-            }
-            else
-            {
-                e0->sides[0] = cp2;
-                e0->sides[1] = cp1;
-            }
-        }
-
-        {
-            Vec2 cp1 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_2, target(out, e1)->pos);
-            Vec2 cp2 = compute_closest_point(*in.obstacles, in.bounds, obstacle_offsets, obstacle_id_1, target(out, e1)->pos);
-
-            if (is_left(u_prev, u, cp1))
-            {
-                e1->sides[0] = cp1;
-                e1->sides[1] = cp2;
-            }
-            else
-            {
-                e1->sides[0] = cp2;
-                e1->sides[1] = cp1;
-            }
-        }
-    }
+    create_vertices(in, out);
+    create_edges(in, out);
+    create_events(in, out);
+    compute_vertex_closest_points(in, out);
 }
 
 }
