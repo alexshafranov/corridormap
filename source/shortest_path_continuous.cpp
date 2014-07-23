@@ -29,10 +29,8 @@ namespace corridormap {
 
 namespace
 {
-    static const bool direction_incoming = true;
-    static const bool direction_outgoing = false;
-    static const bool winding_ccw = true;
-    static const bool winding_cw  = false;
+    enum { direction_outgoing = 0, direction_incoming = 1, };
+    enum { winding_cw = 0, winding_ccw = 1, };
 
     Path_Element make_segment(Vec2 p0, Vec2 p1)
     {
