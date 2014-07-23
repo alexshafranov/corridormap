@@ -4,6 +4,8 @@ Corridor Map
 
 work in progress...
 
+![concave](/example/concave.png?raw=true)
+
 ## Construction
 Voronoi diagram is rendered on GPU.
 OpenCL kernel detects edges and vertices of the medial axis:
