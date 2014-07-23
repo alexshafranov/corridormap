@@ -1055,6 +1055,52 @@ namespace
             }
         }
     }
+
+    void prune_dead_ends(Walkable_Space& out)
+    {
+        for (Edge* e = first(out.edges); e != 0;)
+        {
+            Edge* next_e = next(out.edges, e);
+
+            Vertex* s = source(out, e);
+            Vertex* t = target(out, e);
+
+            if (!event(out, e->dir+0))
+            {
+                int ds = degree(out, s);
+                int dt = degree(out, t);
+
+                if (ds == 1 || dt == 1)
+                {
+                    Vertex* v = (ds == 1) ? s : t;
+                    Vertex* u = (ds == 1) ? t : s;
+                    Half_Edge* he = (ds == 1) ? e->dir+1 : e->dir+0;
+
+                    deallocate(out.vertices, v);
+
+                    for (Half_Edge* n = next(out, he); ; n = next(out, n))
+                    {
+                        if (next(out, n) == he)
+                        {
+                            n->next = he->next;
+
+                            if (half_edge(out, u) == he)
+                            {
+                                Edge* n_edge = edge(out, n);
+                                u->half_edge = int(n_edge - out.edges.items) + int(n - n_edge->dir);
+                            }
+
+                            break;
+                        }
+                    }
+
+                    deallocate(out.edges, e);
+                }
+            }
+
+            e = next_e;
+        }
+    }
 }
 
 void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space& out)
@@ -1063,6 +1109,7 @@ void build_walkable_space(const Walkable_Space_Build_Params& in, Walkable_Space&
     create_edges(in, out);
     create_events(in, out);
     compute_vertex_closest_points(in, out);
+    prune_dead_ends(out);
 }
 
 }

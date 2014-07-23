@@ -74,7 +74,7 @@ T* allocate(Pool<T>& lst)
 }
 
 template <typename T>
-void deallocate(Pool<T>& lst, const T* item)
+void deallocate(Pool<T>& lst, T* item)
 {
     int idx = int(item - lst.items);
 
@@ -91,9 +91,9 @@ void deallocate(Pool<T>& lst, const T* item)
     {
         for (int i = 0; i < lst.num_items; ++i)
         {
-            if (lst.items[i]->link == idx)
+            if (lst.items[i].link == idx)
             {
-                lst.items[i]->link = item->link;
+                lst.items[i].link = item->link;
 
                 if (lst.tail == idx)
                 {

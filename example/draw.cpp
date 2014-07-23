@@ -338,7 +338,7 @@ namespace
                 Segment s11 = to_image(vertex->pos, incoming_1->sides[1], state);
                 Vec2 c2 = o + (s20.b - o) + (s11.b - o);
 
-                if (!equal(s10.b, s21.b, 0.1f))
+                if (!equal(s10.b, s21.b, 0.5f))
                 {
                     nvgBeginPath(vg);
                     nvgMoveTo(vg, s10.b.x, s10.b.y);
@@ -349,7 +349,7 @@ namespace
                     nvgFill(vg);
                 }
 
-                if (!equal(s20.b, s11.b, 0.1f))
+                if (!equal(s20.b, s11.b, 0.5f))
                 {
                     nvgBeginPath(vg);
                     nvgMoveTo(vg, s20.b.x, s20.b.y);
@@ -405,7 +405,7 @@ namespace
                 Segment s11 = to_image(vertex->pos, incoming_1->sides[1], state);
                 Vec2 c2 = o + (s20.b - o) + (s11.b - o);
 
-                if (!equal(s10.b, s21.b, 0.1f))
+                if (!equal(s10.b, s21.b, 0.5f))
                 {
                     nvgBeginPath(vg);
                     nvgMoveTo(vg, s10.b.x, s10.b.y);
@@ -414,7 +414,7 @@ namespace
                     nvgStroke(vg);
                 }
 
-                if (!equal(s20.b, s11.b, 0.1f))
+                if (!equal(s20.b, s11.b, 0.5f))
                 {
                     nvgBeginPath(vg);
                     nvgMoveTo(vg, s20.b.x, s20.b.y);
