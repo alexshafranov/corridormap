@@ -469,7 +469,7 @@ namespace
     }
 }
 
-int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, Path_Element* path, int max_path_size)
+int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, int first_portal, int last_portal, Path_Element* path, int max_path_size)
 {
     corridormap_assert(corridor.num_disks > 0);
     Dequeue<Path_Element> funnel_l(scratch, corridor.num_disks);
@@ -487,16 +487,22 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
     path_state.num_elems = 0;
     path_state.elems = path;
 
+    if (first_portal >= corridor.num_disks)
+    {
+        grow_path(path_state, make_segment(source, target), corridor.epsilon);
+        return path_state.num_elems;
+    }
+
     // initialize the funnel.
-    push_back(funnel_l, make_segment(funnel_apex, corridor.border_l[0]));
-    push_back(funnel_r, make_segment(funnel_apex, corridor.border_r[0]));
+    push_back(funnel_l, make_segment(funnel_apex, corridor.border_l[first_portal]));
+    push_back(funnel_r, make_segment(funnel_apex, corridor.border_r[first_portal]));
 
     Path_Element elem_l;
     Path_Element elem_r;
     elem_l.p_0 = corridor.border_l[0];
     elem_r.p_0 = corridor.border_r[0];
 
-    for (int i = 1; i <= corridor.num_disks; ++i)
+    for (int i = first_portal+1; i <= last_portal+1; ++i)
     {
         elem_l.p_1 = target;
         elem_l.origin = target;
@@ -506,7 +512,7 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
         elem_r.origin = target;
         elem_r.type = 0x00 | curve_line;
 
-        if (i < corridor.num_disks)
+        if (i <= last_portal)
         {
             elem_l.p_1 = corridor.border_l[i];
             elem_r.p_1 = corridor.border_r[i];

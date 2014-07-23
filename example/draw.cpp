@@ -234,24 +234,14 @@ namespace
 
     Vec2 concave_corner(Draw_State& state, Half_Edge* dir_edge)
     {
-        Half_Edge* opp_edge = opposite(*state.space, dir_edge);
-
-        Vec2 pos = target(*state.space, opp_edge)->pos;
-        Vec2 side_l = left_side(*state.space, opp_edge);
-        Vec2 side_r = right_side(*state.space, opp_edge);
-
-        Event* first_event = event(*state.space, opp_edge);
-        if (first_event != 0)
-        {
-            pos = first_event->pos;
-            side_l = left_side(*state.space, opp_edge, first_event);
-            side_r = right_side(*state.space, opp_edge, first_event);
-        }
+        Vec2 pos = target(*state.space, dir_edge)->pos;
+        Vec2 side_l = left_side(*state.space, dir_edge);
+        Vec2 side_r = right_side(*state.space, dir_edge);
 
         Segment seg_l = to_image(pos, side_l, state);
         Segment seg_r = to_image(pos, side_r, state);
 
-        Vec2 v_corner = seg_l.a + (seg_l.b - seg_l.a) + (seg_r.b - seg_l.a);
+        Vec2 v_corner = seg_l.a + (seg_l.b - seg_l.a) + (seg_r.b - seg_r.a);
         return from_image(v_corner, state);
     }
 
@@ -630,6 +620,28 @@ void draw_portals(Draw_State& state, Corridor& corridor)
     }
 }
 
+namespace
+{
+    int find_first_portal(Corridor& corridor, Vec2 source)
+    {
+        for (int i = 0; i < corridor.num_disks-1; ++i)
+        {
+            Vec2 l = corridor.border_l[i];
+            Vec2 r = corridor.border_r[i];
+            Vec2 o1 = corridor.origin[i+0];
+            Vec2 o2 = corridor.origin[i+1];
+            Vec2 dir = o2 - o1;
+            
+            if (dot(l - source, dir) >= 0.f && dot(r - source, dir) >= 0.f)
+            {
+                return i;
+            }
+        }
+
+        return corridor.num_disks;
+    }
+}
+
 void draw_path(Draw_State& state, Corridor& corridor, Vec2 source, Vec2 target)
 {
     NVG_State_Scope s(state.vg);
@@ -637,7 +649,8 @@ void draw_path(Draw_State& state, Corridor& corridor, Vec2 source, Vec2 target)
 
     const int max_path_size = 1024;
     Vec2 path[max_path_size];
-    int path_size = find_shortest_path(corridor, source, target, 0, corridor.num_portals-1, path, max_path_size);
+    int fist_portal = find_first_portal(corridor, source);
+    int path_size = find_shortest_path(corridor, source, target, fist_portal, corridor.num_portals-1, path, max_path_size);
 
     if (path_size > 0)
     {
@@ -662,7 +675,8 @@ void draw_continuous_path(Draw_State& state, Corridor& corridor, Memory* scratch
 
     const int max_path_size = 1024;
     Path_Element path[max_path_size];
-    int path_size = find_shortest_path(corridor, scratch, source, target, path, max_path_size);
+    int fist_portal = find_first_portal(corridor, source);
+    int path_size = find_shortest_path(corridor, scratch, source, target, fist_portal, corridor.num_disks-1, path, max_path_size);
 
     if (path_size > 0)
     {

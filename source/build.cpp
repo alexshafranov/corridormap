@@ -1065,26 +1065,28 @@ namespace
             Vertex* s = source(out, e);
             Vertex* t = target(out, e);
 
-            if (!event(out, e->dir+0))
+            int ds = degree(out, s);
+            int dt = degree(out, t);
+
+            Vertex* v = (ds == 1) ? s : t;
+            Vertex* u = (ds == 1) ? t : s;
+            // half-edge: u->v
+            Half_Edge* uv = (ds == 1) ? e->dir+1 : e->dir+0;
+
+            if (ds == 1 || dt == 1)
             {
-                int ds = degree(out, s);
-                int dt = degree(out, t);
-
-                if (ds == 1 || dt == 1)
+                // edge ending with degree one vertex, no events -> prune.
+                if (!event(out, e->dir+0))
                 {
-                    Vertex* v = (ds == 1) ? s : t;
-                    Vertex* u = (ds == 1) ? t : s;
-                    Half_Edge* he = (ds == 1) ? e->dir+1 : e->dir+0;
-
                     deallocate(out.vertices, v);
 
-                    for (Half_Edge* n = next(out, he); ; n = next(out, n))
+                    for (Half_Edge* n = next(out, uv); ; n = next(out, n))
                     {
-                        if (next(out, n) == he)
+                        if (next(out, n) == uv)
                         {
-                            n->next = he->next;
+                            n->next = uv->next;
 
-                            if (half_edge(out, u) == he)
+                            if (half_edge(out, u) == uv)
                             {
                                 Edge* n_edge = edge(out, n);
                                 u->half_edge = int(n_edge - out.edges.items) + int(n - n_edge->dir);
@@ -1095,6 +1097,32 @@ namespace
                     }
 
                     deallocate(out.edges, e);
+                }
+                // otherwise move the degree one vertex to the first event on that edge.
+                else
+                {
+                    // ourgoing half-edge from v (degree one vertex).
+                    Half_Edge* vu = opposite(out, uv);
+                    Event* evt = event(out, vu);
+                    Event* next_evt = next(out, vu, evt);
+                    int vu_dir = int(vu - e->dir);
+
+                    if (next_evt)
+                    {
+                        vu->event = int(next_evt - out.events.items);
+                        next_evt->next[vu_dir^1] = null_idx;
+                    }
+                    else
+                    {
+                        vu->event = null_idx;
+                        uv->event = null_idx;
+                    }
+
+                    v->pos = evt->pos;
+                    uv->sides[0] = left_side(out, uv, evt);
+                    uv->sides[1] = right_side(out, uv, evt);
+
+                    deallocate(out.events, evt);
                 }
             }
 
