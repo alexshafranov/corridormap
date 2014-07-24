@@ -5,9 +5,9 @@ Corridor Map Library
 work in progress...
 
 ## Building Library and Examples
-Corridor Map project uses premake5 for builds. At the moment only Windows build is supported.
+Corridor Map project uses premake5 for builds. *At the moment only Windows build is supported*
 
-To generate Visual Studio solution run: ```premake5 vs2013```
+To generate Visual Studio solution:  ```premake5 vs2013```
 
 premake5 executable can be found in the root of this repository.
 
