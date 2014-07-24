@@ -1,11 +1,10 @@
-Corridor Map
-============
+Corridor Map Library
+====================
 ![square](/example/square.png?raw=true)
 
 work in progress...
 
 ## Building Library and Examples
-
 Corridor Map project uses premake5 for builds. At the moment only Windows build is supported.
 
 To generate Visual Studio solution run: ```premake5 vs2013```
