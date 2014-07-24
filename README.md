@@ -4,6 +4,15 @@ Corridor Map
 
 work in progress...
 
+## Compiling
+
+Corridor Map project uses premake5 for builds. At the moment only Windows build is supported.
+
+To generate Visual Studio solution run:
+```premake5 vs2013```
+
+premake5 executable is in the root of this repository.
+
 ## Construction
 Voronoi diagram is rendered on GPU.
 OpenCL kernel detects edges and vertices of the medial axis:
