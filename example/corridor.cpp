@@ -20,6 +20,7 @@
 // SOFTWARE.
 
 #include <stdio.h>
+#include <string.h>
 #include <GL/glew.h>
 #include <clew.h>
 #include <clew_gl.h>
@@ -92,8 +93,18 @@ namespace
     const int render_target_height = 1024;
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    bool gpu_feature_detection = false;
+
+    if (argc > 1)
+    {
+        if (strcmp(argv[1], "gpu") == 0)
+        {
+            gpu_feature_detection = true;
+        }
+    }
+
     glfw_context glfw_ctx;
 
     if (!glfw_ctx.ok)
@@ -214,36 +225,46 @@ int main()
     corridormap::Corridor corridor;
 
     {
-        cl_int error_code;
-        cl_mem voronoi_image = render_iface.share_pixels(cl_runtime.context, CL_MEM_READ_WRITE, &error_code);
-
-        if (error_code != CL_SUCCESS)
+        if (gpu_feature_detection)
         {
-            fprintf(stderr, "failed to create opencl voronoi image.\n");
-            return 1;
+            printf("detecting features on GPU.\n");
+
+            cl_int error_code;
+            cl_mem voronoi_image = render_iface.share_pixels(cl_runtime.context, CL_MEM_READ_WRITE, &error_code);
+
+            if (error_code != CL_SUCCESS)
+            {
+                fprintf(stderr, "failed to create opencl voronoi image.\n");
+                return 1;
+            }
+
+            render_iface.acquire_shared(cl_runtime.queue, voronoi_image);
+            error_code = corridormap::mark_voronoi_features(cl_runtime, voronoi_image);
+            error_code = corridormap::compact_voronoi_features(cl_runtime);
+            error_code = corridormap::store_obstacle_ids(cl_runtime, voronoi_image);
+            render_iface.release_shared(cl_runtime.queue, voronoi_image);
+
+            clFinish(cl_runtime.queue);
+
+            features = corridormap::allocate_voronoi_features(&mem, render_target_width, render_target_height, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
+            error_code = corridormap::transfer_voronoi_features(cl_runtime, features);
+
+            clFinish(cl_runtime.queue);
+
+            if (error_code != CL_SUCCESS)
+            {
+                fprintf(stderr, "failed to run opencl kernels.\n");
+                return 1;
+            }
+        }
+        else
+        {
+            printf("detecting features on CPU.\n");
+            features = corridormap::detect_voronoi_features(&mem, &mem, &render_iface);
         }
 
-        render_iface.acquire_shared(cl_runtime.queue, voronoi_image);
-        error_code = corridormap::mark_voronoi_features(cl_runtime, voronoi_image);
-        error_code = corridormap::compact_voronoi_features(cl_runtime);
-        error_code = corridormap::store_obstacle_ids(cl_runtime, voronoi_image);
-        render_iface.release_shared(cl_runtime.queue, voronoi_image);
-
-        clFinish(cl_runtime.queue);
-
-        features = corridormap::allocate_voronoi_features(&mem, render_target_width, render_target_height, cl_runtime.voronoi_vertex_mark_count, cl_runtime.voronoi_edge_mark_count);
-        error_code = corridormap::transfer_voronoi_features(cl_runtime, features);
-
-        clFinish(cl_runtime.queue);
-
-        if (error_code != CL_SUCCESS)
-        {
-            fprintf(stderr, "failed to run opencl kernels.\n");
-            return 1;
-        }
-
-        printf("voronoi vertices: %d\n", cl_runtime.voronoi_vertex_mark_count);
-        printf("voronoi edge marks: %d\n", cl_runtime.voronoi_edge_mark_count);
+        printf("voronoi vertices: %d\n", features.num_vert_points);
+        printf("voronoi edge marks: %d\n", features.num_edge_points);
 
         corridormap::Voronoi_Edge_Spans edge_spans = corridormap::allocate_voronoi_edge_spans(&mem, features.num_edge_points);
         corridormap::build_edge_spans(features, obstacles, normals, obstacle_bounds, edge_spans);

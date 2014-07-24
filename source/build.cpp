@@ -29,6 +29,7 @@
 #include "corridormap/render_interface.h"
 #include "corridormap/vec2.h"
 #include "corridormap/runtime.h"
+#include "corridormap/build_alloc.h"
 #include "corridormap/build.h"
 
 namespace corridormap {
@@ -302,6 +303,116 @@ void set_segment_colors(Distance_Mesh& mesh, unsigned int* colors, int ncolors)
     {
         mesh.segment_colors[i] = colors[i % ncolors];
     }
+}
+
+namespace
+{
+    unsigned int pack_color(unsigned char* v)
+    {
+        return (unsigned int)(v[0]) << 24 |
+               (unsigned int)(v[1]) << 16 |
+               (unsigned int)(v[2]) << 8  |
+               (unsigned int)(v[3]) << 0  ;
+    }
+
+    unsigned int get_pixel(unsigned char* data, int width, int x, int y)
+    {
+        return pack_color(data + (y*width*4 + x*4));
+    }
+}
+
+Voronoi_Features detect_voronoi_features(Memory* memory, Memory* scratch, Renderer* render_iface)
+{
+    int width = render_iface->params.render_target_width;
+    int height = render_iface->params.render_target_height;
+
+    Alloc_Scope<unsigned char> colors(scratch, width*height*4);
+    Alloc_Scope<unsigned char> output(scratch, width*height*1);
+    corridormap_assert(colors.data);
+    corridormap_assert(output.data);
+    zero_mem(colors);
+    zero_mem(output);
+
+    render_iface->read_pixels(colors);
+
+    int num_verts = 0;
+    int num_edges = 0;
+
+    for (int y = 1; y < height; ++y)
+    {
+        for (int x = 1; x < width; ++x)
+        {
+            unsigned int a = get_pixel(colors, width, x - 1, y - 1);
+            unsigned int b = get_pixel(colors, width, x + 0, y - 1);
+            unsigned int c = get_pixel(colors, width, x - 1, y + 0);
+            unsigned int d = get_pixel(colors, width, x + 0, y + 0);
+
+            int diff = 1;
+            if (b != a) { diff++; }
+            if (c != a && c != b) { diff++; }
+            if (d != a && d != b && d != c) { diff++; }
+
+            int num_zero = 0;
+            if (a == 0) { num_zero++; }
+            if (b == 0) { num_zero++; }
+            if (c == 0) { num_zero++; }
+            if (d == 0) { num_zero++; }
+
+            unsigned char m = 0;
+
+            if (diff > 2)
+            {
+                m |= 0x0f;
+                num_verts++;
+            }
+
+            if (diff - num_zero == 2)
+            {
+                m |= 0xf0;
+                num_edges++;
+            }
+
+            output[y*width + x] = m;
+        }
+    }
+
+    Voronoi_Features features = allocate_voronoi_features(memory, width, height, num_verts, num_edges);
+    memset(features.verts, 0, num_verts*sizeof(features.verts[0]));
+    memset(features.edges, 0, num_edges*sizeof(features.edges[0]));
+
+    int vert_top = 0;
+    int edge_top = 0;
+
+    for (int y = 1; y < height; ++y)
+    {
+        for (int x = 1; x < width; ++x)
+        {
+            unsigned int a = get_pixel(colors, width, x - 1, y - 1);
+            unsigned int b = get_pixel(colors, width, x + 0, y - 1);
+            unsigned int c = get_pixel(colors, width, x - 1, y + 0);
+            unsigned int d = get_pixel(colors, width, x + 0, y + 0);
+
+            int lin_idx = y*width + x;
+            unsigned char m = output[lin_idx];
+
+            // vertex
+            if ((m & 0x0f) != 0)
+            {
+                features.verts[vert_top++] = lin_idx;
+            }
+
+            // edge
+            if ((m & 0xf0) != 0)
+            {
+                features.edges[edge_top] = lin_idx;
+                features.edge_obstacle_ids_1[edge_top] = a;
+                features.edge_obstacle_ids_2[edge_top] = (a != b) ? b : ((a != c) ? c : d);
+                edge_top++;
+            }
+        }
+    }
+
+    return features;
 }
 
 namespace

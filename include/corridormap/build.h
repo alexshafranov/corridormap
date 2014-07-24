@@ -54,6 +54,9 @@ void render_distance_mesh(Renderer* render_iface, const Distance_Mesh& mesh);
 // debug: sets color of a segment to colors[segment_index % ncolors].
 void set_segment_colors(Distance_Mesh& mesh, unsigned int* colors, int ncolors);
 
+// CPU version of feature detection: reads the contents of frame buffer from video memory.
+Voronoi_Features detect_voronoi_features(Memory* memory, Memory* scratch, Renderer* render_iface);
+
 // go over all edges in the input footprint and compute normals for each.
 void build_footprint_normals(const Footprint& in, Bbox2 bounds, Footprint_Normals& out);
 

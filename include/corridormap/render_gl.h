@@ -187,9 +187,9 @@ public:
         glDeleteFramebuffers(1, &_frame_buffer);
     }
 
-    virtual bool initialize(Renderer::Parameters params, Memory* scratch_memory)
+    virtual bool initialize(Renderer::Parameters params_, Memory* scratch_memory)
     {
-        _params = params;
+        params = params_;
         _scratch_memory = scratch_memory;
 
         glGenFramebuffers(1, &_frame_buffer);
@@ -253,12 +253,12 @@ public:
 
         // setup orthographic projection. projection is left-haded, camera is in zero looking in +z direction.
         {
-            float l = _params.min[0];
-            float r = _params.max[0];
-            float b = _params.min[1];
-            float t = _params.max[1];
+            float l = params.min[0];
+            float r = params.max[0];
+            float b = params.min[1];
+            float t = params.max[1];
             float n = 0.f;
-            float f = _params.far_plane;
+            float f = params.far_plane;
 
             // matrix is stored in a column major order.
             _projection[0*4 + 0] = 2.f / (r - l);
@@ -292,7 +292,7 @@ public:
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _frame_buffer);
 
-        glViewport(0, 0, _params.render_target_width, _params.render_target_height);
+        glViewport(0, 0, params.render_target_width, params.render_target_height);
         glClearColor(1.f, 1.f, 1.f, 1.f);
         glClearDepth(1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -345,8 +345,11 @@ public:
         glFinish();
     }
 
-    virtual void read_pixels(unsigned char* /*destination*/)
+    virtual void read_pixels(unsigned char* destination)
     {
+        glBindTexture(GL_TEXTURE_2D, _color_buffer_texture);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, destination);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     void blit_frame_buffer(int width, int height)
@@ -460,7 +463,6 @@ public:
     }
 
 private:
-    Renderer::Parameters _params;
     Memory* _scratch_memory;
 
     GLuint _frame_buffer;

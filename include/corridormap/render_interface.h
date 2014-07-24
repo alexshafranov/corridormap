@@ -56,6 +56,8 @@ public:
         cl_context      context;
     };
 
+    Parameters params;
+
     virtual ~Renderer() {}
 
     // initialize renderer. returns false on failure.
@@ -68,7 +70,7 @@ public:
     // end scene. must be called after all calls to draw.
     virtual void end() = 0;
 
-    // copy render target from video memory.
+    // copy render target from video memory (only used when features are detected on cpu).
     virtual void read_pixels(unsigned char* destination) = 0;
 
     // creates shared opencl context.
