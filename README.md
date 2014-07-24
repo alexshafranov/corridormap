@@ -12,7 +12,7 @@ To generate Visual Studio solution run: ```premake5 vs2013```
 
 premake5 executable can be found in the root of this repository.
 
-## Construction
+## Construction Process Illustrated
 Voronoi diagram is rendered on GPU.
 OpenCL kernel detects edges and vertices of the medial axis:
 
