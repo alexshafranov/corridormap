@@ -93,8 +93,6 @@ struct Voronoi_Features
     unsigned int* verts;
     // grid indices (y*grid_width + x) of edge points. [0..num_edge_points).
     unsigned int* edges;
-    // IDs (colors) of obstacles surrounding each vertex. [0..4*num_vert_points).
-    unsigned int* vert_obstacle_ids;
     // side 1 IDs (colors) of obstacles of each edge point. [0..num_edge_points).
     unsigned int* edge_obstacle_ids_1;
     // side 2 IDs (colors) of obstacles of each edge point. [0..num_edge_points).

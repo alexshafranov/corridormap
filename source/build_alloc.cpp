@@ -58,7 +58,6 @@ Voronoi_Features allocate_voronoi_features(Memory* mem, int grid_width, int grid
     result.num_edge_points = num_edge_points;
     result.verts = allocate<unsigned int>(mem, num_vert_points);
     result.edges = allocate<unsigned int>(mem, num_edge_points);
-    result.vert_obstacle_ids = allocate<unsigned int>(mem, 4*num_vert_points);
     result.edge_obstacle_ids_1 = allocate<unsigned int>(mem, num_edge_points);
     result.edge_obstacle_ids_2 = allocate<unsigned int>(mem, num_edge_points);
 
@@ -69,7 +68,6 @@ void deallocate(Memory* mem, Voronoi_Features& features)
 {
     mem->deallocate(features.verts);
     mem->deallocate(features.edges);
-    mem->deallocate(features.vert_obstacle_ids);
     mem->deallocate(features.edge_obstacle_ids_1);
     mem->deallocate(features.edge_obstacle_ids_2);
     memset(&features, 0, sizeof(features));
