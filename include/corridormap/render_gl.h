@@ -24,6 +24,10 @@
 #ifndef CORRIDORMAP_RENDER_GL_H_
 #define CORRIDORMAP_RENDER_GL_H_
 
+#if defined CORRIDORMAP_ENABLE_OPENCL_SHARING
+    #define CORRIDORMAP_OPENCL_SHARING 1
+#endif
+
 #include <stdio.h>
 #include "corridormap/build_types.h"
 #include "corridormap/memory.h"
@@ -396,70 +400,91 @@ public:
         Opencl_Shared result;
         memset(&result, 0, sizeof(result));
 
-        cl_int error_code;
+        #if CORRIDORMAP_OPENCL_SHARING
+            cl_int error_code;
 
-        clGetGLContextInfoKHR_fn pclGetGLContextInfoKHR = reinterpret_cast<clGetGLContextInfoKHR_fn>(clGetExtensionFunctionAddress("clGetGLContextInfoKHR"));
+            clGetGLContextInfoKHR_fn pclGetGLContextInfoKHR = reinterpret_cast<clGetGLContextInfoKHR_fn>(clGetExtensionFunctionAddress("clGetGLContextInfoKHR"));
 
-        // find platform and device which could be shared with opengl and create opencl context.
+            // find platform and device which could be shared with opengl and create opencl context.
 
-        cl_uint num_platforms;
-        clGetPlatformIDs(0, 0, &num_platforms);
+            cl_uint num_platforms;
+            clGetPlatformIDs(0, 0, &num_platforms);
 
-        cl_platform_id* platforms = allocate<cl_platform_id>(_scratch_memory, num_platforms);
-        clGetPlatformIDs(num_platforms, platforms, 0);
+            cl_platform_id* platforms = allocate<cl_platform_id>(_scratch_memory, num_platforms);
+            clGetPlatformIDs(num_platforms, platforms, 0);
 
-        for (cl_uint i = 0; i < num_platforms; ++i)
-        {
-            cl_platform_id platform = platforms[i];
+            for (cl_uint i = 0; i < num_platforms; ++i)
+            {
+                cl_platform_id platform = platforms[i];
 
-            #ifdef _WIN32
-                cl_context_properties properties[] =
+                #ifdef _WIN32
+                    cl_context_properties properties[] =
+                    {
+                        CL_GL_CONTEXT_KHR, reinterpret_cast<cl_context_properties>(wglGetCurrentContext()),
+                        CL_WGL_HDC_KHR, reinterpret_cast<cl_context_properties>(wglGetCurrentDC()),
+                        CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(platform),
+                        0,
+                    };
+                #endif
+
+                cl_device_id device;
+                error_code = pclGetGLContextInfoKHR(properties, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(cl_device_id), &device, 0);
+
+                if (error_code != CL_SUCCESS)
                 {
-                    CL_GL_CONTEXT_KHR, reinterpret_cast<cl_context_properties>(wglGetCurrentContext()),
-                    CL_WGL_HDC_KHR, reinterpret_cast<cl_context_properties>(wglGetCurrentDC()),
-                    CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(platform),
-                    0,
-                };
-            #endif
+                    continue;
+                }
 
-            cl_device_id device;
-            error_code = pclGetGLContextInfoKHR(properties, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(cl_device_id), &device, 0);
+                cl_context context = clCreateContextFromType(properties, CL_DEVICE_TYPE_GPU, 0, 0, &error_code);
 
-            if (error_code != CL_SUCCESS)
-            {
-                continue;
+                if (error_code != CL_SUCCESS)
+                {
+                    continue;
+                }
+
+                result.platform = platform;
+                result.device = device;
+                result.context = context;
+
+                return result;
             }
-
-            cl_context context = clCreateContextFromType(properties, CL_DEVICE_TYPE_GPU, 0, 0, &error_code);
-
-            if (error_code != CL_SUCCESS)
-            {
-                continue;
-            }
-
-            result.platform = platform;
-            result.device = device;
-            result.context = context;
-
-            return result;
-        }
+        #endif
 
         return result;
     }
 
     virtual cl_mem share_pixels(cl_context shared_context, cl_mem_flags flags, cl_int* error_code)
     {
-        return clCreateFromGLTexture2D(shared_context, flags, GL_TEXTURE_2D, 0, _color_buffer_texture, error_code);
+        #if CORRIDORMAP_OPENCL_SHARING
+            return clCreateFromGLTexture2D(shared_context, flags, GL_TEXTURE_2D, 0, _color_buffer_texture, error_code);
+        #else
+            (void)shared_context;
+            (void)flags;
+            (void)error_code;
+            return 0;
+        #endif
     }
 
     virtual cl_int acquire_shared(cl_command_queue queue, cl_mem object)
     {
-        return clEnqueueAcquireGLObjects(queue, 1, &object, 0, 0, 0);
+        #if CORRIDORMAP_OPENCL_SHARING
+            return clEnqueueAcquireGLObjects(queue, 1, &object, 0, 0, 0);
+        #else
+            (void)queue;
+            (void)object;
+            return 0;
+        #endif
     }
 
     virtual cl_int release_shared(cl_command_queue queue, cl_mem object)
     {
-        return clEnqueueReleaseGLObjects(queue, 1, &object, 0, 0, 0);
+        #if CORRIDORMAP_OPENCL_SHARING
+            return clEnqueueReleaseGLObjects(queue, 1, &object, 0, 0, 0);
+        #else
+            (void)queue;
+            (void)object;
+            return 0;
+        #endif
     }
 
 private:

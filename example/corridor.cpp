@@ -36,7 +36,10 @@
 #include "nanovg_gl.h"
 
 #include "corridormap/memory.h"
+
+#define CORRIDORMAP_ENABLE_OPENCL_SHARING
 #include "corridormap/render_gl.h"
+
 #include "corridormap/build.h"
 #include "corridormap/runtime.h"
 #include "corridormap/vec2.h"
