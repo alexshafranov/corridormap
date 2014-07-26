@@ -30,6 +30,7 @@
 
 #include <GLFW/glfw3.h>
 #include "corridormap/memory.h"
+#define CORRIDORMAP_ENABLE_OPENCL_SHARING
 #include "corridormap/render_gl.h"
 #include "corridormap/build.h"
 #include "corridormap/build_alloc.h"
