@@ -251,7 +251,12 @@ namespace
                     if (in_arc(tangent, elem.p_0, elem.p_1, is_ccw(elem)))
                     {
                         pop_back(side);
-                        push_back(side, make_arc(elem.origin, elem.p_0, tangent, is_ccw(elem)));
+
+                        if (!equal(elem.p_0, tangent, epsilon))
+                        {
+                            push_back(side, make_arc(elem.origin, elem.p_0, tangent, is_ccw(elem)));
+                        }
+
                         push_back(side, make_segment(tangent, new_element.p_1));
                         break;
                     }
@@ -281,7 +286,12 @@ namespace
                         {
                             pop_back(side);
                             push_back(side, make_segment(elem.p_0, tangent));
-                            push_back(side, make_arc(new_element.origin, tangent, new_element.p_1, ccw));
+
+                            if (!equal(tangent, new_element.p_1, epsilon))
+                            {
+                                push_back(side, make_arc(new_element.origin, tangent, new_element.p_1, ccw));
+                            }
+
                             // arcs return funnel side to the border.
                             following_border = true;
                             break;
@@ -303,9 +313,19 @@ namespace
                         if (in_arc(t2, new_element.p_0, new_element.p_1, ccw))
                         {
                             pop_back(side);
-                            push_back(side, make_arc(elem.origin, elem.p_0, t1, ccw));
+
+                            if (!equal(elem.p_0, t1, epsilon))
+                            {
+                                push_back(side, make_arc(elem.origin, elem.p_0, t1, ccw));
+                            }
+
                             push_back(side, make_segment(t1, t2));
-                            push_back(side, make_arc(new_element.origin, t2, new_element.p_1, ccw));
+
+                            if (!equal(t2, new_element.p_1, epsilon))
+                            {
+                                push_back(side, make_arc(new_element.origin, t2, new_element.p_1, ccw));
+                            }
+
                             // arcs return funnel side to the border.
                             following_border = true;
                             break;
@@ -322,14 +342,18 @@ namespace
     bool move_apex_over_arc(Dequeue<Path_Element>& side, Vec2 tangent, Vec2& apex, Path& path_state, float epsilon)
     {
         Path_Element& arc = front(side);
+        corridormap_assert(!equal(arc.p_0, arc.p_1, epsilon));
 
         // tangent point splits the arc -> grow path by the arc part before tangent point and signal that we're done.
         if (in_arc(tangent, arc.p_0, arc.p_1, is_ccw(arc)))
         {
-            grow_path(path_state, make_arc(arc.origin, arc.p_0, tangent, is_ccw(arc)), epsilon);
-            apex = tangent;
-            arc.p_0 = tangent;
-            return true;
+            if (!equal(arc.p_1, tangent, epsilon))
+            {
+                grow_path(path_state, make_arc(arc.origin, arc.p_0, tangent, is_ccw(arc)), epsilon);
+                apex = tangent;
+                arc.p_0 = tangent;
+                return true;
+            }
         }
 
         // otherwise grow path by the full arc and continue moving apex.
@@ -428,7 +452,7 @@ namespace
     }
 
     // try to append a new current element funnel apex was moved over opposite side.
-    void restart_funnel_side(Dequeue<Path_Element>& side, bool ccw, Vec2 apex, bool& following_border, const Path_Element& new_element, float clearance)
+    void restart_funnel_side(Dequeue<Path_Element>& side, bool ccw, Vec2 apex, bool& following_border, const Path_Element& new_element, float clearance, float epsilon)
     {
         unsigned char curve = type(new_element);
 
@@ -447,7 +471,12 @@ namespace
             if (in_arc(tangent, new_element.p_0, new_element.p_1, ccw))
             {
                 push_back(side, make_segment(apex, tangent));
-                push_back(side, make_arc(new_element.origin, tangent, new_element.p_1, ccw));
+
+                if (!equal(tangent, new_element.p_1, epsilon))
+                {
+                    push_back(side, make_arc(new_element.origin, tangent, new_element.p_1, ccw));
+                }
+
                 following_border = true;
             }
             else
@@ -530,24 +559,28 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
         // add left portal element.
         if (type(elem_l) != curve_point)
         {
+            corridormap_assert(!equal(elem_l.p_0, elem_l.p_1, corridor.epsilon));
+
             grow_funnel_side(funnel_l, winding_ccw, following_border_l, elem_l, corridor.epsilon, corridor.clearance);
             if (size(funnel_l) == 0)
             {
                 move_funnel_apex(funnel_r, winding_cw, funnel_apex, elem_l, path_state, corridor.clearance, corridor.epsilon);
                 if (full(path_state)) { return path_state.num_elems; }
-                restart_funnel_side(funnel_l, winding_ccw, funnel_apex, following_border_l, elem_l, corridor.clearance);
+                restart_funnel_side(funnel_l, winding_ccw, funnel_apex, following_border_l, elem_l, corridor.clearance, corridor.epsilon);
             }
         }
 
         // add right portal element.
         if (type(elem_r) != curve_point)
         {
+            corridormap_assert(!equal(elem_r.p_0, elem_r.p_1, corridor.epsilon));
+
             grow_funnel_side(funnel_r, winding_cw, following_border_r, elem_r, corridor.epsilon, corridor.clearance);
             if (size(funnel_r) == 0)
             {
                 move_funnel_apex(funnel_l, winding_ccw, funnel_apex, elem_r, path_state, corridor.clearance, corridor.epsilon);
                 if (full(path_state)) { return path_state.num_elems; }
-                restart_funnel_side(funnel_r, winding_cw, funnel_apex, following_border_r, elem_r, corridor.clearance);
+                restart_funnel_side(funnel_r, winding_cw, funnel_apex, following_border_r, elem_r, corridor.clearance, corridor.epsilon);
             }
         }
 
