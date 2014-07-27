@@ -24,6 +24,7 @@
 
 #include <string.h> // memset
 #include <stddef.h> // size_t
+#include "corridormap/assert.h"
 
 namespace corridormap {
 
@@ -110,6 +111,7 @@ int size(const Dequeue<T>& b)
 template <typename T>
 void push_back(Dequeue<T>& b, const T val)
 {
+    corridormap_assert(b.size < b.max_size);
     int idx = (b.front + b.size) % b.max_size;
     b.data[idx] = val;
     b.size++;
@@ -118,6 +120,7 @@ void push_back(Dequeue<T>& b, const T val)
 template <typename T>
 void push_front(Dequeue<T>&b, const T val)
 {
+    corridormap_assert(b.size < b.max_size);
     int idx = (b.front - 1) % b.max_size;
     b.data[idx] = val;
     b.size++;
@@ -126,6 +129,7 @@ void push_front(Dequeue<T>&b, const T val)
 template <typename T>
 T pop_back(Dequeue<T>& b)
 {
+    corridormap_assert(b.size > 0);
     T val = b.data[(b.front + b.size - 1) % b.max_size];
     b.size--;
     return val;
@@ -134,6 +138,7 @@ T pop_back(Dequeue<T>& b)
 template <typename T>
 T pop_front(Dequeue<T>& b)
 {
+    corridormap_assert(b.size > 0);
     T val = b.data[b.front % b.max_size];
     b.front++;
     b.size--;
@@ -143,12 +148,14 @@ T pop_front(Dequeue<T>& b)
 template <typename T>
 T& front(Dequeue<T>& b)
 {
+    corridormap_assert(b.size > 0);
     return b.data[b.front % b.max_size];
 }
 
 template <typename T>
 T& back(Dequeue<T>& b)
 {
+    corridormap_assert(b.size > 0);
     int idx = (b.front + b.size - 1) % b.max_size;
     return b.data[idx];
 }

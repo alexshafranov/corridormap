@@ -206,6 +206,7 @@ namespace
     {
         unsigned char curve = type(new_element);
         corridormap_assert(!equal(new_element.p_0, new_element.p_1, epsilon));
+        corridormap_assert(curve == curve_line || curve == curve_reflex_arc || curve == curve_convex_arc);
 
         // treat reflex arcs as their chords.
         if (curve == curve_reflex_arc)
@@ -514,7 +515,7 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
     path_state.num_elems = 0;
     path_state.elems = path;
 
-    if (first_portal >= corridor.num_disks)
+    if (first_portal > last_portal || first_portal >= corridor.num_disks || last_portal >= corridor.num_disks)
     {
         grow_path(path_state, make_segment(source, target), corridor.epsilon);
         return path_state.num_elems;
@@ -526,8 +527,8 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
 
     Path_Element elem_l;
     Path_Element elem_r;
-    elem_l.p_0 = corridor.border_l[0];
-    elem_r.p_0 = corridor.border_r[0];
+    elem_l.p_0 = corridor.border_l[first_portal];
+    elem_r.p_0 = corridor.border_r[first_portal];
 
     for (int i = first_portal+1; i <= last_portal+1; ++i)
     {
