@@ -139,7 +139,7 @@ namespace
     bool in_arc(Vec2 p, Vec2 a, Vec2 b, bool ccw)
     {
         float area = orient(a, p, b);
-        return ccw ? (area >= -1e-3f) : (area <= 1e-3f);
+        return ccw ? (area >= 0.f) : (area <= 0.f);
     }
 
     // checks that direction (point - start_arc) wraps around arc (i.e. tangent point will be past the arc_start).
