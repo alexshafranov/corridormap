@@ -295,8 +295,9 @@ namespace
 
                             // arcs return funnel side to the border.
                             following_border = true;
-                            break;
                         }
+
+                        break;
                     }
 
                     pop_back(side);
@@ -329,8 +330,9 @@ namespace
 
                             // arcs return funnel side to the border.
                             following_border = true;
-                            break;
                         }
+
+                        break;
                     }
 
                     pop_back(side);
@@ -500,15 +502,6 @@ namespace
 int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, Vec2 target, int first_portal, int last_portal, Path_Element* path, int max_path_size)
 {
     corridormap_assert(corridor.num_disks > 0);
-    Dequeue<Path_Element> funnel_l(scratch, corridor.num_disks);
-    Dequeue<Path_Element> funnel_r(scratch, corridor.num_disks);
-    corridormap_assert(funnel_l.data != 0);
-    corridormap_assert(funnel_r.data != 0);
-    Vec2 funnel_apex = source;
-    // true if left side topmost element is part of the corridor border.
-    bool following_border_l = false;
-    // true if right side topmost element is part of the corridor border.
-    bool following_border_r = false;
 
     Path path_state;
     path_state.max_elems = max_path_size;
@@ -521,7 +514,17 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
         return path_state.num_elems;
     }
 
+    int num_portals = last_portal - first_portal + 2;
+    Dequeue<Path_Element> funnel_l(scratch, num_portals);
+    Dequeue<Path_Element> funnel_r(scratch, num_portals);
+
     // initialize the funnel.
+    Vec2 funnel_apex = source;
+    // true if left side topmost element is part of the corridor border.
+    bool following_border_l = false;
+    // true if right side topmost element is part of the corridor border.
+    bool following_border_r = false;
+
     push_back(funnel_l, make_segment(funnel_apex, corridor.border_l[first_portal]));
     push_back(funnel_r, make_segment(funnel_apex, corridor.border_r[first_portal]));
 
@@ -532,28 +535,29 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
 
     for (int i = first_portal+1; i <= last_portal+1; ++i)
     {
-        elem_l.p_1 = target;
-        elem_l.origin = target;
-        elem_l.type = 0x80 | curve_line;
-
-        elem_r.p_1 = target;
-        elem_r.origin = target;
-        elem_r.type = 0x00 | curve_line;
-
         if (i <= last_portal)
         {
             elem_l.p_1 = corridor.border_l[i];
-            elem_r.p_1 = corridor.border_r[i];
             elem_l.origin = corridor.obstacle_l[i];
-            elem_r.origin = corridor.obstacle_r[i];
             elem_l.type = 0x80 | (unsigned char)left_border_curve(corridor, i);
-            elem_r.type = 0x00 | (unsigned char)right_border_curve(corridor, i);
             corridormap_assert(elem_l.type != curve_point || equal(elem_l.p_0, elem_l.p_1, corridor.epsilon));
+
+            elem_r.p_1 = corridor.border_r[i];
+            elem_r.origin = corridor.obstacle_r[i];
+            elem_r.type = 0x00 | (unsigned char)right_border_curve(corridor, i);
             corridormap_assert(elem_r.type != curve_point || equal(elem_r.p_0, elem_r.p_1, corridor.epsilon));
         }
+        // the last portal is [target, target] segement.
         else
         {
+            elem_l.p_1 = target;
+            elem_l.origin = target;
+            elem_l.type = (0x80 | curve_line);
             following_border_l = false;
+
+            elem_r.p_1 = target;
+            elem_r.origin = target;
+            elem_r.type = (0x00 | curve_line);
             following_border_r = false;
         }
 
@@ -595,12 +599,14 @@ int find_shortest_path(const Corridor& corridor, Memory* scratch, Vec2 source, V
         if (size(funnel_l) > 0)
         {
             flush_funnel_side(funnel_l, path_state, corridor.epsilon);
+            corridormap_assert(equal(path_state.elems[path_state.num_elems-1].p_1, target, 1e-6f));
             return path_state.num_elems;
         }
 
         if (size(funnel_r) > 0)
         {
             flush_funnel_side(funnel_r, path_state, corridor.epsilon);
+            corridormap_assert(equal(path_state.elems[path_state.num_elems-1].p_1, target, 1e-6f));
             return path_state.num_elems;
         }
     }

@@ -88,6 +88,7 @@ struct Dequeue
         , mem(mem)
     {
         data = allocate<T>(mem, max_size);
+        corridormap_assert(data != 0);
     }
 
     ~Dequeue()
