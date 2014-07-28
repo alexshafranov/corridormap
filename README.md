@@ -33,6 +33,10 @@ Continuous shortest path (arcs & line segments), slower but doesn't require tria
 
 ![polygons path continuous](/example/polys_1_continuous_path.png)
 
+Another continuous path example:
+
+![continuous path](/example/bomberman_1.png?raw=true)
+
 ## Reference
 Roland Geraerts. Planning Short Paths with Clearance using Explicit Corridors.
 In IEEE International Conference on Robotics and Automation, pp. 1997-2004, 2010.
