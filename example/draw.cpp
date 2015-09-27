@@ -124,7 +124,7 @@ namespace
         float radius = mag(s - c);
         s = normalized(s - c);
         t = normalized(t - c);
-        nvgArc(state.vg, c.x, c.y, radius, atan2(s.y, s.x), atan2(t.y, t.x), dir);
+        nvgArc(state.vg, c.x, c.y, radius, ::atan2f(s.y, s.x), ::atan2f(t.y, t.x), dir);
     }
 
     void circle(Draw_State& state, Vec2 origin, float radius)
@@ -156,7 +156,7 @@ namespace
         float radius = mag(a - corner);
         a = normalized(a - corner);
         b = normalized(b - corner);
-        nvgArc(state.vg, corner.x, corner.y, radius, atan2(a.y, a.x), atan2(b.y, b.x), NVG_CW);
+        nvgArc(state.vg, corner.x, corner.y, radius, ::atan2f(a.y, a.x), ::atan2f(b.y, b.x), NVG_CW);
     }
 
     void next_border_point(Draw_State& state, Border_Line_State& border, Vec2 pos, Vec2 side)

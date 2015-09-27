@@ -24,6 +24,11 @@ solution "corridormap"
     configuration { "release", "x64" }
         targetdir "bin/x64/release"
 
+    configuration { "vs*" }
+        defines { "_CRT_SECURE_NO_WARNINGS" }
+        buildoptions { "/wd4456" } -- declaration of '...' hides previous local declaration.
+        buildoptions { "/wd4577" } -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
+
     project "clew"
         kind "StaticLib"
         language "C"
@@ -78,9 +83,6 @@ solution "corridormap"
         configuration "vs*"
             -- x64 build stb_image.c: conversion from '__int64' to 'int', possible loss of data
             buildoptions { "/wd4244" }
-
-        configuration { "windows" }
-            defines { "_CRT_SECURE_NO_WARNINGS" }
 
     project "example-voronoi"
         kind "ConsoleApp"

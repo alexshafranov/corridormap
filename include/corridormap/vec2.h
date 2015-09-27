@@ -76,7 +76,7 @@ inline float sq(float v)
 
 inline Vec2 normalized(Vec2 a)
 {
-    return a * (1.f/sqrt(sq(a.x) + sq(a.y)));
+    return a * (1.f/::sqrtf(sq(a.x) + sq(a.y)));
 }
 
 inline float dot(Vec2 a, Vec2 b)
@@ -86,7 +86,7 @@ inline float dot(Vec2 a, Vec2 b)
 
 inline float mag(Vec2 a)
 {
-    return sqrt(dot(a, a));
+    return ::sqrtf(dot(a, a));
 }
 
 inline float mag_sq(Vec2 a)

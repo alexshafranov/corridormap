@@ -111,34 +111,34 @@ namespace
         memset(&result, 0, sizeof(shader));
 
         GLuint program = glCreateProgram();
-        GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-        GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+        GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+        GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
 
-        glShaderSource(vertex_shader, 1, &vs_source, 0);
-        glShaderSource(fragment_shader, 1, &fs_source, 0);
+        glShaderSource(vs, 1, &vs_source, 0);
+        glShaderSource(fs, 1, &fs_source, 0);
 
         GLint status;
-        glCompileShader(vertex_shader);
-        glCompileShader(fragment_shader);
+        glCompileShader(vs);
+        glCompileShader(fs);
 
-        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &status);
-
-        if (status != GL_TRUE)
-        {
-            print_shader_log(vertex_shader);
-            return result;
-        }
-
-        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &status);
+        glGetShaderiv(vs, GL_COMPILE_STATUS, &status);
 
         if (status != GL_TRUE)
         {
-            print_shader_log(fragment_shader);
+            print_shader_log(vs);
             return result;
         }
 
-        glAttachShader(program, vertex_shader);
-        glAttachShader(program, fragment_shader);
+        glGetShaderiv(fs, GL_COMPILE_STATUS, &status);
+
+        if (status != GL_TRUE)
+        {
+            print_shader_log(fs);
+            return result;
+        }
+
+        glAttachShader(program, vs);
+        glAttachShader(program, fs);
 
         glBindAttribLocation(program, 0, "position");
 
@@ -150,8 +150,8 @@ namespace
         }
 
         result.program = program;
-        result.vertex_shader = vertex_shader;
-        result.fragment_shader = fragment_shader;
+        result.vertex_shader = vs;
+        result.fragment_shader = fs;
 
         return result;
     }

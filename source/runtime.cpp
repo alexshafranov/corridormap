@@ -414,7 +414,7 @@ namespace
 
         for (int i = 1; i < path_size; ++i)
         {
-            const Half_Edge* edge = path[i];
+            edge = path[i];
             Vec2 curr_l = right_side(space, opposite(space, edge));
             Vec2 curr_r = left_side(space, opposite(space, edge));
             set_vertex_curves(prev_l, prev_r, curr_l, curr_r, epsilon, out_curves);
