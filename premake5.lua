@@ -52,7 +52,6 @@ solution "corridormap"
             "example/glfw/src/gamma.c",
             "example/glfw/src/init.c",
             "example/glfw/src/input.c",
-            "example/glfw/src/joystick.c",
             "example/glfw/src/monitor.c",
             "example/glfw/src/time.c",
             "example/glfw/src/window.c" }

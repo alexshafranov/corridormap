@@ -158,9 +158,11 @@ namespace
 
     void destroy_shader(shader& s)
     {
+        glDetachShader(s.program, s.vertex_shader);
+        glDetachShader(s.program, s.fragment_shader);
         glDeleteShader(s.vertex_shader);
         glDeleteShader(s.fragment_shader);
-        glDeleteShader(s.program);
+        glDeleteProgram(s.program);
     }
 }
 
